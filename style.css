@@ -38,3 +38,23 @@ p {
 .button:hover {
   background: #357ae8;
 }
+.input-group {
+  display: flex;
+  width: 100%;
+  max-width: 350px;
+  margin: 1rem auto;
+}
+
+.input-group .input {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.input-group .button {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-top: 0;
+  padding: 0.7rem 1.2rem;
+}

@@ -1,6 +1,6 @@
 let DICTIONARY = [];
 
-fetch('dictionary.txt')
+fetch('../dictionary.txt')
   .then(response => response.text())
   .then(text => {
     DICTIONARY = text.split('\n').map(word => word.trim().toLowerCase()).filter(Boolean);

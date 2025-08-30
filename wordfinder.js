@@ -8,7 +8,7 @@ fetch('dictionary.txt')
 
 document.addEventListener('DOMContentLoaded', function () {
   const input = document.getElementById('letters-input');
-  const message = document.getElementById('message');
+  const wordList = document.getElementById('word-list');
   const enterBtn = document.getElementById('enter-btn');
 
   input.addEventListener('input', function () {
@@ -27,17 +27,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
   enterBtn.addEventListener('click', function () {
     const userLetters = input.value.trim().toLowerCase();
+    wordList.innerHTML = ""; // Clear previous results
+
     if (userLetters.length === 0 || DICTIONARY.length === 0) {
-      message.textContent = "";
       return;
     }
     const results = DICTIONARY.filter(
       word => word.length >= 4 && isWordSubsetOfInput(word, userLetters)
     );
     if (results.length > 0) {
-      message.innerHTML = results.join('<br>');
+      wordList.innerHTML = results.join('<br>'); // Show results in wordList
     } else {
-      message.textContent = "No words found.";
+      wordList.innerHTML = "No words found.";
     }
   });
 });

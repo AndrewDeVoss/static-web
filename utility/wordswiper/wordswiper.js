@@ -4,7 +4,7 @@ class WordSwiper extends HTMLElement {
     this.attachShadow({ mode: 'open' });
 
     this.letters = [];
-    this.letterPositions = new Map(); // Track positions of letters for line drawing
+    this.letterPositions = new Map();
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
     this.isSwiping = false;
@@ -14,23 +14,22 @@ class WordSwiper extends HTMLElement {
     const attr = this.getAttribute('letters');
     this.letters = attr ? attr.split(',') : [];
 
-    // Load external stylesheet
     const linkEl = document.createElement('link');
     linkEl.setAttribute('rel', 'stylesheet');
     linkEl.setAttribute('href', '../utility/wordswiper/wordswiper.css');
 
-    // HTML structure
     this.shadowRoot.innerHTML = `
       <div id="word-swiper">
         <svg id="line-canvas" width="300" height="300"></svg>
         <div id="circle-container"></div>
-        <div id="center-button" class="hidden">Enter</div>
+        <div id="center-display">Enter</div>
+        <div id="center-button" class="hidden">✓</div>
       </div>
     `;
     this.shadowRoot.prepend(linkEl);
 
-    // DOM refs
     this.circleContainer = this.shadowRoot.querySelector('#circle-container');
+    this.centerDisplay = this.shadowRoot.querySelector('#center-display');
     this.centerButton = this.shadowRoot.querySelector('#center-button');
     this.lineCanvas = this.shadowRoot.querySelector('#line-canvas');
 
@@ -89,15 +88,15 @@ class WordSwiper extends HTMLElement {
     e.preventDefault();
     this.clearSelection();
     this.isSwiping = true;
-    this.centerButton.classList.add('hidden');
 
     const point = this.getPointFromEvent(e);
     const el = this.getLetterElementFromPoint(point.x, point.y);
-    if (el) this.selectLetter(el);
+    if (el && this.canSelectAgain(el)) this.selectLetter(el);
   }
 
   continueSwipe(e) {
     if (!this.isSwiping) return;
+
     const point = this.getPointFromEvent(e);
     const el = this.getLetterElementFromPoint(point.x, point.y);
 
@@ -113,17 +112,17 @@ class WordSwiper extends HTMLElement {
   }
 
   getLetterElementFromPoint(x, y) {
-    const elements = [...document.elementsFromPoint(x, y)];
+    const elements = [...this.shadowRoot.elementsFromPoint(x, y)];
     return elements.find(el => this.letterPositions.has(el));
   }
 
   canSelectAgain(el) {
-    // Allow same letter more than once if it's not directly repeated
-    return this.selectedLetterEls.at(-1) !== el;
+    return !this.selectedLetterEls.includes(el);
   }
 
   selectLetter(el) {
     el.classList.add('selected');
+    el.style.pointerEvents = 'none'; // Prevent future interaction
     this.selectedLetterEls.push(el);
     this.selectedLetterPositions.push(this.letterPositions.get(el));
     this.updateCenterText();
@@ -132,13 +131,12 @@ class WordSwiper extends HTMLElement {
 
   updateCenterText() {
     const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
-    console.log("Current word:", word);
-    this.centerButton.textContent = word || 'Enter';
+    this.centerDisplay.textContent = word || 'Enter';
   }
 
   redrawLines() {
     const svg = this.lineCanvas;
-    svg.innerHTML = ''; // Clear existing lines
+    svg.innerHTML = '';
 
     for (let i = 0; i < this.selectedLetterPositions.length - 1; i++) {
       const p1 = this.selectedLetterPositions[i];
@@ -158,11 +156,16 @@ class WordSwiper extends HTMLElement {
   }
 
   clearSelection() {
-    this.selectedLetterEls.forEach(el => el.classList.remove('selected'));
+    this.selectedLetterEls.forEach(el => {
+      el.classList.remove('selected');
+      el.style.pointerEvents = 'auto'; // Re-enable interaction after clearing
+    });
+
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
     this.lineCanvas.innerHTML = '';
     this.updateCenterText();
+    this.centerButton.classList.add('hidden');
   }
 
   commitWord() {
@@ -174,7 +177,6 @@ class WordSwiper extends HTMLElement {
     }));
 
     this.clearSelection();
-    this.centerButton.classList.add('hidden');
   }
 }
 

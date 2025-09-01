@@ -9,7 +9,6 @@ body {
   font-family: 'Segoe UI', Arial, sans-serif;
 }
 .container {
-  position: relative;
   background: #fff;
   padding: 2rem 1.5rem;
   border-radius: 1rem;
@@ -17,7 +16,6 @@ body {
   text-align: center;
   max-width: 350px;
   width: 100%;
-  overflow: hidden; /* Ensures canvas doesn't overflow */
 }
 p {
   font-size: 1.2rem;

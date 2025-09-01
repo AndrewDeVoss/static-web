@@ -1,57 +1,45 @@
-:host {
-  display: block;
-  width: 300px;
-  height: 300px;
-  position: relative;
-}
-
 #word-swiper {
   position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.letter {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  background: #eee;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 24px;
+  width: 300px;
+  height: 360px; /* Slightly taller to fit top and bottom elements */
+  margin: 20px auto;
   user-select: none;
-  transition: background 0.2s;
-  cursor: pointer;
 }
 
-.letter.selected {
-  background: #d0ebff;
-}
-
-
-#line-canvas {
+/* Word being built – top of component */
+#word-display {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  font-weight: bold;
+  z-index: 2;
   pointer-events: none;
-  z-index: 5;
+  white-space: nowrap;
 }
 
-#word-swiper {
-  position: relative;
-  width: 300px;
-  height: 300px;
-}
-
+/* Circle container */
 #circle-container {
   position: absolute;
+  top: 40px; /* Moves it down to avoid overlap with word display */
+  left: 0;
   width: 100%;
-  height: 100%;
-  pointer-events: auto;
+  height: 300px;
 }
 
+/* SVG lines */
+#line-canvas {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  height: 300px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Letter appearance */
 .letter {
   position: absolute;
   width: 50px;
@@ -62,7 +50,6 @@
   background: #eee;
   font-size: 20px;
   font-weight: bold;
-  user-select: none;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -72,18 +59,7 @@
   color: #888;
 }
 
-
-#center-display {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 22px;
-  font-weight: bold;
-  z-index: 2;
-  pointer-events: none;
-}
-
+/* Enter button at the bottom */
 #center-button {
   position: absolute;
   bottom: 10px;
@@ -91,11 +67,12 @@
   transform: translateX(-50%);
   background: #2b8fd2;
   color: white;
-  padding: 6px 16px;
+  padding: 8px 20px;
   border-radius: 20px;
-  cursor: pointer;
   font-weight: bold;
+  font-size: 18px;
   z-index: 3;
+  cursor: pointer;
 }
 
 #center-button.hidden {

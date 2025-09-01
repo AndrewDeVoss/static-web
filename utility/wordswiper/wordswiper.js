@@ -126,7 +126,14 @@ class WordSwiper extends HTMLElement {
     el.classList.add('selected');
     this.selectedLetterEls.push(el);
     this.selectedLetterPositions.push(this.letterPositions.get(el));
+    this.updateCenterText();
     this.redrawLines();
+  }
+
+  updateCenterText() {
+    const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
+    console.log("Current word:", word);
+    this.centerButton.textContent = word || 'Enter';
   }
 
   redrawLines() {
@@ -155,6 +162,7 @@ class WordSwiper extends HTMLElement {
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
     this.lineCanvas.innerHTML = '';
+    this.updateCenterText();
   }
 
   commitWord() {

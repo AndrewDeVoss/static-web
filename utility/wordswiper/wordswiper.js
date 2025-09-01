@@ -69,12 +69,15 @@ class WordSwiper extends HTMLElement {
   }
 
   addEventListeners() {
+    // Start swipe only from inside container
     this.circleContainer.addEventListener('mousedown', this.startSwipe.bind(this));
-    this.circleContainer.addEventListener('mousemove', this.continueSwipe.bind(this));
+    this.circleContainer.addEventListener('touchstart', this.startSwipe.bind(this));
+
+    // Move and end on document — ensure tracking even outside bounds
+    document.addEventListener('mousemove', this.continueSwipe.bind(this));
     document.addEventListener('mouseup', this.endSwipe.bind(this));
 
-    this.circleContainer.addEventListener('touchstart', this.startSwipe.bind(this));
-    this.circleContainer.addEventListener('touchmove', this.continueSwipe.bind(this), { passive: false });
+    document.addEventListener('touchmove', this.continueSwipe.bind(this), { passive: false });
     document.addEventListener('touchend', this.endSwipe.bind(this));
 
     this.centerButton.addEventListener('click', this.commitWord.bind(this));
@@ -93,11 +96,8 @@ class WordSwiper extends HTMLElement {
     this.clearSelection();
     this.isSwiping = true;
 
-    const point = this.getPointFromEvent(e);
-    const el = this.getLetterElementFromPoint(point.x, point.y);
-    if (el && this.canSelectAgain(el)) this.selectLetter(el);
+    this.continueSwipe(e); // Ensures first touchpoint is evaluated
 
-    // Show enter button right after first letter
     this.centerButton.classList.remove('hidden');
   }
 

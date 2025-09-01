@@ -1,0 +1,173 @@
+class WordSwiper extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+
+    this.letters = [];
+    this.letterPositions = new Map(); // Track positions of letters for line drawing
+    this.selectedLetterEls = [];
+    this.selectedLetterPositions = [];
+    this.isSwiping = false;
+  }
+
+  connectedCallback() {
+    const attr = this.getAttribute('letters');
+    this.letters = attr ? attr.split(',') : [];
+
+    // Load external stylesheet
+    const linkEl = document.createElement('link');
+    linkEl.setAttribute('rel', 'stylesheet');
+    linkEl.setAttribute('href', '../utility/wordswiper/wordswiper.css');
+
+    // HTML structure
+    this.shadowRoot.innerHTML = `
+      <div id="word-swiper">
+        <svg id="line-canvas" width="300" height="300"></svg>
+        <div id="circle-container"></div>
+        <div id="center-button" class="hidden">Enter</div>
+      </div>
+    `;
+    this.shadowRoot.prepend(linkEl);
+
+    // DOM refs
+    this.circleContainer = this.shadowRoot.querySelector('#circle-container');
+    this.centerButton = this.shadowRoot.querySelector('#center-button');
+    this.lineCanvas = this.shadowRoot.querySelector('#line-canvas');
+
+    this.layoutLetters();
+    this.addEventListeners();
+  }
+
+  layoutLetters() {
+    this.circleContainer.innerHTML = '';
+    this.letterPositions.clear();
+    this.selectedLetterEls = [];
+    this.selectedLetterPositions = [];
+
+    const radius = 120;
+    const angleStep = (2 * Math.PI) / this.letters.length;
+
+    this.letters.forEach((letter, i) => {
+      const angle = i * angleStep - Math.PI / 2;
+      const x = 150 + radius * Math.cos(angle);
+      const y = 150 + radius * Math.sin(angle);
+
+      const div = document.createElement('div');
+      div.className = 'letter';
+      div.innerText = letter;
+      div.style.left = `${x - 25}px`;
+      div.style.top = `${y - 25}px`;
+      div.dataset.letter = letter;
+      div.dataset.index = i;
+
+      this.circleContainer.appendChild(div);
+      this.letterPositions.set(div, { x, y });
+    });
+  }
+
+  addEventListeners() {
+    this.circleContainer.addEventListener('mousedown', this.startSwipe.bind(this));
+    this.circleContainer.addEventListener('mousemove', this.continueSwipe.bind(this));
+    document.addEventListener('mouseup', this.endSwipe.bind(this));
+
+    this.circleContainer.addEventListener('touchstart', this.startSwipe.bind(this));
+    this.circleContainer.addEventListener('touchmove', this.continueSwipe.bind(this), { passive: false });
+    document.addEventListener('touchend', this.endSwipe.bind(this));
+
+    this.centerButton.addEventListener('click', this.commitWord.bind(this));
+  }
+
+  getPointFromEvent(e) {
+    if (e.touches && e.touches[0]) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else {
+      return { x: e.clientX, y: e.clientY };
+    }
+  }
+
+  startSwipe(e) {
+    e.preventDefault();
+    this.clearSelection();
+    this.isSwiping = true;
+    this.centerButton.classList.add('hidden');
+
+    const point = this.getPointFromEvent(e);
+    const el = this.getLetterElementFromPoint(point.x, point.y);
+    if (el) this.selectLetter(el);
+  }
+
+  continueSwipe(e) {
+    if (!this.isSwiping) return;
+    const point = this.getPointFromEvent(e);
+    const el = this.getLetterElementFromPoint(point.x, point.y);
+
+    if (el && this.canSelectAgain(el)) {
+      this.selectLetter(el);
+    }
+  }
+
+  endSwipe() {
+    if (!this.isSwiping) return;
+    this.isSwiping = false;
+    this.centerButton.classList.remove('hidden');
+  }
+
+  getLetterElementFromPoint(x, y) {
+    const elements = [...document.elementsFromPoint(x, y)];
+    return elements.find(el => this.letterPositions.has(el));
+  }
+
+  canSelectAgain(el) {
+    // Allow same letter more than once if it's not directly repeated
+    return this.selectedLetterEls.at(-1) !== el;
+  }
+
+  selectLetter(el) {
+    el.classList.add('selected');
+    this.selectedLetterEls.push(el);
+    this.selectedLetterPositions.push(this.letterPositions.get(el));
+    this.redrawLines();
+  }
+
+  redrawLines() {
+    const svg = this.lineCanvas;
+    svg.innerHTML = ''; // Clear existing lines
+
+    for (let i = 0; i < this.selectedLetterPositions.length - 1; i++) {
+      const p1 = this.selectedLetterPositions[i];
+      const p2 = this.selectedLetterPositions[i + 1];
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', p1.x);
+      line.setAttribute('y1', p1.y);
+      line.setAttribute('x2', p2.x);
+      line.setAttribute('y2', p2.y);
+      line.setAttribute('stroke', '#2b8fd2');
+      line.setAttribute('stroke-width', '4');
+      line.setAttribute('stroke-linecap', 'round');
+
+      svg.appendChild(line);
+    }
+  }
+
+  clearSelection() {
+    this.selectedLetterEls.forEach(el => el.classList.remove('selected'));
+    this.selectedLetterEls = [];
+    this.selectedLetterPositions = [];
+    this.lineCanvas.innerHTML = '';
+  }
+
+  commitWord() {
+    const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
+    this.dispatchEvent(new CustomEvent('word-committed', {
+      detail: { word },
+      bubbles: true,
+      composed: true
+    }));
+
+    this.clearSelection();
+    this.centerButton.classList.add('hidden');
+  }
+}
+
+customElements.define('word-swiper', WordSwiper);

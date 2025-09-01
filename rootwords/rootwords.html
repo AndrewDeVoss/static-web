@@ -10,26 +10,24 @@
     <a href="../index.html" class="home-button" title="Home">🏠</a>
     <div class="container" style="position:relative;">
       <h1>RootWords</h1>
-      <canvas
-        id="tree-canvas"
-        width="300"
-        height="400"
-        style="
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -40%);
-          z-index: 0;
-          opacity: 0.25;
-          pointer-events: none;
-        "
-      ></canvas>
       <div class="input-group" style="position:relative; z-index:1; margin-top:1.5rem;">
         <input id="rootword-input" type="text" placeholder="Type a word..." class="input" />
         <button id="rootword-enter-btn" class="button">Enter</button>
       </div>
-      <!-- Other content can go here -->
+
+      <word-swiper letters="C,A,T,D,O,G,S"></word-swiper>
     </div>
-    <script src="rootwords.js"></script>
+
+    <script type="module" src="../utility/wordswiper/wordswiper.js"></script>
+
+    <script>
+      document.addEventListener('word-committed', (e) => {
+        const word = e.detail.word;
+        console.log('You entered:', word);
+        alert(`You entered: ${word}`);
+      });
+    </script>
+
+    <!-- <script src="rootwords.js"></script> -->
   </body>
 </html>

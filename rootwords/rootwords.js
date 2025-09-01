@@ -19,6 +19,7 @@ observer.observe(swiper, { attributes: true, attributeFilter: ['letters'] });
 // Listen for committed words
 document.addEventListener('word-committed', (e) => {
   const word = e.detail.word.toUpperCase();
+  const letterEls = e.detail.elements; // DOM references of the selected letters
 
   if (!isWord(word)) {
     alert(`❌ '${word}' is not a valid word.`);
@@ -32,7 +33,12 @@ document.addEventListener('word-committed', (e) => {
 
   usedWords.add(word);
   addWordRow(word);
+
+  // Disable the letters that were used in this word using the DOM references directly
+  swiper.disableLetters(letterEls);
 });
+
+
 
 /**
  * Update the root letter set and grid layout from <word-swiper>

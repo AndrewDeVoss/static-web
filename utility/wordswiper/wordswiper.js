@@ -12,7 +12,7 @@ class WordSwiper extends HTMLElement {
 
   connectedCallback() {
     const attr = this.getAttribute('letters');
-    this.letters = attr ? attr.split(',') : [];
+    this.letters = attr ? [...attr] : [];
 
     const linkEl = document.createElement('link');
     linkEl.setAttribute('rel', 'stylesheet');
@@ -151,6 +151,20 @@ class WordSwiper extends HTMLElement {
     }
   }
 
+  /**
+   * Disable letters from being swiped again
+   * @param {string[]} lettersToDisable - array of uppercase letters
+   */
+    disableLetters(letterElsToDisable) {
+      alert("Disabling letters: " + letterElsToDisable.map(el => el.dataset.letter).join(", "));
+      
+      letterElsToDisable.forEach(el => {
+        el.classList.add('disabled');
+        el.style.pointerEvents = 'none';
+      });
+    }
+
+
   updateCenterText() {
     const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
     if (this.centerDisplay) {
@@ -196,14 +210,19 @@ class WordSwiper extends HTMLElement {
     const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
     if (!word) return;
 
+    // Dispatch the word and DOM references (selectedLetterEls)
     this.dispatchEvent(new CustomEvent('word-committed', {
-      detail: { word },
+      detail: {
+        word,
+        elements: this.selectedLetterEls // Passing the DOM references (selected elements)
+      },
       bubbles: true,
       composed: true
     }));
 
     this.clearSelection();
   }
+
 }
 
 customElements.define('word-swiper', WordSwiper);

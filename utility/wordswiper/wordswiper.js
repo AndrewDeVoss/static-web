@@ -16,7 +16,8 @@ class WordSwiper extends HTMLElement {
 
     const linkEl = document.createElement('link');
     linkEl.setAttribute('rel', 'stylesheet');
-    linkEl.setAttribute('href', '/utility/wordswiper/wordswiper.css');
+    const cssURL = new URL('./wordswiper.css', import.meta.url);
+    linkEl.setAttribute('href', cssURL.href);
 
     this.shadowRoot.innerHTML = `
       <div id="word-swiper">

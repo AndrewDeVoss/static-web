@@ -4,19 +4,19 @@
     <meta charset="utf-8" />
     <title>RootWords</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="../style.css" />
   </head>
   <body>
-    <a href="/index.html" class="home-button" title="Home">🏠</a>
+    <a href="../index.html" class="home-button" title="Home">🏠</a>
     <div class="container" style="position:relative;">
       <h1>RootWords</h1>
       <word-swiper letters="C,A,T,D,O,G,S"></word-swiper>
     </div>
 
-    <script type="module" src="/utility/wordswiper/wordswiper.js"></script>
+    <script type="module" src="../utility/wordswiper/wordswiper.js"></script>
 
     <script type="module">
-      import { loadDictionary, isWord } from '/utility/isword/isword.js';
+      import { loadDictionary, isWord } from '../utility/isword/isword.js';
 
       // Load the dictionary once when the page loads
       await loadDictionary();

@@ -59,22 +59,21 @@
   color: #888;
 }
 
-/* Enter button at the bottom */
-#center-button {
+#enter-button {
   position: absolute;
   bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  width: 100%; /* Fill full width of parent */
   background: #2b8fd2;
   color: white;
-  padding: 8px 20px;
+  padding: 10px 0; /* Vertical padding only */
   border-radius: 20px;
   font-weight: bold;
   font-size: 18px;
   z-index: 3;
   cursor: pointer;
+  text-align: center; /* Center text */
 }
-
-#center-button.hidden {
+#enter-button.hidden {
   display: none;
 }

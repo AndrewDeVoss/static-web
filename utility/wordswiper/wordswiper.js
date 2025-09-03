@@ -24,14 +24,14 @@ class WordSwiper extends HTMLElement {
         <div id="word-display"></div> 
         <svg id="line-canvas" width="300" height="300"></svg>
         <div id="circle-container"></div>
-        <div id="center-button" class="hidden">Enter</div>
+        <div id="enter-button" class="hidden">Enter</div>
       </div>
     `;
     this.shadowRoot.prepend(linkEl);
 
     this.circleContainer = this.shadowRoot.querySelector('#circle-container');
     this.centerDisplay = this.shadowRoot?.querySelector('#word-display') || document.querySelector('#word-display');
-    this.centerButton = this.shadowRoot.querySelector('#center-button');
+    this.enterButton = this.shadowRoot.querySelector('#enter-button');
     this.lineCanvas = this.shadowRoot.querySelector('#line-canvas');
 
     this.layoutLetters();
@@ -65,8 +65,8 @@ class WordSwiper extends HTMLElement {
     });
 
     // Make enter button act like a letter at the center
-    this.letterPositions.set(this.centerButton, { x: 150, y: 150 });
-    this.centerButton.dataset.letter = '↵';
+    this.letterPositions.set(this.enterButton, { x: 150, y: 150 });
+    this.enterButton.dataset.letter = '↵';
   }
 
   addEventListeners() {
@@ -81,7 +81,7 @@ class WordSwiper extends HTMLElement {
     document.addEventListener('touchmove', this.continueSwipe.bind(this), { passive: false });
     document.addEventListener('touchend', this.endSwipe.bind(this));
 
-    this.centerButton.addEventListener('click', this.commitWord.bind(this));
+    this.enterButton.addEventListener('click', this.commitWord.bind(this));
   }
 
   getPointFromEvent(e) {
@@ -99,7 +99,7 @@ class WordSwiper extends HTMLElement {
 
     this.continueSwipe(e); // Ensures first touchpoint is evaluated
 
-    this.centerButton.classList.remove('hidden');
+    this.enterButton.classList.remove('hidden');
   }
 
   continueSwipe(e) {
@@ -147,7 +147,7 @@ class WordSwiper extends HTMLElement {
 
     // Show enter button after first letter
     if (this.selectedLetterEls.length === 1) {
-      this.centerButton.classList.remove('hidden');
+      this.enterButton.classList.remove('hidden');
     }
   }
 
@@ -203,7 +203,7 @@ class WordSwiper extends HTMLElement {
     this.selectedLetterPositions = [];
     this.lineCanvas.innerHTML = '';
     this.updateCenterText();
-    this.centerButton.classList.add('hidden');
+    this.enterButton.classList.add('hidden');
   }
 
   commitWord() {

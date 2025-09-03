@@ -57,6 +57,12 @@
 .letter.selected {
   background-color: #ddd;
   color: #888;
+  pointer-events: none;
+}
+
+.letter.disabled {
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 #enter-button {

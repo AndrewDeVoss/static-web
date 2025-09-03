@@ -70,11 +70,9 @@ class WordSwiper extends HTMLElement {
   }
 
   addEventListeners() {
-    // Start swipe only from inside container
     this.circleContainer.addEventListener('mousedown', this.startSwipe.bind(this));
     this.circleContainer.addEventListener('touchstart', this.startSwipe.bind(this));
 
-    // Move and end on document — ensure tracking even outside bounds
     document.addEventListener('mousemove', this.continueSwipe.bind(this));
     document.addEventListener('mouseup', this.endSwipe.bind(this));
 
@@ -97,7 +95,7 @@ class WordSwiper extends HTMLElement {
     this.clearSelection();
     this.isSwiping = true;
 
-    this.continueSwipe(e); // Ensures first touchpoint is evaluated
+    this.continueSwipe(e); // First touchpoint
 
     this.enterButton.classList.remove('hidden');
   }
@@ -108,7 +106,7 @@ class WordSwiper extends HTMLElement {
     const point = this.getPointFromEvent(e);
     const el = this.getLetterElementFromPoint(point.x, point.y);
 
-    if (el && this.canSelectAgain(el)) {
+    if (el) {
       this.selectLetter(el);
     }
   }
@@ -116,7 +114,6 @@ class WordSwiper extends HTMLElement {
   endSwipe() {
     if (!this.isSwiping) return;
     this.isSwiping = false;
-    // Do not hide enter button — user may want to click it
   }
 
   getLetterElementFromPoint(x, y) {
@@ -124,20 +121,15 @@ class WordSwiper extends HTMLElement {
     return elements.find(el => this.letterPositions.has(el));
   }
 
-  canSelectAgain(el) {
-    return !this.selectedLetterEls.includes(el);
-  }
-
   selectLetter(el) {
     const letter = el.dataset.letter;
 
     if (letter === '↵') {
-      this.commitWord(); // Treat swipe over enter as confirmation
+      this.commitWord();
       return;
     }
 
     el.classList.add('selected');
-    el.style.pointerEvents = 'none';
 
     this.selectedLetterEls.push(el);
     this.selectedLetterPositions.push(this.letterPositions.get(el));
@@ -145,7 +137,6 @@ class WordSwiper extends HTMLElement {
     this.updateCenterText();
     this.redrawLines();
 
-    // Show enter button after first letter
     if (this.selectedLetterEls.length === 1) {
       this.enterButton.classList.remove('hidden');
     }
@@ -153,17 +144,13 @@ class WordSwiper extends HTMLElement {
 
   /**
    * Disable letters from being swiped again
-   * @param {string[]} lettersToDisable - array of uppercase letters
+   * @param {HTMLElement[]} letterElsToDisable - DOM elements to disable
    */
-    disableLetters(letterElsToDisable) {
-      alert("Disabling letters: " + letterElsToDisable.map(el => el.dataset.letter).join(", "));
-      
-      letterElsToDisable.forEach(el => {
-        el.classList.add('disabled');
-        el.style.pointerEvents = 'none';
-      });
-    }
-
+  disableLetters(letterElsToDisable) {
+    letterElsToDisable.forEach(el => {
+      el.classList.add('disabled');
+    });
+  }
 
   updateCenterText() {
     const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
@@ -196,7 +183,6 @@ class WordSwiper extends HTMLElement {
   clearSelection() {
     this.selectedLetterEls.forEach(el => {
       el.classList.remove('selected');
-      el.style.pointerEvents = 'auto';
     });
 
     this.selectedLetterEls = [];
@@ -210,11 +196,10 @@ class WordSwiper extends HTMLElement {
     const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
     if (!word) return;
 
-    // Dispatch the word and DOM references (selectedLetterEls)
     this.dispatchEvent(new CustomEvent('word-committed', {
       detail: {
         word,
-        elements: this.selectedLetterEls // Passing the DOM references (selected elements)
+        elements: this.selectedLetterEls
       },
       bubbles: true,
       composed: true
@@ -222,7 +207,6 @@ class WordSwiper extends HTMLElement {
 
     this.clearSelection();
   }
-
 }
 
 customElements.define('word-swiper', WordSwiper);

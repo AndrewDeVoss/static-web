@@ -5,15 +5,18 @@ import { TreeNode } from './word-tree.js';
 const grid = document.getElementById('word-grid');
 const swiper = document.querySelector('word-swiper');
 await customElements.whenDefined('word-swiper');
-let letters = swiper.getAttribute('letters');
+await swiper.isReady(); // ✅ Wait for letterDivs to be initialized
+
+const rootLetterDivs = swiper.getLetterDivs();
+let treeRoot = new TreeNode(rootLetterDivs);  // Safe now
+let currentNode = treeRoot;
 
 let rootLetters = [];
 let totalColumns = 0;
 const usedWords = new Set(); // Track previously submitted words
 
-let treeRoot = new TreeNode(letters);  // Root of the tree, initially empty
-let currentNode = treeRoot;  // The current node that the next word will be added to
-let wordLevelMap = {};  // To store words at each level
+const nodeToInfo = new Map(); // Map to link TreeNode to its corresponding grid cell
+
 
 // Initialize the dictionary and update grid layout
 await loadDictionary();
@@ -26,7 +29,7 @@ observer.observe(swiper, { attributes: true, attributeFilter: ['letters'] });
 // Listen for committed words
 document.addEventListener('word-committed', (e) => {
   const word = e.detail.word.toUpperCase();
-  const letterEls = e.detail.elements; // DOM references of the selected letters
+  const letterDivs = e.detail.elements; // DOM references of the selected letters
 
   // TODO style
   if (!isWord(word)) {
@@ -42,24 +45,15 @@ document.addEventListener('word-committed', (e) => {
   usedWords.add(word);
 
   // Create a new node for this word
-  const newNode = new TreeNode(word);
+  const newNode = new TreeNode(letterDivs);
 
   // Add the new node to the tree as a child of the current node
   currentNode.addChild(newNode);
 
-  // Move to the newly added node for future word additions
-  currentNode = newNode;
-
-  // Add this word to the level map (for drawing purposes)
-  const currentLevel = getNodeLevel(currentNode);
-  if (!wordLevelMap[currentLevel]) wordLevelMap[currentLevel] = [];
-  wordLevelMap[currentLevel].push(word);
-
-  // Disable the letters that were used in this word using the DOM references directly
-  swiper.enableOnlyLetters(letterEls);
-
   // Draw the subtree starting from the newly added node
   drawTree();
+
+  selectNode(newNode);
 });
 
 /**
@@ -93,10 +87,12 @@ function drawTree() {
 
     let nodeInfoDict = {};
     nodeInfoDict.word = node.word;
+    console.log(nodeInfoDict.word);
     nodeInfoDict.row = level;
     nodeInfoDict.column = currentColumn;
     nodeInfoDict.span = node.word.length; // Span is the length of the word
     nodeInfoDict.parent = node.parent;
+    nodeInfoDict.treeNode = node;
 
     drawList.push(nodeInfoDict);
 
@@ -129,10 +125,33 @@ function drawGrid(drawList, numCols) {
     cell.style.gridColumnEnd = nodeInfoDict.column + nodeInfoDict.span + 1;
     cell.style.gridRowStart = nodeInfoDict.row + 1;
     cell.textContent = nodeInfoDict.word;
+
+    nodeInfoDict.cell = cell;
+    nodeToInfo.set(nodeInfoDict.treeNode, nodeInfoDict);
+
+    cell.addEventListener('click', () => {
+      selectNode(nodeInfoDict.treeNode);
+    });
+
     grid.appendChild(cell);
 
     // TODO Draw line from parent to this node if parent exists
   });
+}
+
+function selectNode(treeNode) {
+  currentNode = treeNode;
+  const cell = nodeToInfo.get(treeNode).cell;
+  highlightSelectedCell(cell);
+
+  // Disable the letters that were used in this word using the DOM references directly
+  swiper.enableOnlyLetters(treeNode.letterDivs);
+}
+
+function highlightSelectedCell(selectedCell) {
+  const allCells = grid.querySelectorAll('.grid-cell');
+  allCells.forEach(cell => cell.classList.remove('selected'));
+  selectedCell.classList.add('selected');
 }
 
 /**

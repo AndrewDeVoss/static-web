@@ -1,6 +1,7 @@
 class TreeNode {
-  constructor(word) {
-    this.word = word;
+  constructor(letterDivs) {
+    this.letterDivs = letterDivs;
+    this.word = letterDivs.map(el => el.dataset.letter).join('');
     this.children = [];
     this.parent = null;
   }

@@ -50,6 +50,11 @@ body {
   background-color: #7b9b22;
 }
 
+.grid-cell.selected {
+  outline: 3px solid #ff6600;
+  background-color: #fff2cc;
+}
+
 /* Style for the SVG lines */
 svg {
   position: absolute;

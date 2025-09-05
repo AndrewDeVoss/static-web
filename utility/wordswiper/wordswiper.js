@@ -213,6 +213,33 @@ class WordSwiper extends HTMLElement {
 
     this.clearSelection();
   }
+
+  getLetterDivs() {
+    return this.letterDivs;
+  }
+
+  isReady() {
+    return new Promise(resolve => {
+      // Wait until the next animation frame to ensure layoutLetters has run
+      requestAnimationFrame(() => {
+        // Resolve only when letterDivs are available
+        if (this.letterDivs.length > 0) {
+          resolve();
+        } else {
+          // Try again on next frame (recursive retry)
+          const waitUntilReady = () => {
+            if (this.letterDivs.length > 0) {
+              resolve();
+            } else {
+              requestAnimationFrame(waitUntilReady);
+            }
+          };
+          waitUntilReady();
+        }
+      });
+    });
+  }
+
 }
 
 customElements.define('word-swiper', WordSwiper);

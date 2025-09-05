@@ -8,23 +8,12 @@ body {
 }
 
 .root-container {
-  background-color: #ffffff;
+  background-color: rgb(215,190,160);
   border: 2px solid #333;
   border-radius: 8px;
   padding: 20px;
 }
 
-.cell {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #ccc;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 1.2em;
-  background-color: #e0e0e0;
-}
 
 #word-grid {
   display: grid;
@@ -35,8 +24,6 @@ body {
 }
 
 .grid-cell {
-  background-color: #1a5394;
-  border: 1px solid #852c2c;
   text-align: center;
   font-weight: bold;
   display: flex;
@@ -44,15 +31,15 @@ body {
   justify-content: center;
   border-radius: 4px;
   position: relative;
+  color: #532915;
 }
 
 .grid-cell:hover {
-  background-color: #7b9b22;
+  color: #2e1503;
 }
 
 .grid-cell.selected {
-  outline: 3px solid #ff6600;
-  background-color: #fff2cc;
+  color: #9a7b4f
 }
 
 /* Style for the SVG lines */

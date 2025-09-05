@@ -66,8 +66,8 @@
 }
 
 .letter.used {
-  background-color: #4341bd;
-  color: #2a2950;opacity: 0.3;
+  background-color: #7a512f;
+  color: #7a512f;opacity: 0.3;
   pointer-events: none;
 }
 

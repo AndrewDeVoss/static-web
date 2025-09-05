@@ -52,9 +52,42 @@ document.addEventListener('word-committed', (e) => {
 
   // Draw the subtree starting from the newly added node
   drawTree();
-
+  scoreTree();
   selectNode(newNode);
 });
+
+function scoreTree(rootNode = treeRoot) {
+  const letterDivToDepthMap = new Map();
+
+  function traverse(node, depth) {
+    if (!node || !node.letterDivs) return;
+
+    for (const letterDiv of node.letterDivs) {
+      const currentMax = letterDivToDepthMap.get(letterDiv) ?? -1;
+      if (depth > currentMax) {
+        letterDivToDepthMap.set(letterDiv, depth);
+      }
+    }
+
+    for (const child of node.children) {
+      traverse(child, depth + 1);
+    }
+  }
+
+  traverse(rootNode, 0);
+
+  const depthList = Array.from(letterDivToDepthMap.values());
+  depthList.sort((a, b) => a-b); // sort low to high
+  let score = 0;
+
+  for (let i = 0; i < depthList.length; i++) {
+    score += depthList[i] * (depthList.length-i); // more points for letters from shallow roots. Gotta grow deep!
+  }
+
+  document.getElementById('score-scroll').textContent = score;
+}
+
+
 
 /**
  * Update the root letter set and grid layout from <word-swiper>

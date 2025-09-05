@@ -21,6 +21,7 @@ const nodeToInfo = new Map(); // Map to link TreeNode to its corresponding grid 
 // Initialize the dictionary and update grid layout
 await loadDictionary();
 updateLettersFromSwiper();
+drawTree();
 
 // Observe changes to <word-swiper letters="...">
 const observer = new MutationObserver(updateLettersFromSwiper);

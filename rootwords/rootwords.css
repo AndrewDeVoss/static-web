@@ -21,6 +21,7 @@ body {
   grid-template-columns: repeat(auto-fit, 1fr);
   position: relative;  /* To allow SVG positioning */
   align-items: flex-start;
+  row-gap: 24px;
 }
 
 .grid-cell {
@@ -42,11 +43,6 @@ body {
   color: #9a7b4f
 }
 
-/* Style for the SVG lines */
-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+.grid-lines {
+  z-index: 0; /* Keep SVG under cells if needed */
 }

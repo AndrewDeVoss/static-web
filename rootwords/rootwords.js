@@ -107,6 +107,18 @@ function drawTree() {
 function drawGrid(drawList, numCols) {
   grid.innerHTML = '';  // Clear the existing grid
 
+   // Create an SVG overlay for the squiggly lines
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'grid-lines');
+  svg.style.position = 'absolute';
+  svg.style.top = 0;
+  svg.style.left = 0;
+  svg.style.width = '100%';
+  svg.style.height = '100%';
+  svg.style.pointerEvents = 'none'; // Allow clicks to pass through
+
+  grid.appendChild(svg);
+
   drawList.forEach(nodeInfoDict => {
     const cell = document.createElement('div');
     cell.classList.add('grid-cell');
@@ -124,7 +136,14 @@ function drawGrid(drawList, numCols) {
 
     grid.appendChild(cell);
 
-    // TODO Draw line from parent to this node if parent exists
+    // Draw line from parent to this node if parent exists
+    if (nodeInfoDict.parent) {
+      const parentInfo = nodeToInfo.get(nodeInfoDict.parent);
+      if (parentInfo) {
+        drawSquigglyLine(svg, parentInfo.cell, cell, nodeInfoDict.row);
+      }
+    }
+
   });
 }
 
@@ -146,44 +165,79 @@ function highlightSelectedCell(selectedCell) {
   allCells.forEach(cell => cell.classList.remove('selected'));
   selectedCell.classList.add('selected');
 }
+let lineCounter = 0; // Ensures unique gradient IDs
 
-/**
- * Draw a line between parent and child nodes (parent -> child)
- */
-function drawLine(parentNode, childNode, positions) {
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  const parentPos = positions[parentNode.word];
-  const childPos = positions[childNode.word];
+function drawSquigglyLine(svg, parentEl, childEl, row) {
+  const parentRect = parentEl.getBoundingClientRect();
+  const childRect = childEl.getBoundingClientRect();
+  const gridRect = grid.getBoundingClientRect();
 
-  line.setAttribute('x1', parentPos.x * 50 + 25);  // 50 is the width of each cell
-  line.setAttribute('y1', parentPos.y * 50 + 25);  // 50 is the height of each cell
-  line.setAttribute('x2', childPos.x * 50 + 25);  // Adjust to grid scale
-  line.setAttribute('y2', childPos.y * 50 + 25);  // Adjust to grid scale
-  line.setAttribute('stroke', '#000');
-  line.setAttribute('stroke-width', '2');
+  const startX = parentRect.left + parentRect.width / 2 - gridRect.left;
+  const startY = parentRect.bottom - gridRect.top;
 
-  grid.appendChild(line);
-}
+  const endX = childRect.left + childRect.width / 2 - gridRect.left;
+  const endY = childRect.top - gridRect.top;
 
-/**
- * Helper function to calculate the max depth of the tree
- */
-function getMaxDepth(node) {
-  if (node.children.length === 0) return 0;
-  const childDepths = node.children.map(child => getMaxDepth(child));
-  return Math.max(...childDepths) + 1;
-}
+  // Random jitter for squiggle uniqueness
+  const jitter = () => (Math.random() - 0.5) * 20;
 
-/**
- * Helper function to calculate the level of a node in the tree
- */
-function getNodeLevel(node) {
-  let level = 0;
-  let current = node;
-  while (current !== treeRoot) {
-    level++;
-    current = current.parent;  // Traverse up to the root
+  const c1x = startX + jitter();
+  const c1y = startY + (endY - startY) * 0.33 + jitter();
+
+  const c2x = endX + jitter();
+  const c2y = startY + (endY - startY) * 0.66 + jitter();
+
+  // Depth-based thickness
+  const maxThickness = 8;
+  const minThickness = 1;
+  const maxVisibleDepth = 6;
+  const depthFactor = Math.min(row, maxVisibleDepth) / maxVisibleDepth;
+  const strokeWidth = maxThickness - (maxThickness - minThickness) * depthFactor;
+
+  const gradientId = `fade-gradient-${lineCounter++}`;
+
+  // Create <defs> if not present
+  let defs = svg.querySelector('defs');
+  if (!defs) {
+    defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    svg.prepend(defs);
   }
-  return level;
-}
 
+  // Define gradient
+  const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+  gradient.setAttribute('id', gradientId);
+  gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+  gradient.setAttribute('x1', startX);
+  gradient.setAttribute('y1', startY);
+  gradient.setAttribute('x2', endX);
+  gradient.setAttribute('y2', endY);
+
+  const stops = [
+    { offset: '0%', color: '#5a321c', opacity: '0.05' },
+    { offset: '30%', color: '#5a321c', opacity: '0.3' },
+    { offset: '70%', color: '#5a321c', opacity: '0.3' },
+    { offset: '100%', color: '#5a321c', opacity: '0.05' }
+  ];
+
+  stops.forEach(({ offset, color, opacity }) => {
+    const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop.setAttribute('offset', offset);
+    stop.setAttribute('stop-color', color);
+    stop.setAttribute('stop-opacity', opacity);
+    gradient.appendChild(stop);
+  });
+
+  defs.appendChild(gradient);
+
+  // Draw the squiggly path
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const d = `M ${startX} ${startY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`;
+
+  path.setAttribute('d', d);
+  path.setAttribute('stroke', `url(#${gradientId})`);
+  path.setAttribute('stroke-width', strokeWidth.toFixed(2));
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-linecap', 'round');
+
+  svg.appendChild(path);
+}

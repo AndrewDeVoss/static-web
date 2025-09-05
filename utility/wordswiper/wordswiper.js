@@ -4,6 +4,7 @@ class WordSwiper extends HTMLElement {
     this.attachShadow({ mode: 'open' });
 
     this.letters = [];
+    this.letterDivs = [];
     this.letterPositions = new Map();
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
@@ -62,6 +63,7 @@ class WordSwiper extends HTMLElement {
 
       this.circleContainer.appendChild(div);
       this.letterPositions.set(div, { x, y });
+      this.letterDivs.push(div);
     });
 
     // Make enter button act like a letter at the center
@@ -142,13 +144,17 @@ class WordSwiper extends HTMLElement {
     }
   }
 
-  /**
-   * Disable letters from being swiped again
-   * @param {HTMLElement[]} letterElsToDisable - DOM elements to disable
-   */
   disableLetters(letterElsToDisable) {
     letterElsToDisable.forEach(el => {
       el.classList.add('disabled');
+    });
+  }
+
+  enableOnlyLetters(lettersToEnable) {
+    this.letterDivs.forEach(letterDiv => {
+      if(!lettersToEnable.includes(letterDiv)) {
+        letterDiv.classList.add('disabled');
+      }
     });
   }
 

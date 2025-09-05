@@ -2,14 +2,16 @@
 import { loadDictionary, isWord } from '../utility/isword/isword.js';
 import { TreeNode } from './word-tree.js';
 
-const grid = document.getElementById('grid');
+const grid = document.getElementById('word-grid');
 const swiper = document.querySelector('word-swiper');
+await customElements.whenDefined('word-swiper');
+let letters = swiper.getAttribute('letters');
 
 let rootLetters = [];
 let totalColumns = 0;
 const usedWords = new Set(); // Track previously submitted words
 
-let treeRoot = new TreeNode('CATDOGS');  // Root of the tree, initially empty
+let treeRoot = new TreeNode(letters);  // Root of the tree, initially empty
 let currentNode = treeRoot;  // The current node that the next word will be added to
 let wordLevelMap = {};  // To store words at each level
 
@@ -26,14 +28,14 @@ document.addEventListener('word-committed', (e) => {
   const word = e.detail.word.toUpperCase();
   const letterEls = e.detail.elements; // DOM references of the selected letters
 
-  // If the word is valid and not already used
+  // TODO style
   if (!isWord(word)) {
-    alert(`❌ '${word}' is not a valid word.`);
+    console.log(`❌ '${word}' is not a valid word.`);
     return;
   }
 
   if (usedWords.has(word)) {
-    alert(`⚠️ You've already used the word '${word}'.`);
+    console.log(`⚠️ You've already used the word '${word}'.`);
     return;
   }
 
@@ -54,7 +56,7 @@ document.addEventListener('word-committed', (e) => {
   wordLevelMap[currentLevel].push(word);
 
   // Disable the letters that were used in this word using the DOM references directly
-  swiper.disableLetters(letterEls);
+  swiper.enableOnlyLetters(letterEls);
 
   // Draw the subtree starting from the newly added node
   drawTree();
@@ -68,38 +70,38 @@ function updateLettersFromSwiper() {
   rootLetters = attr ? attr.split(',').map(l => l.trim().toUpperCase()) : [];
   totalColumns = rootLetters.length;
 
-  // Update CSS grid columns
-  grid.style.gridTemplateColumns = `repeat(${totalColumns}, 1fr)`;
-
   // Optional: clear previous words on letter change
   usedWords.clear();
   grid.innerHTML = '';
 }
 
-/**
- * Draw the entire tree based on the current state
- */
 function drawTree() {
   console.log('Drawing tree...');
-  const positions = {};  // To store positions of each node
-  const maxDepth = getMaxDepth(treeRoot);  // Find the max depth for layout
-  let currentX = 0;  // Starting X position for the first node
+
+  const numCols = treeRoot.word.length;  // The width is always equal to the root's word length
+  const drawList = []; // For breadth-first traversal
+  const processedLevels = {};
+  let currentColumn = 0; // Track current column for placement
 
   // Helper function for breadth-first traversal and calculating positions
   function traverse(node, level) {
     if (!node) return;
-
-    // Set position for this node (X: based on level and sibling index, Y: based on level)
-    positions[node.word] = { x: currentX, y: level, word: node.word };  // Store word here
-
-    // Increase X position for the next node at the same level
-    currentX++;
-
-    // Draw the line from parent to child if necessary
-    if (node.parent) {
-      drawLine(node.parent, node, positions);
+    if (!processedLevels[level]) {
+      processedLevels[level] = true;
+      currentColumn = 0; // Reset column for new level
     }
 
+    let nodeInfoDict = {};
+    nodeInfoDict.word = node.word;
+    nodeInfoDict.row = level;
+    nodeInfoDict.column = currentColumn;
+    nodeInfoDict.span = node.word.length; // Span is the length of the word
+    nodeInfoDict.parent = node.parent;
+
+    drawList.push(nodeInfoDict);
+
+    currentColumn += node.word.length; // Move to the next column based on word length
+  
     // Traverse children (breadth-first)
     for (let child of node.children) {
       traverse(child, level + 1);
@@ -110,36 +112,26 @@ function drawTree() {
   traverse(treeRoot, 0);
 
   // Now draw the grid based on the calculated positions
-  drawGrid(positions);
+  drawGrid(drawList, numCols);
 }
-
 
 /**
  * Draw the grid based on node positions
  */
-function drawGrid(positions) {
-  console.log('Drawing grid...', positions);
+function drawGrid(drawList, numCols) {
+  console.log('Drawing grid...');
   grid.innerHTML = '';  // Clear the existing grid
 
-  // Set up the grid layout (using dynamic column count based on max X position)
-  const maxX = Math.max(...Object.values(positions).map(p => p.x));
-  grid.style.gridTemplateColumns = `repeat(${maxX + 1}, 1fr)`;  // Adjust grid width based on number of nodes
-
-  // Create the grid rows for the nodes
-  Object.values(positions).forEach(pos => {
-    const row = document.createElement('div');
-    row.classList.add('grid-row');
-    
+  drawList.forEach(nodeInfoDict => {
     const cell = document.createElement('div');
     cell.classList.add('grid-cell');
-    cell.style.gridColumnStart = pos.x + 1;
-    cell.style.gridRowStart = pos.y + 1;  // Row position is 1-indexed
-    cell.textContent = pos.word;  // Access the word here
+    cell.style.gridColumnStart = nodeInfoDict.column + 1;
+    cell.style.gridColumnEnd = nodeInfoDict.column + nodeInfoDict.span + 1;
+    cell.style.gridRowStart = nodeInfoDict.row + 1;
+    cell.textContent = nodeInfoDict.word;
+    grid.appendChild(cell);
 
-    console.log('Placing word:', pos.word, 'at', pos.x + 1, pos.y + 1);
-
-    row.appendChild(cell);
-    grid.appendChild(row);
+    // TODO Draw line from parent to this node if parent exists
   });
 }
 

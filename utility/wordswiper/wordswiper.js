@@ -150,9 +150,15 @@ class WordSwiper extends HTMLElement {
     });
   }
 
-  enableOnlyLetters(lettersToEnable) {
+  updateLetterAvailability(lettersToEnable, usedLetterDivs=[]) {
     this.letterDivs.forEach(letterDiv => {
+      letterDiv.classList.remove('disabled');
+      letterDiv.classList.remove('used');
+
       if(!lettersToEnable.includes(letterDiv)) {
+        letterDiv.classList.add('disabled');
+      } else if (usedLetterDivs.includes(letterDiv)) {
+        letterDiv.classList.add('used');
         letterDiv.classList.add('disabled');
       }
     });

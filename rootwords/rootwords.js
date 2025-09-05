@@ -70,42 +70,32 @@ function updateLettersFromSwiper() {
 }
 
 function drawTree() {
-  console.log('Drawing tree...');
-
   const numCols = treeRoot.word.length;  // The width is always equal to the root's word length
-  const drawList = []; // For breadth-first traversal
+  const drawList = [];
   const processedLevels = {};
-  let currentColumn = 0; // Track current column for placement
 
-  // Helper function for breadth-first traversal and calculating positions
-  function traverse(node, level) {
+  function traverse(node, row, col) {
     if (!node) return;
-    if (!processedLevels[level]) {
-      processedLevels[level] = true;
-      currentColumn = 0; // Reset column for new level
-    }
 
     let nodeInfoDict = {};
     nodeInfoDict.word = node.word;
-    console.log(nodeInfoDict.word);
-    nodeInfoDict.row = level;
-    nodeInfoDict.column = currentColumn;
-    nodeInfoDict.span = node.word.length; // Span is the length of the word
+    nodeInfoDict.row = row;
+    nodeInfoDict.column = col;
+    nodeInfoDict.span = node.word.length;
     nodeInfoDict.parent = node.parent;
     nodeInfoDict.treeNode = node;
 
     drawList.push(nodeInfoDict);
-
-    currentColumn += node.word.length; // Move to the next column based on word length
   
-    // Traverse children (breadth-first)
+    let column = col;
     for (let child of node.children) {
-      traverse(child, level + 1);
+      traverse(child, row+1, column);
+      column += child.word.length;
     }
   }
 
   // Start traversal from the given startNode (root of the tree)
-  traverse(treeRoot, 0);
+  traverse(treeRoot, 0, 0);
 
   // Now draw the grid based on the calculated positions
   drawGrid(drawList, numCols);
@@ -115,7 +105,6 @@ function drawTree() {
  * Draw the grid based on node positions
  */
 function drawGrid(drawList, numCols) {
-  console.log('Drawing grid...');
   grid.innerHTML = '';  // Clear the existing grid
 
   drawList.forEach(nodeInfoDict => {
@@ -145,7 +134,11 @@ function selectNode(treeNode) {
   highlightSelectedCell(cell);
 
   // Disable the letters that were used in this word using the DOM references directly
-  swiper.enableOnlyLetters(treeNode.letterDivs);
+  const usedLetterDivs = [];
+  for (let child of treeNode.children) {
+    usedLetterDivs.push(...child.letterDivs);
+  }
+  swiper.updateLetterAvailability(treeNode.letterDivs, usedLetterDivs);
 }
 
 function highlightSelectedCell(selectedCell) {

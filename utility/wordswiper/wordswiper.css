@@ -65,6 +65,12 @@
   pointer-events: none;
 }
 
+.letter.used {
+  background-color: #4341bd;
+  color: #2a2950;opacity: 0.3;
+  pointer-events: none;
+}
+
 #enter-button {
   position: absolute;
   bottom: -20px;

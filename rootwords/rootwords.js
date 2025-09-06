@@ -205,6 +205,7 @@ function removeSubtrees(startNode) {
       info.cell.remove();
     }
     nodeToInfo.delete(node);
+    usedWords.delete(node.word);
   });
 
   // Remove these children from the parent node
@@ -215,46 +216,55 @@ function removeSubtrees(startNode) {
   scoreTree();
 }
 
-function addLongPressListener(cell, node, holdTime = 800) {
-  let timer;
+
+function addLongPressListener(cell, node, holdTime = 1000) {
+  let holdTimer;
+  let delayTimer;
   let progress = 0;
   const interval = 50;
   const steps = holdTime / interval;
+  const animationDelay = 200; // Delay before starting animation
 
   const startHold = () => {
-    progress = 0;
-    cell.classList.add('long-press-start');
+    delayTimer = setTimeout(() => {
+      progress = 0;
+      cell.classList.add('long-press-start');
 
-    timer = setInterval(() => {
-      progress++;
-      const ratio = progress / steps;
+      holdTimer = setInterval(() => {
+        progress++;
+        const ratio = progress / steps;
 
-      // Style the text color instead of the background
-      const redValue = Math.min(255, Math.floor(100 + 155 * ratio)); // From dark red to full red
-      cell.style.color = `rgb(${redValue}, 0, 0)`;
+        // Text color fade from dark red to bright red
+        const redValue = Math.min(255, Math.floor(100 + 155 * ratio));
+        cell.style.color = `rgb(${redValue}, 0, 0)`;
 
-      if (progress >= steps) {
-        clearInterval(timer);
-        cell.style.color = ''; // Reset text color
-        cell.classList.remove('long-press-start');
-        removeSubtrees(node);
-        selectNode(node);
-      }
-    }, interval);
+        if (progress >= steps) {
+          clearInterval(holdTimer);
+          cell.style.color = '';
+          cell.classList.remove('long-press-start');
+          removeSubtrees(node);
+          selectNode(node);
+        }
+      }, interval);
+    }, animationDelay);
   };
 
-
   const cancelHold = () => {
-    clearInterval(timer);
+    clearTimeout(delayTimer);
+    clearInterval(holdTimer);
     cell.style.color = '';
     cell.classList.remove('long-press-start');
   };
 
+  // Mouse support
   cell.addEventListener('mousedown', startHold);
   cell.addEventListener('mouseup', cancelHold);
   cell.addEventListener('mouseleave', cancelHold);
+
+  // Touch support
   cell.addEventListener('touchstart', startHold);
   cell.addEventListener('touchend', cancelHold);
+  cell.addEventListener('touchcancel', cancelHold);
 }
 
 

@@ -120,7 +120,6 @@ body {
   transition: background-color 0.2s linear;
 }
 
-
 /* Grid background lines */
 .grid-lines {
   z-index: 0;

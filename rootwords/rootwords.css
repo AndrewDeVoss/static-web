@@ -1,3 +1,4 @@
+/* Fix main body layout */
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
@@ -5,19 +6,79 @@ body {
   padding: 20px;
   display: flex;
   justify-content: center;
+  padding-bottom: 80px; /* Leave room for bottom banner */
 }
 
+/* Bottom Banner styles */
+.bottom-banner {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background-color: #222;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  padding: 10px 0;
+}
+
+/* Navigation bar inside banner */
+.nav-controls {
+  width: 100%;
+  max-width: 800px; /* Matches container */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  color: white;
+  font-size: 24px;
+}
+
+/* Home & Help buttons */
+.root-words-home-button,
+.root-words-help-button {
+  text-decoration: none;
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+
+/* Score box - centered */
+.score-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 80px;
+  height: 40px;
+  padding: 0 16px;
+  border: 2px solid #5a321c;
+  border-radius: 6px;
+  background-color: #fff8f0;
+  color: #532915;
+  font-size: 1.6rem;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Score text animation container */
+.score-scroll {
+  width: 100%;
+  transition: transform 1s ease-in-out;
+  position: relative; /* Changed from absolute to avoid layout issues */
+  text-align: center;
+}
+
+/* Container positioning */
 .container {
-  position: relative; /* ensure container is the positioning context */
+  position: relative;
+  max-width: 800px;
+  width: 100%;
 }
 
-.score-box-container {
-  position: absolute;
-  top: 0.5rem;      /* adjust spacing from the top */
-  right: 0.5rem;    /* adjust spacing from the right */
-}
-
-
+/* Game area box */
 .root-container {
   background-color: rgb(215,190,160);
   border: 2px solid #333;
@@ -25,16 +86,17 @@ body {
   padding: 20px;
 }
 
-
+/* Word grid layout */
 #word-grid {
   display: grid;
   box-sizing: border-box;
   grid-template-columns: repeat(auto-fit, 1fr);
-  position: relative;  /* To allow SVG positioning */
+  position: relative;
   align-items: flex-start;
   row-gap: 24px;
 }
 
+/* Grid cell appearance */
 .grid-cell {
   text-align: center;
   font-weight: bold;
@@ -51,37 +113,10 @@ body {
 }
 
 .grid-cell.selected {
-  color: #9a7b4f
+  color: #9a7b4f;
 }
 
+/* Grid background lines */
 .grid-lines {
-  z-index: 0; /* Keep SVG under cells if needed */
-}
-
-
-.score-box-container {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-}
-
-.score-box {
-  width: 60px;
-  height: 40px;
-  overflow: hidden;
-  border: 2px solid #5a321c;
-  border-radius: 6px;
-  background-color: #fff8f0;
-  font-size: 1.8rem;
-  font-weight: bold;
-  text-align: center;
-  line-height: 40px;
-  position: relative;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-}
-
-.score-scroll {
-  position: absolute;
-  width: 100%;
-  transition: transform 1s ease-in-out;
+  z-index: 0;
 }

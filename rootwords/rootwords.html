@@ -8,21 +8,28 @@
     <link rel="stylesheet" href="./rootwords.css" />
   </head>
   <body>
-    <a href="../index.html" class="home-button" title="Home">🏠</a>
-    <div class="container" style="position:relative;">
+    <div class="container">
       <h1>RootWords</h1>
-      <div class="score-box-container">
-        <div class="score-box">
-          <div class="score-scroll" id="score-scroll">0</div>
-        </div>
-      </div>
 
       <div class="root-container">
         <div id="word-grid"></div>
       </div>
+
       <word-swiper letters="TASTEMINTS"></word-swiper>
     </div>
 
+    <!-- Bottom Navigation Banner -->
+    <div class="bottom-banner">
+      <div class="nav-controls">
+        <a href="../index.html" class="root-words-home-button" title="Home">🏠</a>
+
+        <div class="score-box">
+          <div class="score-scroll" id="score-scroll">0</div>
+        </div>
+
+        <div class="root-words-help-button" title="Help">❓</div>
+      </div>
+    </div>
 
     <script type="module" src="../utility/wordswiper/wordswiper.js"></script>
     <script type="module" src="./rootwords.js"></script>

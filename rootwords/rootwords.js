@@ -188,17 +188,22 @@ function removeSubtrees(startNode) {
 
   const toRemove = [];
 
-  // Collect all descendants (but NOT the startNode itself)
-  function collectDescendants(node) {
-    for (const child of node.children) {
-      toRemove.push(child);
-      collectDescendants(child);
+  function collectNodesToRemove(node) {
+    if (node.children.length === 0 && node !== treeRoot) {
+      // No children – mark the node itself for removal
+      toRemove.push(node);
+    } else {
+      // Has children – remove children and their subtrees
+      for (const child of node.children) {
+        toRemove.push(child);
+        collectNodesToRemove(child);
+      }
     }
   }
 
-  collectDescendants(startNode);
+  collectNodesToRemove(startNode);
 
-  // Remove from DOM and internal mapping
+  // Remove from DOM and internal tracking
   toRemove.forEach(node => {
     const info = nodeToInfo.get(node);
     if (info && info.cell) {
@@ -206,16 +211,22 @@ function removeSubtrees(startNode) {
     }
     nodeToInfo.delete(node);
     usedWords.delete(node.word);
+
+    // Remove node from parent's children
+    const parent = node.parent;
+    if (parent) {
+      parent.children = parent.children.filter(child => child !== node);
+    }
   });
 
-  // Remove these children from the parent node
-  startNode.children = [];
+  // If we were pruning subtrees, clear them now
+  if (startNode.children.length > 0) {
+    startNode.children = [];
+  }
 
-  // Redraw remaining tree and rescore
   drawTree();
   scoreTree();
 }
-
 
 function addLongPressListener(cell, node, holdTime = 1000) {
   let holdTimer;
@@ -242,8 +253,13 @@ function addLongPressListener(cell, node, holdTime = 1000) {
           clearInterval(holdTimer);
           cell.style.color = '';
           cell.classList.remove('long-press-start');
+          const leaf = node.children.length === 0;
           removeSubtrees(node);
-          selectNode(node);
+          if (leaf && node.parent) {
+            selectNode(node.parent);
+          } else if (!leaf) {
+            selectNode(node);
+          }
         }
       }, interval);
     }, animationDelay);

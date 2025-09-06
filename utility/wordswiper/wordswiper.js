@@ -159,7 +159,6 @@ class WordSwiper extends HTMLElement {
         letterDiv.classList.add('disabled');
       } else if (usedLetterDivs.includes(letterDiv)) {
         letterDiv.classList.add('used');
-        letterDiv.classList.add('disabled');
       }
     });
   }

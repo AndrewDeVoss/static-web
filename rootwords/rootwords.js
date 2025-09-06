@@ -168,6 +168,8 @@ function drawGrid(drawList, numCols) {
       selectNode(nodeInfoDict.treeNode);
     });
 
+    addLongPressListener(cell, nodeInfoDict.treeNode);
+
     grid.appendChild(cell);
 
     // Draw line from parent to this node if parent exists
@@ -180,6 +182,83 @@ function drawGrid(drawList, numCols) {
 
   });
 }
+
+function removeSubtrees(startNode) {
+  if (!startNode) return;
+
+  const toRemove = [];
+
+  function collect(node) {
+    toRemove.push(node);
+    for (const child of node.children) {
+      collect(child);
+    }
+  }
+
+  collect(startNode);
+
+  // Remove DOM cells and SVG paths (optional: regenerate SVG instead)
+  toRemove.forEach(node => {
+    const info = nodeToInfo.get(node);
+    if (info && info.cell) {
+      info.cell.remove();
+    }
+    nodeToInfo.delete(node);
+  });
+
+  // Remove node from parent's children
+  if (startNode.parent) {
+    startNode.parent.children = startNode.parent.children.filter(child => child !== startNode);
+  }
+
+  // If removing the root, reset everything
+  if (startNode === treeRoot) {
+    treeRoot = new TreeNode(rootLetterDivs);
+    currentNode = treeRoot;
+  }
+
+  drawTree(); // Redraw updated tree
+  scoreTree();
+}
+
+
+function addLongPressListener(cell, node, holdTime = 1000) {
+  let timer;
+  let progress = 0;
+  const interval = 50;
+  const steps = holdTime / interval;
+
+  const startHold = () => {
+    progress = 0;
+    cell.classList.add('long-press-start');
+
+    timer = setInterval(() => {
+      progress++;
+      const ratio = progress / steps;
+      cell.style.backgroundColor = `rgba(255, 0, 0, ${0.2 + 0.5 * ratio})`; // Visual feedback
+
+      if (progress >= steps) {
+        clearInterval(timer);
+        cell.style.backgroundColor = ''; // Reset background
+        cell.classList.remove('long-press-start');
+        removeSubtrees(node);
+      }
+    }, interval);
+  };
+
+  const cancelHold = () => {
+    clearInterval(timer);
+    cell.style.backgroundColor = '';
+    cell.classList.remove('long-press-start');
+  };
+
+  cell.addEventListener('mousedown', startHold);
+  cell.addEventListener('mouseup', cancelHold);
+  cell.addEventListener('mouseleave', cancelHold);
+  cell.addEventListener('touchstart', startHold);
+  cell.addEventListener('touchend', cancelHold);
+}
+
 
 function selectNode(treeNode) {
   currentNode = treeNode;

@@ -61,13 +61,14 @@
 }
 
 .letter.disabled {
+  background-color: #7a512f;
+  color: #7a512f;
   opacity: 0.3;
   pointer-events: none;
 }
 
 .letter.used {
-  background-color: #7a512f;
-  color: #7a512f;opacity: 0.3;
+  opacity: 0.3;
   pointer-events: none;
 }
 

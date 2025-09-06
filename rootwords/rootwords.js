@@ -188,16 +188,17 @@ function removeSubtrees(startNode) {
 
   const toRemove = [];
 
-  function collect(node) {
-    toRemove.push(node);
+  // Collect all descendants (but NOT the startNode itself)
+  function collectDescendants(node) {
     for (const child of node.children) {
-      collect(child);
+      toRemove.push(child);
+      collectDescendants(child);
     }
   }
 
-  collect(startNode);
+  collectDescendants(startNode);
 
-  // Remove DOM cells and SVG paths (optional: regenerate SVG instead)
+  // Remove from DOM and internal mapping
   toRemove.forEach(node => {
     const info = nodeToInfo.get(node);
     if (info && info.cell) {
@@ -206,23 +207,15 @@ function removeSubtrees(startNode) {
     nodeToInfo.delete(node);
   });
 
-  // Remove node from parent's children
-  if (startNode.parent) {
-    startNode.parent.children = startNode.parent.children.filter(child => child !== startNode);
-  }
+  // Remove these children from the parent node
+  startNode.children = [];
 
-  // If removing the root, reset everything
-  if (startNode === treeRoot) {
-    treeRoot = new TreeNode(rootLetterDivs);
-    currentNode = treeRoot;
-  }
-
-  drawTree(); // Redraw updated tree
+  // Redraw remaining tree and rescore
+  drawTree();
   scoreTree();
 }
 
-
-function addLongPressListener(cell, node, holdTime = 1000) {
+function addLongPressListener(cell, node, holdTime = 800) {
   let timer;
   let progress = 0;
   const interval = 50;
@@ -235,20 +228,25 @@ function addLongPressListener(cell, node, holdTime = 1000) {
     timer = setInterval(() => {
       progress++;
       const ratio = progress / steps;
-      cell.style.backgroundColor = `rgba(255, 0, 0, ${0.2 + 0.5 * ratio})`; // Visual feedback
+
+      // Style the text color instead of the background
+      const redValue = Math.min(255, Math.floor(100 + 155 * ratio)); // From dark red to full red
+      cell.style.color = `rgb(${redValue}, 0, 0)`;
 
       if (progress >= steps) {
         clearInterval(timer);
-        cell.style.backgroundColor = ''; // Reset background
+        cell.style.color = ''; // Reset text color
         cell.classList.remove('long-press-start');
         removeSubtrees(node);
+        selectNode(node);
       }
     }, interval);
   };
 
+
   const cancelHold = () => {
     clearInterval(timer);
-    cell.style.backgroundColor = '';
+    cell.style.color = '';
     cell.classList.remove('long-press-start');
   };
 

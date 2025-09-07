@@ -189,16 +189,14 @@ function removeSubtrees(startNode) {
   const toRemove = [];
 
   function collectNodesToRemove(node) {
-    if (node.children.length === 0 && node !== treeRoot) {
+    if (node !== treeRoot) {
       // No children – mark the node itself for removal
       toRemove.push(node);
-    } else {
-      // Has children – remove children and their subtrees
-      for (const child of node.children) {
+    }
+    for (const child of node.children) {
         toRemove.push(child);
         collectNodesToRemove(child);
       }
-    }
   }
 
   collectNodesToRemove(startNode);
@@ -255,10 +253,10 @@ function addLongPressListener(cell, node, holdTime = 1000) {
           cell.classList.remove('long-press-start');
           const leaf = node.children.length === 0;
           removeSubtrees(node);
-          if (leaf && node.parent) {
+          if (node.parent) {
             selectNode(node.parent);
-          } else if (!leaf) {
-            selectNode(node);
+          } else {
+            selectNode(treeRoot);
           }
         }
       }, interval);

@@ -14,8 +14,8 @@ let currentNode = treeRoot;
 let rootLetters = [];
 let totalColumns = 0;
 const usedWords = new Set(); // Track previously submitted words
-
 const nodeToInfo = new Map(); // Map to link TreeNode to its corresponding grid cell
+let lineCounter = 0; // Ensures unique gradient IDs
 
 
 // Initialize the dictionary and update grid layout
@@ -184,7 +184,7 @@ function drawGrid(drawList, numCols) {
 
     grid.appendChild(cell);
 
-    // Draw line from parent to this node if parent exists
+    // ✅ Draw regular root to parent if needed
     if (nodeInfoDict.parent) {
       const parentInfo = nodeToInfo.get(nodeInfoDict.parent);
       if (parentInfo) {
@@ -192,21 +192,23 @@ function drawGrid(drawList, numCols) {
       }
     }
 
-    // Draw green root for parent if not already processed
-    if (nodeInfoDict.parent) {
-      const parent = nodeInfoDict.parent;
-      const parentInfo = nodeToInfo.get(parent);
+    // ✅ Draw green root for this node (if it has unused potential)
+    const parentSpan = nodeInfoDict.span;
+    const children = nodeInfoDict.treeNode.children;
+    const totalUsedCols = children.reduce((sum, child) => sum + child.word.length, 0);
+    const greenLength = parentSpan - totalUsedCols;
 
-      if (parentInfo && !parentInfo._greenDrawn) {
-        const totalChildLetters = parent.children.reduce((sum, child) => sum + child.word.length, 0);
-        const greenLength = parent.word.length - totalChildLetters;
-
-        drawGreenRoot(svg, parentInfo.cell, parentInfo, greenLength);
-        parentInfo._greenDrawn = true;
-      }
+    if (greenLength > 0) {
+      drawGreenRoot(svg, cell, nodeInfoDict, greenLength);
     }
-
   });
+
+  // Calculate the height of the first row dynamically
+  const firstRow = grid.querySelector('.grid-cell');
+  const rowHeight = firstRow ? firstRow.offsetHeight : 50; // Default 50px if not found
+
+  // Dynamically apply padding-bottom based on row height
+  grid.style.paddingBottom = `${Math.round(rowHeight*1.5)}px`;
 }
 
 function removeSubtrees(startNode) {
@@ -328,7 +330,6 @@ function highlightSelectedCell(selectedCell) {
   allCells.forEach(cell => cell.classList.remove('selected'));
   selectedCell.classList.add('selected');
 }
-let lineCounter = 0; // Ensures unique gradient IDs
 
 function drawRootConnection(svg, parentEl, childEl, row) {
   const parentRect = parentEl.getBoundingClientRect();
@@ -377,8 +378,8 @@ function drawRootConnection(svg, parentEl, childEl, row) {
 
   const stops = [
     { offset: '0%', color: '#5a321c', opacity: '0.05' },
-    { offset: '30%', color: '#5a321c', opacity: '0.3' },
-    { offset: '70%', color: '#5a321c', opacity: '0.3' },
+    { offset: '30%', color: '#5a321c', opacity: '0.7' },
+    { offset: '70%', color: '#5a321c', opacity: '0.7' },
     { offset: '100%', color: '#5a321c', opacity: '0.05' }
   ];
 
@@ -404,7 +405,6 @@ function drawRootConnection(svg, parentEl, childEl, row) {
 
   svg.appendChild(path);
 }
-
 function drawGreenRoot(svg, parentEl, parentInfo, greenLength) {
   if (greenLength <= 0) return;
 
@@ -414,41 +414,86 @@ function drawGreenRoot(svg, parentEl, parentInfo, greenLength) {
   const startX = parentRect.left + parentRect.width / 2 - gridRect.left;
   const startY = parentRect.bottom - gridRect.top;
 
-  // Calculate available column space
   const parentCol = parentInfo.column;
   const parentSpan = parentInfo.span;
 
   const totalUsedCols = parentInfo.treeNode.children.reduce((sum, child) => sum + child.word.length, 0);
   const unusedCols = parentSpan - totalUsedCols;
 
-  if (unusedCols <= 0) return; // No room to draw green root
+  if (unusedCols <= 0) return;
 
-  // Calculate midpoint of unused section
   const unusedStartCol = parentCol + totalUsedCols;
   const unusedMidCol = unusedStartCol + unusedCols / 2;
 
-  const colWidth = parentRect.width / parentSpan; // One column's width
+  const colWidth = parentRect.width / parentSpan;
   const endX = (unusedMidCol - parentCol) * colWidth + parentRect.left - gridRect.left;
-  const endY = startY + greenLength * 12; // Adjust vertical depth as needed
+  const endY = startY + greenLength * 12;
 
-  // Squiggle: generate Bezier control points
-  const jitter = () => (Math.random() - 0.5) * 15;
+  // Slightly larger, smoother bends
+  const baseCurveOffset = 30; // Adjust this to control curvature
+  const jitter = () => (Math.random() - 0.5) * 10; // Smaller random variation
 
-  const c1x = startX + jitter();
-  const c1y = startY + (endY - startY) * 0.33 + jitter();
+  const midX = (startX + endX) / 2;
 
-  const c2x = endX + jitter();
-  const c2y = startY + (endY - startY) * 0.66 + jitter();
+  // Push control points slightly outward to curve more
+  const c1x = midX - baseCurveOffset + jitter();
+  const c1y = startY + (endY - startY) * 0.3 + jitter();
+
+  const c2x = midX + baseCurveOffset + jitter();
+  const c2y = startY + (endY - startY) * 0.7 + jitter();
+
+
+  // ✅ Match stroke thickness to row depth
+  const row = parentInfo.row + 1;  // Green root is for the next row
+  const maxThickness = 8;
+  const minThickness = 1;
+  const maxVisibleDepth = 6;
+
+  const depthFactor = Math.min(row, maxVisibleDepth) / maxVisibleDepth;
+  const strokeWidth = maxThickness - (maxThickness - minThickness) * depthFactor;
+
+  const gradientId = `greenRootGradient-${lineCounter++}`;
+
+  let defs = svg.querySelector('defs');
+  if (!defs) {
+    defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    svg.prepend(defs);
+  }
+
+  const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+  gradient.setAttribute('id', gradientId);
+  gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+  gradient.setAttribute('x1', startX);
+  gradient.setAttribute('y1', startY);
+  gradient.setAttribute('x2', endX);
+  gradient.setAttribute('y2', endY);
+
+  const stops = [
+    { offset: '0%', color: '#6B3D2F', opacity: '0.05' },
+    { offset: '30%', color: '#6b672fff', opacity: '0.7' },
+    { offset: '70%', color: '#5F8F5D', opacity: '0.7' },
+    { offset: '100%', color: '#3e813cff', opacity: '0.05' }
+  ];
+
+  stops.forEach(({ offset, color, opacity }) => {
+    const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop.setAttribute('offset', offset);
+    stop.setAttribute('stop-color', color);
+    stop.setAttribute('stop-opacity', opacity);
+    gradient.appendChild(stop);
+  });
+
+  defs.appendChild(gradient);
 
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   const d = `M ${startX} ${startY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`;
 
   path.setAttribute('d', d);
-  path.setAttribute('stroke', 'green');
-  path.setAttribute('stroke-width', '3');
+  path.setAttribute('stroke', `url(#${gradientId})`);
+  path.setAttribute('stroke-width', strokeWidth.toFixed(2)); // ✅ Dynamic thickness
   path.setAttribute('fill', 'none');
   path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('opacity', '0.6');
+  path.setAttribute('opacity', '1');
 
   svg.appendChild(path);
 }

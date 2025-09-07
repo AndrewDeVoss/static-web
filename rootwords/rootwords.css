@@ -105,15 +105,15 @@ body {
   justify-content: center;
   border-radius: 4px;
   position: relative;
-  color: #532915;
+  color: #61311b;
 }
 
 .grid-cell:hover {
-  color: #2e1503;
+  color: #422108;
 }
 
 .grid-cell.selected {
-  color: #9a7b4f;
+  color: #070503;
 }
 
 .grid-cell.long-press-start {

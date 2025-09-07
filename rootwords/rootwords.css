@@ -1,13 +1,36 @@
-/* Fix main body layout */
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
+html, body {
+  height: 100%;
   margin: 0;
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-  padding-bottom: 80px; /* Leave room for bottom banner */
+  padding: 0;
 }
+
+/* Full height viewport layout */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f9f9f9; /* optional */
+}
+
+/* ✅ Centered container with scroll */
+.container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+
+  /* Centered and constrained width */
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+
+  /* Padding around everything */
+  padding: 1.5rem;
+
+  /* Allow scrolling when content overflows vertically */
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
 
 /* Bottom Banner styles */
 .bottom-banner {
@@ -71,12 +94,6 @@ body {
   text-align: center;
 }
 
-/* Container positioning */
-.container {
-  position: relative;
-  max-width: 800px;
-  width: 100%;
-}
 
 /* Game area box */
 .root-container {
@@ -84,7 +101,41 @@ body {
   border: 2px solid #333;
   border-radius: 8px;
   padding: 20px;
+  max-height: 60vh; /* or any height you want the grid to stop expanding */
+  overflow-y: auto;
+  position: relative;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
 }
+
+#word-swiper {
+  position: fixed;
+  bottom: 3.5rem; /* Enough space above bottom banner */
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
+  z-index: 100;
+
+  /* 🔵 Size and padding */
+  max-width: 90vw;
+  padding: 1rem 2rem;
+  border-radius: 9999px; /* Fully rounded (pill shape) */
+  box-sizing: border-box;
+
+  /* 🔍 Transparent glassy background */
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  /* ✨ Shadow for separation */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  /* 🧍 Center-align content if needed */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
 
 /* Word grid layout */
 #word-grid {

@@ -198,7 +198,7 @@ function drawGrid(drawList, numCols) {
     const totalUsedCols = children.reduce((sum, child) => sum + child.word.length, 0);
     const greenLength = parentSpan - totalUsedCols;
 
-    if (greenLength > 0) {
+    if (greenLength > 0 && nodeInfoDict.word.length > 1) {
       drawGreenRoot(svg, cell, nodeInfoDict, greenLength);
     }
   });

@@ -188,7 +188,21 @@ function drawGrid(drawList, numCols) {
     if (nodeInfoDict.parent) {
       const parentInfo = nodeToInfo.get(nodeInfoDict.parent);
       if (parentInfo) {
-        drawSquigglyLine(svg, parentInfo.cell, cell, nodeInfoDict.row);
+        drawRootConnection(svg, parentInfo.cell, cell, nodeInfoDict.row);
+      }
+    }
+
+    // Draw green root for parent if not already processed
+    if (nodeInfoDict.parent) {
+      const parent = nodeInfoDict.parent;
+      const parentInfo = nodeToInfo.get(parent);
+
+      if (parentInfo && !parentInfo._greenDrawn) {
+        const totalChildLetters = parent.children.reduce((sum, child) => sum + child.word.length, 0);
+        const greenLength = parent.word.length - totalChildLetters;
+
+        drawGreenRoot(svg, parentInfo.cell, parentInfo, greenLength);
+        parentInfo._greenDrawn = true;
       }
     }
 
@@ -316,7 +330,7 @@ function highlightSelectedCell(selectedCell) {
 }
 let lineCounter = 0; // Ensures unique gradient IDs
 
-function drawSquigglyLine(svg, parentEl, childEl, row) {
+function drawRootConnection(svg, parentEl, childEl, row) {
   const parentRect = parentEl.getBoundingClientRect();
   const childRect = childEl.getBoundingClientRect();
   const gridRect = grid.getBoundingClientRect();
@@ -387,6 +401,54 @@ function drawSquigglyLine(svg, parentEl, childEl, row) {
   path.setAttribute('stroke-width', strokeWidth.toFixed(2));
   path.setAttribute('fill', 'none');
   path.setAttribute('stroke-linecap', 'round');
+
+  svg.appendChild(path);
+}
+
+function drawGreenRoot(svg, parentEl, parentInfo, greenLength) {
+  if (greenLength <= 0) return;
+
+  const parentRect = parentEl.getBoundingClientRect();
+  const gridRect = grid.getBoundingClientRect();
+
+  const startX = parentRect.left + parentRect.width / 2 - gridRect.left;
+  const startY = parentRect.bottom - gridRect.top;
+
+  // Calculate available column space
+  const parentCol = parentInfo.column;
+  const parentSpan = parentInfo.span;
+
+  const totalUsedCols = parentInfo.treeNode.children.reduce((sum, child) => sum + child.word.length, 0);
+  const unusedCols = parentSpan - totalUsedCols;
+
+  if (unusedCols <= 0) return; // No room to draw green root
+
+  // Calculate midpoint of unused section
+  const unusedStartCol = parentCol + totalUsedCols;
+  const unusedMidCol = unusedStartCol + unusedCols / 2;
+
+  const colWidth = parentRect.width / parentSpan; // One column's width
+  const endX = (unusedMidCol - parentCol) * colWidth + parentRect.left - gridRect.left;
+  const endY = startY + greenLength * 12; // Adjust vertical depth as needed
+
+  // Squiggle: generate Bezier control points
+  const jitter = () => (Math.random() - 0.5) * 15;
+
+  const c1x = startX + jitter();
+  const c1y = startY + (endY - startY) * 0.33 + jitter();
+
+  const c2x = endX + jitter();
+  const c2y = startY + (endY - startY) * 0.66 + jitter();
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const d = `M ${startX} ${startY} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${endX} ${endY}`;
+
+  path.setAttribute('d', d);
+  path.setAttribute('stroke', 'green');
+  path.setAttribute('stroke-width', '3');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('stroke-linecap', 'round');
+  path.setAttribute('opacity', '0.6');
 
   svg.appendChild(path);
 }

@@ -295,6 +295,8 @@ function addLongPressListener(cell, node, holdTime = 1000) {
 
 
 function selectNode(treeNode) {
+  // clear the word selection first
+  swiper.clearSelection();
   currentNode = treeNode;
   const cell = nodeToInfo.get(treeNode).cell;
   highlightSelectedCell(cell);

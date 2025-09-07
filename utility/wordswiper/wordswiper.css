@@ -51,12 +51,16 @@
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0s, color 0s, opacity 0s !important;
+  transition: none;
 }
 
+#circle-container.shuffling .letter {
+  transition: opacity 0.2s ease;
+}
+
+
 .letter.selected {
-  background-color: #ddd;
-  color: #888;
+  background-color: #6f82eb;
   pointer-events: none;
 }
 

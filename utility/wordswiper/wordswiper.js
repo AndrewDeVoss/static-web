@@ -71,6 +71,64 @@ class WordSwiper extends HTMLElement {
     this.enterButton.dataset.letter = '↵';
   }
 
+  shuffleLetters() {
+    const container = this.shadowRoot.querySelector('#circle-container');
+
+    // Add class to enable opacity transitions
+    container.classList.add('shuffling');
+
+    const divs = [...this.letterDivs];
+    this.letterDivs.length = 0;
+
+    const shuffled = divs.sort(() => Math.random() - 0.5);
+
+    // Step 1: Fade all to 0 from their current opacity (using inline style)
+    shuffled.forEach(div => {
+      div.style.transition = 'opacity 0.2s ease';
+      div.style.opacity = '0';
+    });
+
+    setTimeout(() => {
+      shuffled.forEach((div, i) => {
+        const angleStep = (2 * Math.PI) / shuffled.length;
+        const angle = i * angleStep - Math.PI / 2;
+        const radius = 120;
+        const x = 150 + radius * Math.cos(angle);
+        const y = 150 + radius * Math.sin(angle);
+
+        div.style.left = `${x - 25}px`;
+        div.style.top = `${y - 25}px`;
+
+        // TEMPORARILY set opacity to 1 so we can force reflow
+        div.style.opacity = '1';
+
+        // 🔄 Force reflow so browser applies the opacity before the class changes
+        void div.offsetHeight;
+
+        // Now remove the inline opacity *if* the letter is disabled/used
+        if (div.classList.contains('disabled') || div.classList.contains('used')) {
+          div.style.opacity = ''; // Let CSS handle it (will be 0.3)
+        } else {
+          div.style.opacity = '1'; // Explicitly set if it's supposed to be full
+        }
+
+        this.letterPositions.set(div, { x, y });
+        this.letterDivs.push(div);
+      });
+    }, 200);
+
+
+        // Step 3: Cleanup transitions and inline styles
+    setTimeout(() => {
+      shuffled.forEach(div => {
+        div.style.transition = '';
+        div.style.opacity = ''; // ❗ Remove inline opacity no matter what
+      });
+      container.classList.remove('shuffling');
+    }, 400);
+  }
+
+
   addEventListeners() {
     this.circleContainer.addEventListener('mousedown', this.startSwipe.bind(this));
     this.circleContainer.addEventListener('touchstart', this.startSwipe.bind(this));
@@ -152,14 +210,13 @@ class WordSwiper extends HTMLElement {
 
   updateLetterAvailability(lettersToEnable, usedLetterDivs=[]) {
     this.letterDivs.forEach(letterDiv => {
-      letterDiv.classList.remove('disabled');
-      letterDiv.classList.remove('used');
-
-      if(!lettersToEnable.includes(letterDiv)) {
+      letterDiv.className = 'letter'; // Resets it cleanly
+      if (!lettersToEnable.includes(letterDiv)) {
         letterDiv.classList.add('disabled');
       } else if (usedLetterDivs.includes(letterDiv)) {
         letterDiv.classList.add('used');
       }
+
     });
   }
 

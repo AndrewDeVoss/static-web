@@ -27,6 +27,18 @@ drawTree();
 const observer = new MutationObserver(updateLettersFromSwiper);
 observer.observe(swiper, { attributes: true, attributeFilter: ['letters'] });
 
+const shuffleButton = document.querySelector('.root-words-shuffle-button');
+
+if (swiper && shuffleButton) {
+  shuffleButton.addEventListener('click', () => {
+    swiper.shuffleLetters();
+  });
+} else {
+  console.warn('Could not find swiper or shuffle button');
+}
+
+
+
 // Listen for committed words
 document.addEventListener('word-committed', (e) => {
   const word = e.detail.word.toUpperCase();

@@ -4,6 +4,23 @@ html, body {
   padding: 0;
 }
 
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: #fff8f0;
+  text-align: center;
+  z-index: 1000;
+  padding: 1rem 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.drawn-wrapper {
+  padding-top: 70px; /* Height of header + some spacing */
+  padding-bottom: 80px; /* Height of bottom banner + some spacing */
+  box-sizing: border-box;
+}
+
 /* Full height viewport layout */
 body {
   display: flex;

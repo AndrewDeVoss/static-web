@@ -2,52 +2,45 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow-y: auto; /* Let body scroll */
 }
+
+body.no-flex {
+  display: block !important;
+  align-items: unset !important;
+  justify-content: unset !important;
+}
+
 
 .header {
   position: fixed;
   top: 0;
+  left: 0;
   width: 100%;
-  background-color: #fff8f0;
-  text-align: center;
+  height: 50px;
   z-index: 1000;
-  padding: 1rem 0;
+  margin: 0;
+  background-color: #fff8f0;
   border-bottom: 1px solid #ccc;
+  text-align: center;
 }
 
 .drawn-wrapper {
-  padding-top: 70px; /* Height of header + some spacing */
-  padding-bottom: 80px; /* Height of bottom banner + some spacing */
-  box-sizing: border-box;
-}
-
-/* Full height viewport layout */
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background: #f9f9f9; /* optional */
-}
-
-/* ✅ Centered container with scroll */
-.container {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-
-  /* Centered and constrained width */
-  max-width: 700px;
   width: 100%;
-  margin: 0 auto;
-
-  /* Padding around everything */
-  padding: 1.5rem;
-
-  /* Allow scrolling when content overflows vertically */
-  overflow-y: auto;
+  margin-top: 50px; /* Header height */
+  padding-bottom: 100%; /* Extra scroll room */
+  background-color: rgb(215, 190, 160);
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
+
+/* Game area box */
+.root-container {
+  padding: 20px;
+  overflow-y: auto;
+  position: relative;
+}
 
 /* Bottom Banner styles */
 .bottom-banner {
@@ -112,18 +105,7 @@ body {
 }
 
 
-/* Game area box */
-.root-container {
-  background-color: rgb(215,190,160);
-  border: 2px solid #333;
-  border-radius: 8px;
-  padding: 20px;
-  max-height: 60vh; /* or any height you want the grid to stop expanding */
-  overflow-y: auto;
-  position: relative;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-}
+
 
 #word-swiper {
   position: fixed;

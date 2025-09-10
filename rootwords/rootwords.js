@@ -119,6 +119,7 @@ function drawTree() {
   const numCols = treeRoot.word.length;  // The width is always equal to the root's word length
   const drawList = [];
   const processedLevels = {};
+  let numRows = 0;
 
   function traverse(node, row, col) {
     if (!node) return;
@@ -130,6 +131,10 @@ function drawTree() {
     nodeInfoDict.span = node.word.length;
     nodeInfoDict.parent = node.parent;
     nodeInfoDict.treeNode = node;
+
+    if (row>numRows) {
+      numRows = row;
+    }
 
     drawList.push(nodeInfoDict);
   
@@ -145,6 +150,8 @@ function drawTree() {
 
   // Now draw the grid based on the calculated positions
   drawGrid(drawList, numCols);
+
+  grid.style.setProperty('--num-rows', numRows);
 }
 
 /**

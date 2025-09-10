@@ -28,7 +28,7 @@ body.no-flex {
 .drawn-wrapper {
   width: 100%;
   margin-top: 50px; /* Header height */
-  padding-bottom: 100%; /* Extra scroll room */
+  padding-bottom: calc(100vh - (50px + 6rem)); /* Extra scroll room */
   background-color: rgb(215, 190, 160);
   box-sizing: border-box;
   overflow-y: auto;

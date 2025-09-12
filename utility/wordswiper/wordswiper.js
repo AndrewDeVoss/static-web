@@ -24,8 +24,9 @@ class WordSwiper extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <div id="word-swiper">
         <div id="word-display"></div>
-        <svg id="line-canvas" width="300" height="300"></svg>
-        <div id="circle-container"></div>
+        <div id="circle-container">
+          <svg id="line-canvas" width="100%" height="100%"></svg>
+        </div>
       </div>
     `;
     this.shadowRoot.prepend(linkEl);
@@ -177,17 +178,24 @@ class WordSwiper extends HTMLElement {
 
   redrawLines() {
     const svg = this.lineCanvas;
-    svg.innerHTML = '';
+    svg.innerHTML = ''; // Clear any previous lines
 
     for (let i = 0; i < this.selectedLetterPositions.length - 1; i++) {
       const p1 = this.selectedLetterPositions[i];
       const p2 = this.selectedLetterPositions[i + 1];
 
+      // Calculate positions relative to the circle-container
+      const svgRect = svg.getBoundingClientRect();
+      const p1x = p1.x - svgRect.left;
+      const p1y = p1.y - svgRect.top;
+      const p2x = p2.x - svgRect.left;
+      const p2y = p2.y - svgRect.top;
+
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', p1.x);
-      line.setAttribute('y1', p1.y);
-      line.setAttribute('x2', p2.x);
-      line.setAttribute('y2', p2.y);
+      line.setAttribute('x1', p1x);
+      line.setAttribute('y1', p1y);
+      line.setAttribute('x2', p2x);
+      line.setAttribute('y2', p2y);
       line.setAttribute('stroke', '#2b8fd2');
       line.setAttribute('stroke-width', '4');
       line.setAttribute('stroke-linecap', 'round');

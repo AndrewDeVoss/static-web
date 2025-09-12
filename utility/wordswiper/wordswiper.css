@@ -58,7 +58,6 @@
   transition: opacity 0.2s ease;
 }
 
-
 .letter.selected {
   background-color: #6f82eb;
   pointer-events: none;
@@ -91,6 +90,7 @@
   cursor: pointer;
   text-align: center; /* Center text */
 }
+
 #enter-button.hidden {
   display: none;
 }

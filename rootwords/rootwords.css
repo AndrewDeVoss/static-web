@@ -17,7 +17,6 @@ body.no-flex {
   justify-content: unset !important;
 }
 
-
 .header {
   position: fixed;
   top: 0;
@@ -40,12 +39,78 @@ body.no-flex {
   overflow-y: auto;
 }
 
-
 /* Game area box */
 .root-container {
   padding: 20px;
   overflow-y: auto;
   position: relative;
+}
+
+#word-swiper {
+  position: fixed;
+  bottom: 3.5rem; /* Enough space above bottom banner */
+  left: 50%;
+  transform: translateX(-50%); /* Center horizontally */
+  z-index: 100;
+
+  /* 🔵 Size and padding */
+  max-width: 90vw;
+  padding: 1rem 2rem;
+  border-radius: 9999px; /* Fully rounded (pill shape) */
+  box-sizing: border-box;
+
+  /* 🔍 Transparent glassy background */
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  /* ✨ Shadow for separation */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  /* 🧍 Center-align content if needed */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Word grid layout */
+#word-grid {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-columns: repeat(auto-fit, 1fr);
+  position: relative;
+  align-items: flex-start;
+  row-gap: 24px;
+}
+
+/* Grid cell appearance */
+.grid-cell {
+  text-align: center;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  position: relative;
+  color: #61311b;
+  user-select: none;
+}
+
+.grid-cell:hover {
+  color: #422108;
+}
+
+.grid-cell.selected {
+  color: #070503;
+}
+
+.grid-cell.long-press-start {
+  transition: background-color 0.2s linear;
+}
+
+/* Grid background lines */
+.grid-lines {
+  z-index: 0;
 }
 
 /* Bottom Banner styles */
@@ -110,73 +175,3 @@ body.no-flex {
   text-align: center;
 }
 
-
-
-
-#word-swiper {
-  position: fixed;
-  bottom: 3.5rem; /* Enough space above bottom banner */
-  left: 50%;
-  transform: translateX(-50%); /* Center horizontally */
-  z-index: 100;
-
-  /* 🔵 Size and padding */
-  max-width: 90vw;
-  padding: 1rem 2rem;
-  border-radius: 9999px; /* Fully rounded (pill shape) */
-  box-sizing: border-box;
-
-  /* 🔍 Transparent glassy background */
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-
-  /* ✨ Shadow for separation */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-
-  /* 🧍 Center-align content if needed */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-
-
-/* Word grid layout */
-#word-grid {
-  display: grid;
-  box-sizing: border-box;
-  grid-template-columns: repeat(auto-fit, 1fr);
-  position: relative;
-  align-items: flex-start;
-  row-gap: 24px;
-}
-
-/* Grid cell appearance */
-.grid-cell {
-  text-align: center;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  position: relative;
-  color: #61311b;
-}
-
-.grid-cell:hover {
-  color: #422108;
-}
-
-.grid-cell.selected {
-  color: #070503;
-}
-
-.grid-cell.long-press-start {
-  transition: background-color 0.2s linear;
-}
-
-/* Grid background lines */
-.grid-lines {
-  z-index: 0;
-}

@@ -48,29 +48,32 @@ body.no-flex {
 
 #word-swiper {
   position: fixed;
-  bottom: 3.5rem; /* Enough space above bottom banner */
+  bottom: 3.5rem; /* Space above the bottom banner */
   left: 50%;
   transform: translateX(-50%); /* Center horizontally */
   z-index: 100;
 
-  /* 🔵 Size and padding */
-  max-width: 90vw;
-  padding: 1rem 2rem;
+  /* Adjust size to make it smaller */
+  max-width: 60vw; /* Decrease the max width to make it smaller */
+  padding: 0.5rem 1rem; /* Reduce padding for a smaller size */
   border-radius: 9999px; /* Fully rounded (pill shape) */
   box-sizing: border-box;
 
-  /* 🔍 Transparent glassy background */
+  /* Transparent glassy background */
   background: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
-  /* ✨ Shadow for separation */
+  /* Shadow for separation */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 
-  /* 🧍 Center-align content if needed */
+  /* Center-align content */
   display: flex;
   justify-content: center;
   align-items: center;
+
+  /* Optional: Scale down the font size and content */
+  font-size: 1rem; /* Adjust font size to make content inside smaller */
 }
 
 /* Word grid layout */

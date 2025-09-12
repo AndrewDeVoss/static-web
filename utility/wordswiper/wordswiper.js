@@ -9,6 +9,7 @@ class WordSwiper extends HTMLElement {
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
     this.isSwiping = false;
+    this.swipeExited = false;
   }
 
   connectedCallback() {
@@ -22,17 +23,15 @@ class WordSwiper extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <div id="word-swiper">
-        <div id="word-display"></div> 
+        <div id="word-display"></div>
         <svg id="line-canvas" width="300" height="300"></svg>
         <div id="circle-container"></div>
-        <div id="enter-button" class="hidden">Enter</div>
       </div>
     `;
     this.shadowRoot.prepend(linkEl);
 
     this.circleContainer = this.shadowRoot.querySelector('#circle-container');
     this.centerDisplay = this.shadowRoot?.querySelector('#word-display') || document.querySelector('#word-display');
-    this.enterButton = this.shadowRoot.querySelector('#enter-button');
     this.lineCanvas = this.shadowRoot.querySelector('#line-canvas');
 
     this.layoutLetters();
@@ -65,69 +64,7 @@ class WordSwiper extends HTMLElement {
       this.letterPositions.set(div, { x, y });
       this.letterDivs.push(div);
     });
-
-    // Make enter button act like a letter at the center
-    this.letterPositions.set(this.enterButton, { x: 150, y: 150 });
-    this.enterButton.dataset.letter = '↵';
   }
-
-  shuffleLetters() {
-    const container = this.shadowRoot.querySelector('#circle-container');
-
-    // Add class to enable opacity transitions
-    container.classList.add('shuffling');
-
-    const divs = [...this.letterDivs];
-    this.letterDivs.length = 0;
-
-    const shuffled = divs.sort(() => Math.random() - 0.5);
-
-    // Step 1: Fade all to 0 from their current opacity (using inline style)
-    shuffled.forEach(div => {
-      div.style.transition = 'opacity 0.2s ease';
-      div.style.opacity = '0';
-    });
-
-    setTimeout(() => {
-      shuffled.forEach((div, i) => {
-        const angleStep = (2 * Math.PI) / shuffled.length;
-        const angle = i * angleStep - Math.PI / 2;
-        const radius = 120;
-        const x = 150 + radius * Math.cos(angle);
-        const y = 150 + radius * Math.sin(angle);
-
-        div.style.left = `${x - 25}px`;
-        div.style.top = `${y - 25}px`;
-
-        // TEMPORARILY set opacity to 1 so we can force reflow
-        div.style.opacity = '1';
-
-        // 🔄 Force reflow so browser applies the opacity before the class changes
-        void div.offsetHeight;
-
-        // Now remove the inline opacity *if* the letter is disabled/used
-        if (div.classList.contains('disabled') || div.classList.contains('used')) {
-          div.style.opacity = ''; // Let CSS handle it (will be 0.3)
-        } else {
-          div.style.opacity = '1'; // Explicitly set if it's supposed to be full
-        }
-
-        this.letterPositions.set(div, { x, y });
-        this.letterDivs.push(div);
-      });
-    }, 200);
-
-
-        // Step 3: Cleanup transitions and inline styles
-    setTimeout(() => {
-      shuffled.forEach(div => {
-        div.style.transition = '';
-        div.style.opacity = ''; // ❗ Remove inline opacity no matter what
-      });
-      container.classList.remove('shuffling');
-    }, 400);
-  }
-
 
   addEventListeners() {
     this.circleContainer.addEventListener('mousedown', this.startSwipe.bind(this));
@@ -138,26 +75,15 @@ class WordSwiper extends HTMLElement {
 
     document.addEventListener('touchmove', this.continueSwipe.bind(this), { passive: false });
     document.addEventListener('touchend', this.endSwipe.bind(this));
-
-    this.enterButton.addEventListener('click', this.commitWord.bind(this));
-  }
-
-  getPointFromEvent(e) {
-    if (e.touches && e.touches[0]) {
-      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    } else {
-      return { x: e.clientX, y: e.clientY };
-    }
   }
 
   startSwipe(e) {
     e.preventDefault();
     this.clearSelection();
     this.isSwiping = true;
+    this.swipeExited = false; // Reset swipe exit flag
 
     this.continueSwipe(e); // First touchpoint
-
-    this.enterButton.classList.remove('hidden');
   }
 
   continueSwipe(e) {
@@ -169,11 +95,18 @@ class WordSwiper extends HTMLElement {
     if (el) {
       this.selectLetter(el);
     }
+
+    this.checkSwipeExit(point.x, point.y);
   }
 
   endSwipe() {
     if (!this.isSwiping) return;
     this.isSwiping = false;
+
+    // If the user swiped outside the circle, commit the word
+    if (this.swipeExited) {
+      this.commitWord();
+    }
   }
 
   getLetterElementFromPoint(x, y) {
@@ -190,34 +123,49 @@ class WordSwiper extends HTMLElement {
     }
 
     el.classList.add('selected');
-
     this.selectedLetterEls.push(el);
     this.selectedLetterPositions.push(this.letterPositions.get(el));
 
     this.updateCenterText();
     this.redrawLines();
+  }
 
-    if (this.selectedLetterEls.length === 1) {
-      this.enterButton.classList.remove('hidden');
+  // Handle swipe exit (if user moves their swipe outside of the circle)
+  checkSwipeExit(x, y) {
+    const rect = this.circleContainer.getBoundingClientRect();
+    const isOutside = x < rect.left || x > rect.right || y < rect.top || y > rect.bottom;
+
+    if (isOutside && !this.swipeExited) {
+      this.swipeExited = true;
+      this.commitWord(); // Trigger commit when swipe exits
     }
   }
 
-  disableLetters(letterElsToDisable) {
-    letterElsToDisable.forEach(el => {
-      el.classList.add('disabled');
-    });
+  commitWord() {
+    const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
+    if (!word) return;
+
+    this.dispatchEvent(new CustomEvent('word-committed', {
+      detail: {
+        word,
+        elements: this.selectedLetterEls
+      },
+      bubbles: true,
+      composed: true
+    }));
+
+    this.clearSelection();
   }
 
-  updateLetterAvailability(lettersToEnable, usedLetterDivs=[]) {
-    this.letterDivs.forEach(letterDiv => {
-      letterDiv.className = 'letter'; // Resets it cleanly
-      if (!lettersToEnable.includes(letterDiv)) {
-        letterDiv.classList.add('disabled');
-      } else if (usedLetterDivs.includes(letterDiv)) {
-        letterDiv.classList.add('used');
-      }
-
+  clearSelection() {
+    this.selectedLetterEls.forEach(el => {
+      el.classList.remove('selected');
     });
+
+    this.selectedLetterEls = [];
+    this.selectedLetterPositions = [];
+    this.lineCanvas.innerHTML = '';
+    this.updateCenterText();
   }
 
   updateCenterText() {
@@ -248,36 +196,27 @@ class WordSwiper extends HTMLElement {
     }
   }
 
-  clearSelection() {
-    this.selectedLetterEls.forEach(el => {
-      el.classList.remove('selected');
-    });
-
-    this.selectedLetterEls = [];
-    this.selectedLetterPositions = [];
-    this.lineCanvas.innerHTML = '';
-    this.updateCenterText();
-    this.enterButton.classList.add('hidden');
-  }
-
-  commitWord() {
-    const word = this.selectedLetterEls.map(el => el.dataset.letter).join('');
-    if (!word) return;
-
-    this.dispatchEvent(new CustomEvent('word-committed', {
-      detail: {
-        word,
-        elements: this.selectedLetterEls
-      },
-      bubbles: true,
-      composed: true
-    }));
-
-    this.clearSelection();
+  getPointFromEvent(e) {
+    if (e.touches && e.touches[0]) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else {
+      return { x: e.clientX, y: e.clientY };
+    }
   }
 
   getLetterDivs() {
     return this.letterDivs;
+  }
+
+  updateLetterAvailability(lettersToEnable, usedLetterDivs=[]) {
+    this.letterDivs.forEach(letterDiv => {
+      letterDiv.className = 'letter'; // Resets it cleanly
+      if (!lettersToEnable.includes(letterDiv)) {
+        letterDiv.classList.add('disabled');
+      } else if (usedLetterDivs.includes(letterDiv)) {
+        letterDiv.classList.add('used');
+      }
+    });
   }
 
   isReady() {
@@ -301,7 +240,7 @@ class WordSwiper extends HTMLElement {
       });
     });
   }
-
 }
 
 customElements.define('word-swiper', WordSwiper);
+

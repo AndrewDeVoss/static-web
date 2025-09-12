@@ -3,6 +3,12 @@ html, body {
   margin: 0;
   padding: 0;
   overflow-y: auto; /* Let body scroll */
+  -ms-overflow-style: none;  /* For Internet Explorer and older Edge */
+  scrollbar-width: none;  /* For Firefox */
+}
+
+body::-webkit-scrollbar {
+  display: none;  /* For Chrome, Safari, Opera */
 }
 
 body.no-flex {

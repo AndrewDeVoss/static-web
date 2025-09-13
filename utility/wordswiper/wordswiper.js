@@ -25,8 +25,9 @@ class WordSwiper extends HTMLElement {
       <div id="word-swiper">
         <div id="word-display"></div>
         <div id="circle-container">
-          <svg id="line-canvas" width="100%" height="100%"></svg>
+          
         </div>
+        <svg id="line-canvas" width="100%" height="100%"></svg>
       </div>
     `;
     this.shadowRoot.prepend(linkEl);
@@ -34,6 +35,7 @@ class WordSwiper extends HTMLElement {
     this.circleContainer = this.shadowRoot.querySelector('#circle-container');
     this.centerDisplay = this.shadowRoot?.querySelector('#word-display') || document.querySelector('#word-display');
     this.lineCanvas = this.shadowRoot.querySelector('#line-canvas');
+    console.log(`line canvas found: ${!!this.lineCanvas}`);
 
     this.layoutLetters();
     this.addEventListeners();
@@ -202,6 +204,8 @@ class WordSwiper extends HTMLElement {
 
       svg.appendChild(line);
     }
+
+    console.log(`svg content: ${svg.innerHTML}`);
   }
 
   getPointFromEvent(e) {

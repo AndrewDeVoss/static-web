@@ -41,15 +41,29 @@ class WordSwiper extends HTMLElement {
     this.letterContainer = this.shadowRoot.getElementById('letter-container');
     this.lineCanvas = this.shadowRoot.getElementById('line-canvas');
 
-    console.log(`line canvas found: ${!!this.lineCanvas}`);
-
     this.layoutLetters();
     this.addEventListeners();
   }
 
+  static get observedAttributes() {
+  return ['letters'];
+}
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === 'letters' && newValue !== oldValue) {
+      this.letters = newValue ? [...newValue] : [];
+      if (this.letterContainer) {
+        this.layoutLetters();
+      }
+    }
+  }
+
   layoutLetters() {
+    if (!this.letterContainer) return; // safety check
+
     this.letterContainer.innerHTML = '';
     this.letterPositions.clear();
+    this.letterDivs = []; // reset here!
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
 
@@ -74,6 +88,22 @@ class WordSwiper extends HTMLElement {
       this.letterDivs.push(div);
     });
   }
+
+  shuffleLetters() {
+    if (!this.letters || this.letters.length === 0) return;
+
+    // Fisher–Yates shuffle
+    for (let i = this.letters.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.letters[i], this.letters[j]] = [this.letters[j], this.letters[i]];
+    }
+
+    // re-render layout
+    if (this.letterContainer) {
+      this.layoutLetters();
+    }
+  }
+
 
   addEventListeners() {
     this.circleContainer.addEventListener('mousedown', this.startSwipe.bind(this));

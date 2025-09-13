@@ -1,11 +1,17 @@
 // rootwords.js
-import { loadDictionary, isWord } from '../utility/isword/isword.js';
+import { loadDictionary, isWord, chooseRandomWordSet } from '../utility/isword/isword.js';
 import { TreeNode } from './word-tree.js';
+
 
 const grid = document.getElementById('word-grid');
 const swiper = document.querySelector('word-swiper');
 await customElements.whenDefined('word-swiper');
 await swiper.isReady(); // ✅ Wait for letterDivs to be initialized
+await loadDictionary();
+const { words, letters } = chooseRandomWordSet(10);
+console.log("Today's words:", words);
+console.log("Today's letters:", letters);
+swiper.setAttribute("letters", letters.toUpperCase());
 
 const rootLetterDivs = swiper.getLetterDivs();
 let treeRoot = new TreeNode(rootLetterDivs);  // Safe now
@@ -19,7 +25,6 @@ let lineCounter = 0; // Ensures unique gradient IDs
 
 
 // Initialize the dictionary and update grid layout
-await loadDictionary();
 updateLettersFromSwiper();
 drawTree();
 

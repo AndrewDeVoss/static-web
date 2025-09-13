@@ -1,3 +1,5 @@
+let swipeLineCounter = 0; // keep unique IDs for gradients
+
 class WordSwiper extends HTMLElement {
   constructor() {
     super();
@@ -186,23 +188,67 @@ class WordSwiper extends HTMLElement {
     const svg = this.lineCanvas;
     svg.innerHTML = ''; // Clear previous lines
 
+    // ensure <defs> exists
+    let defs = svg.querySelector('defs');
+    if (!defs) {
+      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svg.prepend(defs);
+    }
+
+    const jitter = () => (Math.random() - 0.5) * 60; // wiggle factor
+
     for (let i = 0; i < this.selectedLetterPositions.length - 1; i++) {
       const p1 = this.selectedLetterPositions[i];
       const p2 = this.selectedLetterPositions[i + 1];
 
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', p1.x);
-      line.setAttribute('y1', p1.y);
-      line.setAttribute('x2', p2.x);
-      line.setAttribute('y2', p2.y);
-      line.setAttribute('stroke', '#2b8fd2');
-      line.setAttribute('stroke-width', '4');
-      line.setAttribute('stroke-linecap', 'round');
+      // control points for a bezier with some squiggle
+      const c1x = p1.x + (p2.x - p1.x) * 0.33 + jitter();
+      const c1y = p1.y + (p2.y - p1.y) * 0.33 + jitter();
 
-      svg.appendChild(line);
+      const c2x = p1.x + (p2.x - p1.x) * 0.66 + jitter();
+      const c2y = p1.y + (p2.y - p1.y) * 0.66 + jitter();
+
+      const gradientId = `swipe-gradient-${swipeLineCounter++}`;
+
+      // define gradient
+      const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+      gradient.setAttribute('id', gradientId);
+      gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+      gradient.setAttribute('x1', p1.x);
+      gradient.setAttribute('y1', p1.y);
+      gradient.setAttribute('x2', p2.x);
+      gradient.setAttribute('y2', p2.y);
+
+      const stops = [
+        { offset: '0%',   color: '#5a321c', opacity: '0.05' },
+        { offset: '40%',  color: '#5a321c', opacity: '0.7' },
+        { offset: '60%',  color: '#5a321c', opacity: '0.7' },
+        { offset: '100%', color: '#5a321c', opacity: '0.05' }
+      ];
+
+      stops.forEach(({ offset, color, opacity }) => {
+        const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+        stop.setAttribute('offset', offset);
+        stop.setAttribute('stop-color', color);
+        stop.setAttribute('stop-opacity', opacity);
+        gradient.appendChild(stop);
+      });
+
+      defs.appendChild(gradient);
+
+      // squiggly path
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const d = `M ${p1.x} ${p1.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+      path.setAttribute('d', d);
+      path.setAttribute('stroke', `url(#${gradientId})`);
+      path.setAttribute('stroke-width', '4');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-linecap', 'round');
+
+      svg.appendChild(path);
     }
   }
-  
+
   getPointFromEvent(e) {
     if (e.touches && e.touches[0]) {
       return { x: e.touches[0].clientX, y: e.touches[0].clientY };

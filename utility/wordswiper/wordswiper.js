@@ -25,16 +25,20 @@ class WordSwiper extends HTMLElement {
       <div id="word-swiper">
         <div id="word-display"></div>
         <div id="circle-container">
-          
+          <div id="letter-container"></div> 
+          <svg id="line-canvas" width="100%" height="100%"></svg>
         </div>
-        <svg id="line-canvas" width="100%" height="100%"></svg>
       </div>
     `;
+
     this.shadowRoot.prepend(linkEl);
 
-    this.circleContainer = this.shadowRoot.querySelector('#circle-container');
+    // this.circleContainer = this.shadowRoot.querySelector('#circle-container');
     this.centerDisplay = this.shadowRoot?.querySelector('#word-display') || document.querySelector('#word-display');
-    this.lineCanvas = this.shadowRoot.querySelector('#line-canvas');
+    this.circleContainer = this.shadowRoot.getElementById('circle-container');
+    this.letterContainer = this.shadowRoot.getElementById('letter-container');
+    this.lineCanvas = this.shadowRoot.getElementById('line-canvas');
+
     console.log(`line canvas found: ${!!this.lineCanvas}`);
 
     this.layoutLetters();
@@ -42,7 +46,7 @@ class WordSwiper extends HTMLElement {
   }
 
   layoutLetters() {
-    this.circleContainer.innerHTML = '';
+    this.letterContainer.innerHTML = '';
     this.letterPositions.clear();
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
@@ -63,7 +67,7 @@ class WordSwiper extends HTMLElement {
       div.dataset.letter = letter;
       div.dataset.index = i;
 
-      this.circleContainer.appendChild(div);
+      this.letterContainer.appendChild(div);
       this.letterPositions.set(div, { x, y });
       this.letterDivs.push(div);
     });
@@ -180,34 +184,25 @@ class WordSwiper extends HTMLElement {
 
   redrawLines() {
     const svg = this.lineCanvas;
-    svg.innerHTML = ''; // Clear any previous lines
+    svg.innerHTML = ''; // Clear previous lines
 
     for (let i = 0; i < this.selectedLetterPositions.length - 1; i++) {
       const p1 = this.selectedLetterPositions[i];
       const p2 = this.selectedLetterPositions[i + 1];
 
-      // Calculate positions relative to the circle-container
-      const svgRect = svg.getBoundingClientRect();
-      const p1x = p1.x - svgRect.left;
-      const p1y = p1.y - svgRect.top;
-      const p2x = p2.x - svgRect.left;
-      const p2y = p2.y - svgRect.top;
-
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', p1x);
-      line.setAttribute('y1', p1y);
-      line.setAttribute('x2', p2x);
-      line.setAttribute('y2', p2y);
+      line.setAttribute('x1', p1.x);
+      line.setAttribute('y1', p1.y);
+      line.setAttribute('x2', p2.x);
+      line.setAttribute('y2', p2.y);
       line.setAttribute('stroke', '#2b8fd2');
       line.setAttribute('stroke-width', '4');
       line.setAttribute('stroke-linecap', 'round');
 
       svg.appendChild(line);
     }
-
-    console.log(`svg content: ${svg.innerHTML}`);
   }
-
+  
   getPointFromEvent(e) {
     if (e.touches && e.touches[0]) {
       return { x: e.touches[0].clientX, y: e.touches[0].clientY };

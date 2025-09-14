@@ -67,6 +67,7 @@ body.no-flex {
   position: relative;
   color: #61311b;
   user-select: none;
+  -webkit-user-select: none;  /* For Safari on iOS */
 }
 
 .grid-cell:hover {

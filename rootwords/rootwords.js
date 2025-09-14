@@ -9,8 +9,6 @@ await customElements.whenDefined('word-swiper');
 await swiper.isReady(); // ✅ Wait for letterDivs to be initialized
 await loadDictionary();
 const { words, letters } = chooseRandomWordSet(10);
-console.log("Today's words:", words);
-console.log("Today's letters:", letters);
 swiper.setAttribute("letters", letters.toUpperCase());
 
 const rootLetterDivs = swiper.getLetterDivs();

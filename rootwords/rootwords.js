@@ -9,7 +9,7 @@ await customElements.whenDefined('word-swiper');
 await swiper.isReady(); // ✅ Wait for letterDivs to be initialized
 await loadDictionary();
 const { words, letters } = chooseRandomWordSet(10);
-swiper.setAttribute("letters", letters.toUpperCase());
+swiper.setLetters(letters.toUpperCase());
 
 const rootLetterDivs = swiper.getLetterDivs();
 let treeRoot = new TreeNode(rootLetterDivs);  // Safe now
@@ -332,6 +332,8 @@ function selectNode(treeNode) {
   for (let child of treeNode.children) {
     usedLetterDivs.push(...child.letterDivs);
   }
+
+  console.log('length', usedLetterDivs.length);
   swiper.updateLetterAvailability(treeNode.letterDivs, usedLetterDivs);
 }
 

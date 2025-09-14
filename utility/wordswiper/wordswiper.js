@@ -89,20 +89,40 @@ class WordSwiper extends HTMLElement {
     });
   }
 
-  shuffleLetters() {
-    if (!this.letters || this.letters.length === 0) return;
-
-    // Fisher–Yates shuffle
-    for (let i = this.letters.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.letters[i], this.letters[j]] = [this.letters[j], this.letters[i]];
-    }
-
-    // re-render layout
-    if (this.letterContainer) {
-      this.layoutLetters();
-    }
+  setLetters(letters) {
+    this.letters = [...letters];
+    this.layoutLetters();
   }
+
+
+  shuffleLetters() {
+    if (!this.letterDivs || this.letterDivs.length === 0) return;
+
+    // Shuffle the existing DOM elements (Fisher–Yates)
+    for (let i = this.letterDivs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.letterDivs[i], this.letterDivs[j]] = [this.letterDivs[j], this.letterDivs[i]];
+    }
+
+    // Recalculate their positions in a circle
+    const radius = 120;
+    const angleStep = (2 * Math.PI) / this.letterDivs.length;
+
+    this.letterPositions.clear();
+
+    this.letterDivs.forEach((div, i) => {
+      const angle = i * angleStep - Math.PI / 2;
+      const x = 150 + radius * Math.cos(angle);
+      const y = 150 + radius * Math.sin(angle);
+
+      div.style.left = `${x - 25}px`;
+      div.style.top = `${y - 25}px`;
+      div.dataset.index = i;
+
+      this.letterPositions.set(div, { x, y });
+    });
+  }
+
 
 
   addEventListeners() {

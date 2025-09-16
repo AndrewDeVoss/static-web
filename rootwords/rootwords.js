@@ -577,29 +577,37 @@ function saveTreeToStorage(cookie = 'savedWordTree', todayOnly = true) {
   }
 }
 
-
 function loadTreeFromStorage(cookie = 'savedWordTree') {
-  const encoded = localStorage.getItem(cookie);
-  if (!encoded) return;
+  // First try to load from localStorage
+  let encoded = getCookie(cookie);
+
+  // If localStorage is empty, try cookies
+  if (!encoded) {
+    encoded = localStorage.getItem(cookie);
+  }
+
+  if (!encoded) return; // Nothing to load
 
   try {
-    const restoredTree = decodeTree(encoded, getLetterDivsByWord);
-    treeRoot = restoredTree;
-    currentNode = treeRoot;
-    usedWords.clear();
+    const newTree = decodeTree(encoded, getLetterDivsByWord);
 
-    function collectWords(node) {
-      usedWords.add(node.word);
-      node.children.forEach(collectWords);
-    }
-
-    collectWords(treeRoot);
+    // Replace the global treeRoot and currentNode
+    treeRoot = newTree;
+    currentNode = newTree;
 
     drawTree();
     scoreTree();
-    selectNode(treeRoot);
+    selectNode(newTree);
   } catch (err) {
-    console.error('❌ Failed to decode tree:', err);
+    console.error('Failed to decode saved tree:', err);
   }
+}
+
+function getCookie(name) {
+  const cookieString = document.cookie
+    .split('; ')
+    .find(row => row.startsWith(encodeURIComponent(name) + '='));
+
+  return cookieString ? decodeURIComponent(cookieString.split('=')[1]) : null;
 }
 

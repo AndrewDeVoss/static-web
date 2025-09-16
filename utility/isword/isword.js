@@ -14,7 +14,7 @@ export function isWord(word) {
 // Seed helpers
 // ----------------------------
 function daysSinceJune15() {
-  const start = new Date(2024, 5, 15); // June = 5 (0-based)
+  const start = new Date(2024, 6, 15); // June = 5 (0-based)
   const today = new Date();
   const diffTime = today.setHours(0,0,0,0) - start.setHours(0,0,0,0);
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -32,7 +32,7 @@ function mulberry32(seed) {
 // ----------------------------
 // Random word picker
 // ----------------------------
-export function chooseRandomWordSet(targetLength = 10) {
+export function chooseRandomWordSet(targetLength = 12) {
   if (wordSet.size === 0) {
     throw new Error("Dictionary not loaded. Call loadDictionary() first.");
   }

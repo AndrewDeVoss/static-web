@@ -8,14 +8,12 @@ const swiper = document.querySelector('word-swiper');
 await customElements.whenDefined('word-swiper');
 await swiper.isReady(); // ✅ Wait for letterDivs to be initialized
 await loadDictionary();
-const { words, letters } = chooseRandomWordSet(10);
+const { words, letters } = chooseRandomWordSet(11);
 swiper.setLetters(letters.toUpperCase());
 
 const rootLetterDivs = swiper.getLetterDivs();
 let treeRoot = new TreeNode(rootLetterDivs);  // Safe now
 let currentNode = treeRoot;
-
-loadTreeFromStorage();
 
 let rootLetters = [];
 let totalColumns = 0;
@@ -27,6 +25,9 @@ let lineCounter = 0; // Ensures unique gradient IDs
 // Initialize the dictionary and update grid layout
 updateLettersFromSwiper();
 drawTree();
+
+// Try load
+loadTreeFromStorage();
 
 // Observe changes to <word-swiper letters="...">
 const observer = new MutationObserver(updateLettersFromSwiper);
@@ -590,6 +591,10 @@ function loadTreeFromStorage(cookie = 'savedWordTree') {
 
   try {
     const newTree = decodeTree(encoded, getLetterDivsByWord);
+    if (newTree.word !== treeRoot.word) {
+      console.warn('Saved tree root word does not match current letters. Ignoring saved tree.');
+      return;
+    }
 
     // Replace the global treeRoot and currentNode
     treeRoot = newTree;

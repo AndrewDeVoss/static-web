@@ -15,6 +15,8 @@ const rootLetterDivs = swiper.getLetterDivs();
 let treeRoot = new TreeNode(rootLetterDivs);  // Safe now
 let currentNode = treeRoot;
 
+loadTreeFromStorage();
+
 let rootLetters = [];
 let totalColumns = 0;
 const usedWords = new Set(); // Track previously submitted words
@@ -101,6 +103,8 @@ function scoreTree(rootNode = treeRoot) {
   }
 
   document.getElementById('score-scroll').textContent = score;
+
+  saveTreeToStorage();
 }
 
 
@@ -509,3 +513,93 @@ function drawGreenRoot(svg, parentEl, parentInfo, greenLength) {
 
   svg.appendChild(path);
 }
+
+function encodeTree(root) {
+  function serialize(node) {
+    return {
+      word: node.word,
+      children: node.children.map(serialize)
+    };
+  }
+  return JSON.stringify(serialize(root));
+}
+
+function decodeTree(jsonStr, getLetterDivsByWord) {
+  const data = JSON.parse(jsonStr);
+
+  function build(nodeData) {
+    const letterDivs = getLetterDivsByWord(nodeData.word);
+    const node = new TreeNode(letterDivs);
+    node.children = nodeData.children.map(childData => {
+      const childNode = build(childData);
+      childNode.parent = node;
+      return childNode;
+    });
+    return node;
+  }
+
+  return build(data);
+}
+
+function getLetterDivsByWord(word) {
+  const allDivs = Array.from(swiper.getLetterDivs());
+  const usedIndices = new Set();
+  const result = [];
+
+  for (let letter of word) {
+    const div = allDivs.find((div, idx) =>
+      div.dataset.letter === letter && !usedIndices.has(idx)
+    );
+    if (div) {
+      usedIndices.add(allDivs.indexOf(div));
+      result.push(div);
+    } else {
+      console.warn(`Could not find letterDiv for letter "${letter}"`);
+    }
+  }
+
+  return result;
+}
+
+function saveTreeToStorage(cookie = 'savedWordTree', todayOnly = true) {
+  const encoded = encodeTree(treeRoot);
+
+  if (todayOnly) {
+    // Save as cookie with expiration at midnight
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0); // Next midnight (local time)
+
+    document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
+  } else {
+    // Default: use localStorage
+    localStorage.setItem(cookie, encoded);
+  }
+}
+
+
+function loadTreeFromStorage(cookie = 'savedWordTree') {
+  const encoded = localStorage.getItem(cookie);
+  if (!encoded) return;
+
+  try {
+    const restoredTree = decodeTree(encoded, getLetterDivsByWord);
+    treeRoot = restoredTree;
+    currentNode = treeRoot;
+    usedWords.clear();
+
+    function collectWords(node) {
+      usedWords.add(node.word);
+      node.children.forEach(collectWords);
+    }
+
+    collectWords(treeRoot);
+
+    drawTree();
+    scoreTree();
+    selectNode(treeRoot);
+  } catch (err) {
+    console.error('❌ Failed to decode tree:', err);
+  }
+}
+

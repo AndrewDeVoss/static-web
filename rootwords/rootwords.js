@@ -338,7 +338,6 @@ function selectNode(treeNode) {
     usedLetterDivs.push(...child.letterDivs);
   }
 
-  console.log('length', usedLetterDivs.length);
   swiper.updateLetterAvailability(treeNode.letterDivs, usedLetterDivs);
 }
 
@@ -527,32 +526,48 @@ function encodeTree(root) {
 
 function decodeTree(jsonStr, getLetterDivsByWord) {
   const data = JSON.parse(jsonStr);
+  const allDivs = Array.from(swiper.getLetterDivs());
+  const root = new TreeNode(allDivs);
+  const queue = [];
+  queue.push({ nodeData: data, parentNode: root, availableDivs: allDivs.slice() });
 
-  function build(nodeData) {
-    const letterDivs = getLetterDivsByWord(nodeData.word);
-    const node = new TreeNode(letterDivs);
-    node.children = nodeData.children.map(childData => {
-      const childNode = build(childData);
-      childNode.parent = node;
-      return childNode;
+  while (queue.length > 0) {
+    const { nodeData, parentNode, availableDivs } = queue.shift();
+    
+    // Track used divs for siblings
+    let usedDivs = new Set(); 
+    
+    nodeData.children.forEach(childData => {
+      // Filter availableDivs to exclude the already used ones for this sibling
+      const filteredDivs = availableDivs.filter(div => !usedDivs.has(div));
+      
+      // Get the letterDivs for the current child
+      const letterDivs = getLetterDivsByWord(childData.word, filteredDivs);
+      
+      // Mark the divs as used
+      letterDivs.forEach(div => usedDivs.add(div));
+
+      const childNode = new TreeNode(letterDivs);
+      parentNode.addChild(childNode);
+
+      // Add the child node and its data to the queue
+      queue.push({ nodeData: childData, parentNode: childNode, availableDivs: filteredDivs });
     });
-    return node;
   }
 
-  return build(data);
+  return root;
 }
 
-function getLetterDivsByWord(word) {
-  const allDivs = Array.from(swiper.getLetterDivs());
+function getLetterDivsByWord(word, letterDivs) {
   const usedIndices = new Set();
   const result = [];
 
   for (let letter of word) {
-    const div = allDivs.find((div, idx) =>
+    const div = letterDivs.find((div, idx) =>
       div.dataset.letter === letter && !usedIndices.has(idx)
     );
     if (div) {
-      usedIndices.add(allDivs.indexOf(div));
+      usedIndices.add(letterDivs.indexOf(div));
       result.push(div);
     } else {
       console.warn(`Could not find letterDiv for letter "${letter}"`);
@@ -561,6 +576,7 @@ function getLetterDivsByWord(word) {
 
   return result;
 }
+
 
 function saveTreeToStorage(cookie = 'savedWordTree', todayOnly = true) {
   const encoded = encodeTree(treeRoot);

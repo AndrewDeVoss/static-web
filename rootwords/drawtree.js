@@ -12,7 +12,7 @@ export function drawTree(score, treeContainer) {
     const maxBranchLength = trunkHeight * 0.9;
     const horizontalBuffer = 40;
     const totalWidth = maxBranchLength * 2 + horizontalBuffer * 2;
-    const totalHeight = trunkHeight + 50;
+    const totalHeight = trunkHeight * 1.5;
     const baseX = totalWidth / 2;
     const baseY = totalHeight;
 
@@ -209,7 +209,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
   leafGroup.appendChild(leftPath);
   leafGroup.appendChild(rightPath);
 
-  const angle = 90 + 90 * orientation;
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90 + 90 * orientation;
   leafGroup.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
   console.log(`Drawing leaf at (${cx.toFixed(1)}, ${cy.toFixed(1)}) with angle ${angle.toFixed(1)}`);
 

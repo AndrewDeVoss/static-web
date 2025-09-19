@@ -44,7 +44,7 @@ export function drawTree(score, treeContainer) {
 
         const side = level % 2 === 0 ? 'left' : 'right';
 
-        const branchLength = leavesOnThisBranch * leafSize;
+        const branchLength = (1+leavesOnThisBranch) * leafSize;
         const branchAngle = 20 + level * 3;
 
         // Taper branch

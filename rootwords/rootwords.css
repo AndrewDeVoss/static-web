@@ -33,15 +33,18 @@ body.no-flex {
 .drawn-wrapper {
   width: 100%;
   margin-top: 50px; /* Header height */
-  padding-bottom: calc(100vh - (50px + 6rem)); /* Extra scroll room */
-  background-color: rgb(215, 190, 160);
   box-sizing: border-box;
   overflow-y: auto;
+
 }
 
 /* Game area box */
 .root-container {
-  padding: 20px;
+  background-color: rgb(215, 190, 160);
+  padding-bottom: calc(100vh - (50px + 6rem)); /* Extra scroll room */
+  padding-top: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
   overflow-y: auto;
   position: relative;
 }

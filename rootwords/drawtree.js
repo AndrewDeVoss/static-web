@@ -1,25 +1,26 @@
 export function drawTree(score, treeContainer) {
-  treeContainer.innerHTML = ''; // Clear previous tree
+    treeContainer.innerHTML = ''; // Clear previous tree
 
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svgWidth = 200;
-  const maxLeaves = Math.min(score, 100);
+    const svgNS = "http://www.w3.org/2000/svg";
+    const maxLeaves = Math.min(score, 100);
+    
+    // Minimum trunk dimensions
+    const minTrunkHeight = 200;
+    const minTrunkWidth = 5;
 
-  // Trunk dimensions
-  const minTrunkHeight = 200;
-  const maxTrunkHeight = 1000;
-  const minTrunkWidth = 5;
-  const maxTrunkWidth = 50;
+    // Scale factors for height and width per leaf
+    const heightPerLeaf = 8;
+    const widthPerLeaf = 0.4;
 
-    // Trunk dimensions (scaling with score)
-    const trunkHeight = minTrunkHeight + (maxTrunkHeight - minTrunkHeight) * (maxLeaves / 100);
-    const trunkWidth = minTrunkWidth + (maxTrunkWidth - minTrunkWidth) * (maxLeaves / 100);
+    // Calculate trunk height and width based on leaf count
+    const trunkHeight = Math.max(minTrunkHeight, maxLeaves * heightPerLeaf);
+    const trunkWidth = Math.max(minTrunkWidth, maxLeaves * widthPerLeaf);
 
-    // Dynamically calculate width based on longest branch
+    // Canvas dimensions
     const maxBranchLength = trunkHeight * 0.9;
     const horizontalBuffer = 40;
     const totalWidth = maxBranchLength * 2 + horizontalBuffer * 2;
-    const totalHeight = trunkHeight + maxBranchLength + 60; // add top buffer
+    const totalHeight = trunkHeight + 20;
     const baseX = totalWidth / 2;
     const baseY = totalHeight;
 
@@ -30,54 +31,63 @@ export function drawTree(score, treeContainer) {
     svg.setAttribute("viewBox", `0 0 ${totalWidth} ${totalHeight}`);
     svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
 
+    // Draw trunk
+    drawTaperedTrunk(svg, baseX, baseY, trunkHeight, trunkWidth);
 
-  // Draw trunk (tapered)
-  drawTaperedTrunk(svg, baseX, baseY, trunkHeight, trunkWidth);
+    // Draw branches and leaves
+    const levels = 5;
+    let leafIndex = 0;
 
-  // Branches & leaves
-  const levels = 5;
-  const leavesPerLevel = Math.ceil(maxLeaves / levels);
-  let leafIndex = 0;
+    for (let level = 0; level < levels; level++) {
+        const branchStartOffset = 100;
+        const usableTrunkHeight = trunkHeight - branchStartOffset;
+        const y = baseY - branchStartOffset - (usableTrunkHeight / (levels - 1)) * level;
 
-  for (let level = 0; level < levels; level++) {
-    const branchStartOffset = 100; // Minimum height from bottom to first branch
-    const usableTrunkHeight = trunkHeight - branchStartOffset;
-    const y = baseY - branchStartOffset - (usableTrunkHeight / (levels - 1)) * level;
+        const side = level % 2 === 0 ? 'left' : 'right';
 
-    const side = level % 2 === 0 ? 'left' : 'right';
+        const branchLength = trunkHeight * 0.9 * (1 - level * 0.1);
+        const branchAngle = 20 + level * 3;
 
-    const branchLength = trunkHeight * 0.9 * (1 - level * 0.1);
-    const branchAngle = 20 + level * 3;
+        // Taper branch
+        const heightFromBase = baseY - y;
+        const topTrunkWidth = trunkWidth / 8;
+        const trunkWidthAtBranch = trunkWidth - ((trunkWidth - topTrunkWidth) * (heightFromBase / trunkHeight));
 
-    // Tapering for branch
-    const heightFromBase = baseY - y;
-    const topTrunkWidth = trunkWidth / 8;
-    const trunkWidthAtBranch = trunkWidth - ((trunkWidth - topTrunkWidth) * (heightFromBase / trunkHeight));
+        const branchX1 = baseX;
+        const branchY1 = y;
+        const dx = branchLength * Math.cos(branchAngle * Math.PI / 180);
+        const dy = branchLength * Math.sin(branchAngle * Math.PI / 180);
+        const branchX2 = side === 'left' ? branchX1 - dx : branchX1 + dx;
+        const branchY2 = branchY1 - dy;
 
-    const branchX1 = baseX;
-    const branchY1 = y;
-    const dx = branchLength * Math.cos(branchAngle * Math.PI / 180);
-    const dy = branchLength * Math.sin(branchAngle * Math.PI / 180);
-    const branchX2 = side === 'left' ? branchX1 - dx : branchX1 + dx;
-    const branchY2 = branchY1 - dy;
+        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, trunkWidthAtBranch, 0);
 
-    drawBranch(svg, branchX1, branchY1, branchX2, branchY2, trunkWidthAtBranch, 0);
+        // ✅ New balanced leaf distribution
+        const remainingLeaves = maxLeaves - leafIndex;
+        const remainingLevels = levels - level;
+        const leavesOnThisBranch = Math.ceil(remainingLeaves / remainingLevels);
 
-    const leavesOnThisBranch = Math.min(leavesPerLevel + (levels - level), maxLeaves - leafIndex);
+        for (let i = 0; i < leavesOnThisBranch; i++) {
+            const t = i / (leavesOnThisBranch - 1 || 1);
 
-    for (let i = 0; i < leavesOnThisBranch; i++) {
-      const t = i / (leavesOnThisBranch - 1 || 1);
-      const lx = branchX1 + (branchX2 - branchX1) * t + (Math.random() - 0.5) * 6;
-      const ly = branchY1 + (branchY2 - branchY1) * t + (Math.random() - 0.5) * 6;
-      drawLeaf(svg, lx, ly, 7);
-      leafIndex++;
-      if (leafIndex >= maxLeaves) break;
+            // You can re-enable randomness later by uncommenting the following lines
+            // const lx = branchX1 + (branchX2 - branchX1) * t + (Math.random() - 0.5) * 6;
+            // const ly = branchY1 + (branchY2 - branchY1) * t + (Math.random() - 0.5) * 6;
+
+            // 🔍 Clean version without randomness
+            const lx = branchX1 + (branchX2 - branchX1) * t;
+            const ly = branchY1 + (branchY2 - branchY1) * t;
+
+            drawLeaf(svg, lx, ly, 15);
+            leafIndex++;
+
+            if (leafIndex >= maxLeaves) break;
+        }
+
+        if (leafIndex >= maxLeaves) break;
     }
 
-    if (leafIndex >= maxLeaves) break;
-  }
-
-  treeContainer.appendChild(svg);
+    treeContainer.appendChild(svg);
 }
 
 
@@ -140,30 +150,39 @@ function drawLeaf(svg, cx, cy, size = 10) {
 
   const top = { x: cx, y: cy - size };
   const bottom = { x: cx, y: cy + size };
-  const leftCtrl = { x: cx - size, y: cy };
-  const rightCtrl = { x: cx + size, y: cy };
 
-  const leftHalf = document.createElementNS(svg.namespaceURI, "path");
-  const leftPath = `
-    M ${cx} ${cy}
-    C ${leftCtrl.x} ${leftCtrl.y}, ${leftCtrl.x} ${leftCtrl.y}, ${top.x} ${top.y}
-    C ${leftCtrl.x} ${leftCtrl.y}, ${leftCtrl.x} ${leftCtrl.y}, ${bottom.x} ${bottom.y}
+  // Wider at the base, narrower at the tip
+  const leftCtrlBottom = { x: cx - size * 1.0, y: cy + size * 0.4 };
+  const leftCtrlTop = { x: cx - size * 0.5, y: cy - size * 0.4 };
+  const rightCtrlBottom = { x: cx + size * 1.0, y: cy + size * 0.4 };
+  const rightCtrlTop = { x: cx + size * 0.5, y: cy - size * 0.4 };
+
+  // Left half of the leaf (lighter green)
+  const leftPath = document.createElementNS(svg.namespaceURI, "path");
+  const leftD = `
+    M ${bottom.x} ${bottom.y}
+    C ${leftCtrlBottom.x} ${leftCtrlBottom.y}, ${leftCtrlTop.x} ${leftCtrlTop.y}, ${top.x} ${top.y}
     Z
   `;
-  leftHalf.setAttribute("d", leftPath);
-  leftHalf.setAttribute("fill", "#7ed957");
+  leftPath.setAttribute("d", leftD);
+  leftPath.setAttribute("fill", "#7ed957");
 
-  const rightHalf = document.createElementNS(svg.namespaceURI, "path");
-  const rightPath = `
-    M ${cx} ${cy}
-    C ${rightCtrl.x} ${rightCtrl.y}, ${rightCtrl.x} ${rightCtrl.y}, ${top.x} ${top.y}
-    C ${rightCtrl.x} ${rightCtrl.y}, ${rightCtrl.x} ${rightCtrl.y}, ${bottom.x} ${bottom.y}
+  // Right half of the leaf (darker green)
+  const rightPath = document.createElementNS(svg.namespaceURI, "path");
+  const rightD = `
+    M ${bottom.x} ${bottom.y}
+    C ${rightCtrlBottom.x} ${rightCtrlBottom.y}, ${rightCtrlTop.x} ${rightCtrlTop.y}, ${top.x} ${top.y}
     Z
   `;
-  rightHalf.setAttribute("d", rightPath);
-  rightHalf.setAttribute("fill", "#4caf50");
+  rightPath.setAttribute("d", rightD);
+  rightPath.setAttribute("fill", "#4caf50");
 
-  leafGroup.appendChild(leftHalf);
-  leafGroup.appendChild(rightHalf);
+  // Optional: random rotation to look natural
+  const randomAngle = (Math.random() - 0.5) * 50; // -25° to +25°
+  leafGroup.setAttribute("transform", `rotate(${randomAngle}, ${cx}, ${cy})`);
+
+  leafGroup.appendChild(leftPath);
+  leafGroup.appendChild(rightPath);
   svg.appendChild(leafGroup);
 }
+

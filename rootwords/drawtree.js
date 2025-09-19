@@ -69,8 +69,11 @@ export function drawTree(score, treeContainer) {
         const y = baseY - branchStartOffset - (usableTrunkHeight / (levels - 1)) * level;
         const side = level % 2 === 0 ? 'left' : 'right';
 
+        const minAngle = -15;
+        const maxAngle = 60;
+        const levelParam = Math.pow(level / (levels - 1), 2);  // Normalized level from 0 to 1
+        const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
         const branchLength = (1 + leavesOnThisBranch) * leafSize;
-        let branchAngle = 10 + level;
 
         const heightFromBase = baseY - y;
         const topTrunkWidth = trunkWidth / (2 + levels / 2);
@@ -84,7 +87,7 @@ export function drawTree(score, treeContainer) {
         const branchY2 = branchY1 - dy;
 
         const branchMidX = (branchX1 + branchX2) / 2;
-        const wiggleAmount = 5*(levels - level); // Increase for more curve
+        const wiggleAmount = 5 * (levels - level - 1); // Increase for more curve
 
         const ctrl1X = branchX1 + (side === 'left' ? -wiggleAmount : wiggleAmount);
         const ctrl1Y = branchY1 - 20;
@@ -101,11 +104,11 @@ export function drawTree(score, treeContainer) {
             if (isFirst) {
                 t = 1;
             } else {
-                const numRemainingLeaves = leavesOnThisBranch - 1;
-                const slots = numRemainingLeaves + 1;
-                const gap = 0.7 / slots;
                 const slotIndex = i - 1;
-                t = 1 - gap * (slotIndex + 1);
+                const linearT = (slotIndex + 1) / (leavesOnThisBranch); // normalized 0–1
+                const compression = 1.7; // try 1.5–2.0
+                const easedT = 1 - Math.pow(linearT, compression);
+                t = easedT;
             }
 
             const branchStart = { x: branchX1, y: branchY1 };
@@ -118,7 +121,6 @@ export function drawTree(score, treeContainer) {
                 branchEnd,
                 t
             );
-
 
             const length = Math.sqrt(dx * dx + dy * dy);
             const nx = -dy / length;

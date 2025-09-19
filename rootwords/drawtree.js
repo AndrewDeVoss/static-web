@@ -30,15 +30,21 @@ export function drawTree(score, treeContainer) {
     // Draw branches and leaves
     const levels = 5;
     let leafIndex = 0;
+    const leafSize = 15;
 
     for (let level = 0; level < levels; level++) {
+        // New balanced leaf distribution
+        const remainingLeaves = numLeaves - leafIndex;
+        const remainingLevels = levels - level;
+        const leavesOnThisBranch = Math.ceil(remainingLeaves / remainingLevels);
+
         const branchStartOffset = 100;
         const usableTrunkHeight = trunkHeight - branchStartOffset;
         const y = baseY - branchStartOffset - (usableTrunkHeight / (levels - 1)) * level;
 
         const side = level % 2 === 0 ? 'left' : 'right';
 
-        const branchLength = trunkHeight * branchLengthFactor * (1 - level * 0.1);
+        const branchLength = leavesOnThisBranch * leafSize;
         const branchAngle = 20 + level * 3;
 
         // Taper branch
@@ -59,18 +65,17 @@ export function drawTree(score, treeContainer) {
 
         drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrlX, ctrlY, trunkWidthAtBranch, 1);
 
-        // New balanced leaf distribution
-        const remainingLeaves = numLeaves - leafIndex;
-        const remainingLevels = levels - level;
-        const leavesOnThisBranch = Math.ceil(remainingLeaves / remainingLevels);
+
 
        for (let i = 0; i < leavesOnThisBranch; i++) {
           const isFirst = i === 0;
+          
+        const tipGap = 0.12; // how far from tip (t=1) to push the 2nd leaf back
 
-          // First leaf at the tip (t = 1), others step backwards from tip
-          const t = isFirst
-            ? 1
-            : 1 - ((i - 1) / (leavesOnThisBranch - 1 || 1)); // spread rest from tip back toward trunk
+        const t = isFirst
+          ? 1
+          : 1 - tipGap - ((i - 1) / (leavesOnThisBranch - 1 || 1)) * (1 - tipGap);
+
 
           const branchStart = { x: branchX1, y: branchY1 };
           const branchEnd = { x: branchX2, y: branchY2 };
@@ -84,7 +89,6 @@ export function drawTree(score, treeContainer) {
 
           const orientation = isFirst ? 0 : (i % 2 === 0 ? 1 : -1);  // 0 = follow curve, 1 = up, -1 = down
 
-          const leafSize = 15;
           let cx = bx;
           let cy = by;
 

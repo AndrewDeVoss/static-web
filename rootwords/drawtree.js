@@ -2,25 +2,17 @@ export function drawTree(score, treeContainer) {
     treeContainer.innerHTML = ''; // Clear previous tree
 
     const svgNS = "http://www.w3.org/2000/svg";
-    const maxLeaves = Math.min(score, 100);
-    
-    // Minimum trunk dimensions
-    const minTrunkHeight = 200;
-    const minTrunkWidth = 5;
-
-    // Scale factors for height and width per leaf
-    const heightPerLeaf = 8;
-    const widthPerLeaf = 0.4;
+    const numLeaves = score;
 
     // Calculate trunk height and width based on leaf count
-    const trunkHeight = Math.max(minTrunkHeight, maxLeaves * heightPerLeaf);
-    const trunkWidth = Math.max(minTrunkWidth, maxLeaves * widthPerLeaf);
+    const trunkHeight = 200 + numLeaves;
+    const trunkWidth = Math.round(5 + numLeaves * 0.1);
 
     // Canvas dimensions
     const maxBranchLength = trunkHeight * 0.9;
     const horizontalBuffer = 40;
     const totalWidth = maxBranchLength * 2 + horizontalBuffer * 2;
-    const totalHeight = trunkHeight + 20;
+    const totalHeight = trunkHeight + 50;
     const baseX = totalWidth / 2;
     const baseY = totalHeight;
 
@@ -59,36 +51,82 @@ export function drawTree(score, treeContainer) {
         const dy = branchLength * Math.sin(branchAngle * Math.PI / 180);
         const branchX2 = side === 'left' ? branchX1 - dx : branchX1 + dx;
         const branchY2 = branchY1 - dy;
+        
+        // Curvier branch
+        const ctrlX = (branchX1 + branchX2) / 2;
+        const ctrlY = branchY1 - 40;
 
-        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, trunkWidthAtBranch, 0);
+        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrlX, ctrlY, trunkWidthAtBranch, 0);
 
-        // ✅ New balanced leaf distribution
-        const remainingLeaves = maxLeaves - leafIndex;
+        // New balanced leaf distribution
+        const remainingLeaves = numLeaves - leafIndex;
         const remainingLevels = levels - level;
         const leavesOnThisBranch = Math.ceil(remainingLeaves / remainingLevels);
 
         for (let i = 0; i < leavesOnThisBranch; i++) {
-            const t = i / (leavesOnThisBranch - 1 || 1);
+          const t = i / (leavesOnThisBranch - 1 || 1);
 
-            // You can re-enable randomness later by uncommenting the following lines
-            // const lx = branchX1 + (branchX2 - branchX1) * t + (Math.random() - 0.5) * 6;
-            // const ly = branchY1 + (branchY2 - branchY1) * t + (Math.random() - 0.5) * 6;
+          const branchStart = { x: branchX1, y: branchY1 };
+          const branchEnd = { x: branchX2, y: branchY2 };
+          const control = { x: ctrlX, y: ctrlY };
 
-            // 🔍 Clean version without randomness
-            const lx = branchX1 + (branchX2 - branchX1) * t;
-            const ly = branchY1 + (branchY2 - branchY1) * t;
+          const { x: bx, y: by, dx, dy } = getPointAndTangentOnQuadraticBezier(branchStart, control, branchEnd, t);
 
-            drawLeaf(svg, lx, ly, 15);
-            leafIndex++;
+          const length = Math.sqrt(dx * dx + dy * dy);
+          const nx = -dy / length;
+          const ny = dx / length;
 
-            if (leafIndex >= maxLeaves) break;
+          const orientation = (i % 2 === 0) ? 1 : -1;
+
+          const leafSize = 15;
+          const cx = bx + nx * leafSize * orientation;
+          const cy = by + ny * leafSize * orientation;
+
+          console.log(`Leaf ${leafIndex + 1}: (${cx.toFixed(1)}, ${cy.toFixed(1)}) on ${side} branch at level ${level + 1}`);
+
+          drawLeaf(svg, cx, cy, leafSize, dx, dy, orientation);
+
+          leafIndex++;
+          if (leafIndex >= numLeaves) break;
         }
 
-        if (leafIndex >= maxLeaves) break;
+
+        if (leafIndex >= numLeaves) break;
     }
 
     treeContainer.appendChild(svg);
 }
+
+/**
+ * Given a quadratic Bezier curve defined by start, control, and end points,
+ * returns the position (x, y) and tangent vector (dx, dy) at parameter t.
+ * 
+ * @param {Object} start - { x, y } start point of the curve
+ * @param {Object} control - { x, y } control point
+ * @param {Object} end - { x, y } end point of the curve
+ * @param {number} t - Parameter from 0 to 1 along the curve
+ * @returns {Object} { x, y, dx, dy } - point and tangent at t
+ */
+function getPointAndTangentOnQuadraticBezier(start, control, end, t) {
+  // Position along the curve
+  const x = (1 - t) ** 2 * start.x +
+            2 * (1 - t) * t * control.x +
+            t ** 2 * end.x;
+
+  const y = (1 - t) ** 2 * start.y +
+            2 * (1 - t) * t * control.y +
+            t ** 2 * end.y;
+
+  // Tangent vector (derivative of the curve)
+  const dx = 2 * (1 - t) * (control.x - start.x) +
+             2 * t * (end.x - control.x);
+
+  const dy = 2 * (1 - t) * (control.y - start.y) +
+             2 * t * (end.y - control.y);
+
+  return { x, y, dx, dy };
+}
+
 
 
 // Draw tapered trunk: thick at base, narrow at top, straight vertical
@@ -110,12 +148,8 @@ function drawTaperedTrunk(svg, baseX, baseY, height = 200, width = 14) {
 
 // Draw a tapered, curved branch as a filled path
 // startThickness = trunk width at base of branch, endThickness = 0 (pointed tip)
-function drawBranch(svg, x1, y1, x2, y2, startThickness = 6) {
+function drawBranch(svg, x1, y1, x2, y2, ctrlX, ctrlY, startThickness = 6) {
   const path = document.createElementNS(svg.namespaceURI, "path");
-
-  // Curvier branch
-  const ctrlX = (x1 + x2) / 2;
-  const ctrlY = y1 - 40;
 
   // Perpendicular direction vector
   const dx = x2 - x1;
@@ -145,44 +179,39 @@ function drawBranch(svg, x1, y1, x2, y2, startThickness = 6) {
 
 
 // Draw a two-tone leaf with subtle shading
-function drawLeaf(svg, cx, cy, size = 10) {
+function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
   const leafGroup = document.createElementNS(svg.namespaceURI, "g");
 
   const top = { x: cx, y: cy - size };
   const bottom = { x: cx, y: cy + size };
 
-  // Wider at the base, narrower at the tip
   const leftCtrlBottom = { x: cx - size * 1.0, y: cy + size * 0.4 };
   const leftCtrlTop = { x: cx - size * 0.5, y: cy - size * 0.4 };
   const rightCtrlBottom = { x: cx + size * 1.0, y: cy + size * 0.4 };
   const rightCtrlTop = { x: cx + size * 0.5, y: cy - size * 0.4 };
 
-  // Left half of the leaf (lighter green)
   const leftPath = document.createElementNS(svg.namespaceURI, "path");
-  const leftD = `
+  leftPath.setAttribute("d", `
     M ${bottom.x} ${bottom.y}
     C ${leftCtrlBottom.x} ${leftCtrlBottom.y}, ${leftCtrlTop.x} ${leftCtrlTop.y}, ${top.x} ${top.y}
     Z
-  `;
-  leftPath.setAttribute("d", leftD);
+  `);
   leftPath.setAttribute("fill", "#7ed957");
 
-  // Right half of the leaf (darker green)
   const rightPath = document.createElementNS(svg.namespaceURI, "path");
-  const rightD = `
+  rightPath.setAttribute("d", `
     M ${bottom.x} ${bottom.y}
     C ${rightCtrlBottom.x} ${rightCtrlBottom.y}, ${rightCtrlTop.x} ${rightCtrlTop.y}, ${top.x} ${top.y}
     Z
-  `;
-  rightPath.setAttribute("d", rightD);
+  `);
   rightPath.setAttribute("fill", "#4caf50");
-
-  // Optional: random rotation to look natural
-  const randomAngle = (Math.random() - 0.5) * 50; // -25° to +25°
-  leafGroup.setAttribute("transform", `rotate(${randomAngle}, ${cx}, ${cy})`);
 
   leafGroup.appendChild(leftPath);
   leafGroup.appendChild(rightPath);
+
+  const angle = 90 + 90 * orientation;
+  leafGroup.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
+  console.log(`Drawing leaf at (${cx.toFixed(1)}, ${cy.toFixed(1)}) with angle ${angle.toFixed(1)}`);
+
   svg.appendChild(leafGroup);
 }
-

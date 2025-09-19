@@ -6,10 +6,11 @@ export function drawTree(score, treeContainer) {
 
     // Calculate trunk height and width based on leaf count
     const trunkHeight = 200 + numLeaves;
-    const trunkWidth = Math.round(5 + numLeaves * 0.1);
+    const trunkWidth = Math.round(15 + numLeaves * 0.1);
 
     // Canvas dimensions
-    const maxBranchLength = trunkHeight * 0.9;
+    const branchLengthFactor = 0.6;
+    const maxBranchLength = trunkHeight * branchLengthFactor;
     const horizontalBuffer = 40;
     const totalWidth = maxBranchLength * 2 + horizontalBuffer * 2;
     const totalHeight = trunkHeight * 1.5;
@@ -37,7 +38,7 @@ export function drawTree(score, treeContainer) {
 
         const side = level % 2 === 0 ? 'left' : 'right';
 
-        const branchLength = trunkHeight * 0.9 * (1 - level * 0.1);
+        const branchLength = trunkHeight * branchLengthFactor * (1 - level * 0.1);
         const branchAngle = 20 + level * 3;
 
         // Taper branch
@@ -56,15 +57,20 @@ export function drawTree(score, treeContainer) {
         const ctrlX = (branchX1 + branchX2) / 2;
         const ctrlY = branchY1 - 40;
 
-        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrlX, ctrlY, trunkWidthAtBranch, 0);
+        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrlX, ctrlY, trunkWidthAtBranch, 1);
 
         // New balanced leaf distribution
         const remainingLeaves = numLeaves - leafIndex;
         const remainingLevels = levels - level;
         const leavesOnThisBranch = Math.ceil(remainingLeaves / remainingLevels);
 
-        for (let i = 0; i < leavesOnThisBranch; i++) {
-          const t = i / (leavesOnThisBranch - 1 || 1);
+       for (let i = 0; i < leavesOnThisBranch; i++) {
+          const isFirst = i === 0;
+
+          // First leaf at the tip (t = 1), others step backwards from tip
+          const t = isFirst
+            ? 1
+            : 1 - ((i - 1) / (leavesOnThisBranch - 1 || 1)); // spread rest from tip back toward trunk
 
           const branchStart = { x: branchX1, y: branchY1 };
           const branchEnd = { x: branchX2, y: branchY2 };
@@ -76,11 +82,17 @@ export function drawTree(score, treeContainer) {
           const nx = -dy / length;
           const ny = dx / length;
 
-          const orientation = (i % 2 === 0) ? 1 : -1;
+          const orientation = isFirst ? 0 : (i % 2 === 0 ? 1 : -1);  // 0 = follow curve, 1 = up, -1 = down
 
           const leafSize = 15;
-          const cx = bx + nx * leafSize * orientation;
-          const cy = by + ny * leafSize * orientation;
+          let cx = bx;
+          let cy = by;
+
+          // Only offset perpendicular if not the first leaf
+          if (!isFirst) {
+            cx += nx * leafSize * orientation;
+            cy += ny * leafSize * orientation;
+          }
 
           console.log(`Leaf ${leafIndex + 1}: (${cx.toFixed(1)}, ${cy.toFixed(1)}) on ${side} branch at level ${level + 1}`);
 
@@ -89,6 +101,7 @@ export function drawTree(score, treeContainer) {
           leafIndex++;
           if (leafIndex >= numLeaves) break;
         }
+
 
 
         if (leafIndex >= numLeaves) break;
@@ -148,26 +161,32 @@ function drawTaperedTrunk(svg, baseX, baseY, height = 200, width = 14) {
 
 // Draw a tapered, curved branch as a filled path
 // startThickness = trunk width at base of branch, endThickness = 0 (pointed tip)
-function drawBranch(svg, x1, y1, x2, y2, ctrlX, ctrlY, startThickness = 6) {
+function drawBranch(svg, x1, y1, x2, y2, ctrlX, ctrlY, startThickness = 6, endThickness = 0) {
   const path = document.createElementNS(svg.namespaceURI, "path");
 
-  // Perpendicular direction vector
+  // Direction and perpendicular vectors
   const dx = x2 - x1;
   const dy = y2 - y1;
   const length = Math.sqrt(dx * dx + dy * dy);
   const nx = -dy / length;
   const ny = dx / length;
 
-  // Start thickness
+  // Start thickness offset points
   const x1a = x1 + nx * (startThickness / 2);
   const y1a = y1 + ny * (startThickness / 2);
   const x1b = x1 - nx * (startThickness / 2);
   const y1b = y1 - ny * (startThickness / 2);
 
-  // The tip is now a single point (x2, y2)
+  // End thickness offset points
+  const x2a = x2 + nx * (endThickness / 2);
+  const y2a = y2 + ny * (endThickness / 2);
+  const x2b = x2 - nx * (endThickness / 2);
+  const y2b = y2 - ny * (endThickness / 2);
+
   const pathData = `
     M ${x1a} ${y1a}
-    Q ${ctrlX} ${ctrlY}, ${x2} ${y2}
+    Q ${ctrlX} ${ctrlY}, ${x2a} ${y2a}
+    L ${x2b} ${y2b}
     Q ${ctrlX} ${ctrlY}, ${x1b} ${y1b}
     Z
   `;

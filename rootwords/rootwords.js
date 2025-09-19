@@ -1,6 +1,7 @@
 // rootwords.js
 import { loadDictionary, isWord, chooseRandomWordSet } from '../utility/isword/isword.js';
 import { TreeNode } from './word-tree.js';
+import { drawTree } from './drawtree.js'
 
 
 const grid = document.getElementById('word-grid');
@@ -24,7 +25,7 @@ let lineCounter = 0; // Ensures unique gradient IDs
 
 // Initialize the dictionary and update grid layout
 updateLettersFromSwiper();
-drawTree();
+drawRoots();
 
 // Try load
 loadTreeFromStorage();
@@ -70,7 +71,7 @@ document.addEventListener('word-committed', (e) => {
   currentNode.addChild(newNode);
 
   // Draw the subtree TODO starting from the newly added node
-  drawTree();
+  drawRoots();
   scoreTree();
 
   // Select node according to a few rules
@@ -118,8 +119,10 @@ function scoreTree(rootNode = treeRoot) {
   document.getElementById('score-scroll').textContent = score;
 
   saveTreeToStorage();
-}
 
+  const treeContainer = document.getElementById("tree");
+  drawTree(score, treeContainer);
+}
 
 
 /**
@@ -135,7 +138,7 @@ function updateLettersFromSwiper() {
   grid.innerHTML = '';
 }
 
-function drawTree() {
+function drawRoots() {
   const numCols = treeRoot.word.length;  // The width is always equal to the root's word length
   const drawList = [];
   const processedLevels = {};
@@ -277,7 +280,7 @@ function removeSubtrees(startNode) {
     startNode.children = [];
   }
 
-  drawTree();
+  drawRoots();
   scoreTree();
 }
 
@@ -628,7 +631,7 @@ function loadTreeFromStorage(cookie = 'savedWordTree') {
     treeRoot = newTree;
     currentNode = newTree;
 
-    drawTree();
+    drawRoots();
     scoreTree();
     selectNode(newTree);
   } catch (err) {

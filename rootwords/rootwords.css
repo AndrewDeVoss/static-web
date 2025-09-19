@@ -52,7 +52,8 @@ body.no-flex {
 /* Above-ground */
 #over-world {
   position: relative;
-  height: 100vh; /* or any height you want for the above-ground area */
+  min-height: 100px; /* or any height you want for the above-ground area */
+  padding-top: 10px;
   width: 100%;
   overflow: hidden;
   background: var(--sky-gradient); /* Will set via JS or class */
@@ -72,14 +73,10 @@ body.no-flex {
 }
 
 #tree {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   z-index: 2;
   pointer-events: none;
   width: auto;
-  height: 100%;
   display: flex;
   align-items: flex-end;
   justify-content: center;

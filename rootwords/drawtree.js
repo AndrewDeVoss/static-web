@@ -3,10 +3,10 @@ export function drawTree(score, treeContainer) {
 
     const svgNS = "http://www.w3.org/2000/svg";
     const numLeaves = 1 + score;
-    const levels = Math.max(2, Math.ceil(Math.sqrt(numLeaves + 1)));
+    const levels = Math.max(2, Math.round(numLeaves/5));
 
     // Teardrop shape: narrow bottom, bulge, taper top
-    const controlPoints = [0.5, 1.0, .05, 0.01];
+    const controlPoints = [0.5, 1.0, 1.0, 0.5];
 
     // Generate Bezier weights per level
     let weights = [];
@@ -42,8 +42,7 @@ export function drawTree(score, treeContainer) {
     let leafIndex = 0;
     const leafSize = 15;
 
-
-    const trunkHeight = 100 + (numLeaves * 2);
+    const trunkHeight = 100 + (levels * 20) + numLeaves;
     const trunkWidth = Math.round(15 + numLeaves * 0.1);
 
     const maxBranchLength = (1 + maxLeavesOnLevel) * leafSize;
@@ -65,13 +64,13 @@ export function drawTree(score, treeContainer) {
     for (let level = 0; level < levels; level++) {
         const leavesOnThisBranch = leavesPerLevel[level];
         if (leavesOnThisBranch==0) continue;
-        const branchStartOffset = 100;
+        const branchStartOffset = 100 + numLeaves;
         const usableTrunkHeight = trunkHeight - branchStartOffset;
         const y = baseY - branchStartOffset - (usableTrunkHeight / (levels - 1)) * level;
         const side = level % 2 === 0 ? 'left' : 'right';
 
         const branchLength = (1 + leavesOnThisBranch) * leafSize;
-        const branchAngle = 5 + level;
+        const branchAngle = 10 + level;
 
         const heightFromBase = baseY - y;
         const topTrunkWidth = trunkWidth / (2 + levels / 2);

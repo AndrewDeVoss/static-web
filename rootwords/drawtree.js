@@ -65,17 +65,22 @@ export function drawTree(score, treeContainer) {
 
         drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrlX, ctrlY, trunkWidthAtBranch, 1);
 
-
-
        for (let i = 0; i < leavesOnThisBranch; i++) {
           const isFirst = i === 0;
-          
-        const tipGap = 0.12; // how far from tip (t=1) to push the 2nd leaf back
 
-        const t = isFirst
-          ? 1
-          : 1 - tipGap - ((i - 1) / (leavesOnThisBranch - 1 || 1)) * (1 - tipGap);
+          let t;
+          if (isFirst) {
+            t = 1; // Tip of branch
+          } else {
+            const numRemainingLeaves = leavesOnThisBranch - 1;
+            const slots = numRemainingLeaves + 1;
 
+            // How far from base (t=0) to draw next leaf, leaving space at base and tip
+            const gap = 0.9 / slots; // 0.9 = max distance covered (leave a 10% margin near tip)
+            const slotIndex = i - 1;
+
+            t = gap * (slotIndex + 1); // Skip 0th and final slot
+          } 
 
           const branchStart = { x: branchX1, y: branchY1 };
           const branchEnd = { x: branchX2, y: branchY2 };
@@ -97,8 +102,6 @@ export function drawTree(score, treeContainer) {
             cx += nx * leafSize * orientation;
             cy += ny * leafSize * orientation;
           }
-
-          console.log(`Leaf ${leafIndex + 1}: (${cx.toFixed(1)}, ${cy.toFixed(1)}) on ${side} branch at level ${level + 1}`);
 
           drawLeaf(svg, cx, cy, leafSize, dx, dy, orientation);
 
@@ -233,8 +236,14 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
   leafGroup.appendChild(rightPath);
 
   const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90 + 90 * orientation;
-  leafGroup.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-  console.log(`Drawing leaf at (${cx.toFixed(1)}, ${cy.toFixed(1)}) with angle ${angle.toFixed(1)}`);
+  let transform = `rotate(${angle}, ${cx}, ${cy})`;
+
+  if (orientation < 0) {
+    // Mirror around the center (cx, cy)
+    transform += ` scale(-1, 1) translate(${-2 * cx}, 0)`;
+  }
+
+  leafGroup.setAttribute("transform", transform);
 
   svg.appendChild(leafGroup);
 }

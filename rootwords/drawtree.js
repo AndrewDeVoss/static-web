@@ -3,10 +3,11 @@ export function drawTree(score, treeContainer) {
 
     const svgNS = "http://www.w3.org/2000/svg";
     const numLeaves = 1 + score;
-    const levels = Math.max(2, Math.round(numLeaves/5));
+    const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
+    const levels = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
 
     // Teardrop shape: narrow bottom, bulge, taper top
-    const controlPoints = [0.5, 1.0, 1.0, 0.5];
+    const controlPoints = [0.5, 1.0, 0.85, 0.5];
 
     // Generate Bezier weights per level
     let weights = [];
@@ -45,7 +46,7 @@ export function drawTree(score, treeContainer) {
     const trunkHeight = 100 + (levels * 20) + numLeaves;
     const trunkWidth = Math.round(15 + numLeaves * 0.1);
 
-    const maxBranchLength = (1 + maxLeavesOnLevel) * leafSize;
+    const maxBranchLength = (1 + maxLeavesOnLevel) * (leafSize * 1.5);
     const horizontalBuffer = 40;
     const totalWidth = maxBranchLength * 2 + horizontalBuffer * 2;
     const totalHeight = trunkHeight * 1.5;
@@ -83,10 +84,16 @@ export function drawTree(score, treeContainer) {
         const branchX2 = side === 'left' ? branchX1 - dx : branchX1 + dx;
         const branchY2 = branchY1 - dy;
 
-        const ctrlX = (branchX1 + branchX2) / 2;
-        const ctrlY = branchY1 - 40;
+        const branchMidX = (branchX1 + branchX2) / 2;
+        const wiggleAmount = 20; // Increase for more curve
 
-        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrlX, ctrlY, trunkWidthAtBranch, 1);
+        const ctrl1X = branchX1 + (side === 'left' ? -wiggleAmount : wiggleAmount);
+        const ctrl1Y = branchY1 - 20;
+
+        const ctrl2X = branchMidX + (side === 'left' ? wiggleAmount : -wiggleAmount);
+        const ctrl2Y = branchY2 - 20;
+
+        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, trunkWidthAtBranch, 1);
 
         for (let i = 0; i < leavesOnThisBranch; i++) {
             const isFirst = i === 0;
@@ -97,16 +104,22 @@ export function drawTree(score, treeContainer) {
             } else {
                 const numRemainingLeaves = leavesOnThisBranch - 1;
                 const slots = numRemainingLeaves + 1;
-                const gap = 0.9 / slots;
+                const gap = 0.7 / slots;
                 const slotIndex = i - 1;
-                t = gap * (slotIndex + 1);
+                t = 1 - gap * (slotIndex + 1);
             }
 
             const branchStart = { x: branchX1, y: branchY1 };
             const branchEnd = { x: branchX2, y: branchY2 };
-            const control = { x: ctrlX, y: ctrlY };
 
-            const { x: bx, y: by, dx, dy } = getPointAndTangentOnQuadraticBezier(branchStart, control, branchEnd, t);
+            const { x: bx, y: by, dx, dy } = getPointAndTangentOnCubicBezier(
+                branchStart,
+                { x: ctrl1X, y: ctrl1Y },
+                { x: ctrl2X, y: ctrl2Y },
+                branchEnd,
+                t
+            );
+
 
             const length = Math.sqrt(dx * dx + dy * dy);
             const nx = -dy / length;
@@ -162,6 +175,29 @@ function getPointAndTangentOnQuadraticBezier(start, control, end, t) {
     return { x, y, dx, dy };
 }
 
+function getPointAndTangentOnCubicBezier(p0, p1, p2, p3, t) {
+    const x = (1 - t) ** 3 * p0.x +
+              3 * (1 - t) ** 2 * t * p1.x +
+              3 * (1 - t) * t ** 2 * p2.x +
+              t ** 3 * p3.x;
+
+    const y = (1 - t) ** 3 * p0.y +
+              3 * (1 - t) ** 2 * t * p1.y +
+              3 * (1 - t) * t ** 2 * p2.y +
+              t ** 3 * p3.y;
+
+    const dx = 3 * (1 - t) ** 2 * (p1.x - p0.x) +
+               6 * (1 - t) * t * (p2.x - p1.x) +
+               3 * t ** 2 * (p3.x - p2.x);
+
+    const dy = 3 * (1 - t) ** 2 * (p1.y - p0.y) +
+               6 * (1 - t) * t * (p2.y - p1.y) +
+               3 * t ** 2 * (p3.y - p2.y);
+
+    return { x, y, dx, dy };
+}
+
+
 function drawTaperedTrunk(svg, baseX, baseY, height = 200, width = 14) {
     const path = document.createElementNS(svg.namespaceURI, "path");
     const topWidth = width / 8;
@@ -178,7 +214,7 @@ function drawTaperedTrunk(svg, baseX, baseY, height = 200, width = 14) {
     svg.appendChild(path);
 }
 
-function drawBranch(svg, x1, y1, x2, y2, ctrlX, ctrlY, startThickness = 6, endThickness = 0) {
+function drawBranch(svg, x1, y1, x2, y2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, startThickness = 6, endThickness = 0) {
     const path = document.createElementNS(svg.namespaceURI, "path");
 
     const dx = x2 - x1;
@@ -199,9 +235,9 @@ function drawBranch(svg, x1, y1, x2, y2, ctrlX, ctrlY, startThickness = 6, endTh
 
     const pathData = `
         M ${x1a} ${y1a}
-        Q ${ctrlX} ${ctrlY}, ${x2a} ${y2a}
+        C ${ctrl1X} ${ctrl1Y}, ${ctrl2X} ${ctrl2Y}, ${x2a} ${y2a}
         L ${x2b} ${y2b}
-        Q ${ctrlX} ${ctrlY}, ${x1b} ${y1b}
+        C ${ctrl2X} ${ctrl2Y}, ${ctrl1X} ${ctrl1Y}, ${x1b} ${y1b}
         Z
     `;
 
@@ -209,6 +245,7 @@ function drawBranch(svg, x1, y1, x2, y2, ctrlX, ctrlY, startThickness = 6, endTh
     path.setAttribute("fill", "#7b4b25");
     svg.appendChild(path);
 }
+
 
 function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
     const leafGroup = document.createElementNS(svg.namespaceURI, "g");

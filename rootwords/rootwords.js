@@ -69,10 +69,22 @@ document.addEventListener('word-committed', (e) => {
   // Add the new node to the tree as a child of the current node
   currentNode.addChild(newNode);
 
-  // Draw the subtree starting from the newly added node
+  // Draw the subtree TODO starting from the newly added node
   drawTree();
   scoreTree();
-  selectNode(newNode);
+
+  // Select node according to a few rules
+  if (newNode.word.length === 1) {
+    selectNode(currentNode); // Cannot increase depth with single-letter words
+  } else {
+    // Determine how many letters are used in children of currentNode
+    const totalUsedCols = currentNode.children.reduce((sum, child) => sum + child.word.length, 0);
+    if (totalUsedCols < currentNode.word.length) {
+      selectNode(currentNode); // Still room to grow from current node
+    } else {
+      selectNode(newNode); // Move to the new node
+    }
+  }
 });
 
 function scoreTree(rootNode = treeRoot) {

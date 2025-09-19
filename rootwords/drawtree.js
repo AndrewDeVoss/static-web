@@ -61,7 +61,6 @@ export function drawTree(score, treeContainer) {
 
     drawTaperedTrunk(svg, baseX, baseY, trunkHeight, trunkWidth);
 
-
     for (let level = 0; level < levels; level++) {
         const leavesOnThisBranch = leavesPerLevel[level];
         if (leavesOnThisBranch==0) continue;
@@ -71,7 +70,7 @@ export function drawTree(score, treeContainer) {
         const side = level % 2 === 0 ? 'left' : 'right';
 
         const branchLength = (1 + leavesOnThisBranch) * leafSize;
-        const branchAngle = 10 + level;
+        let branchAngle = 10 + level;
 
         const heightFromBase = baseY - y;
         const topTrunkWidth = trunkWidth / (2 + levels / 2);
@@ -85,7 +84,7 @@ export function drawTree(score, treeContainer) {
         const branchY2 = branchY1 - dy;
 
         const branchMidX = (branchX1 + branchX2) / 2;
-        const wiggleAmount = 20; // Increase for more curve
+        const wiggleAmount = 5*(levels - level); // Increase for more curve
 
         const ctrl1X = branchX1 + (side === 'left' ? -wiggleAmount : wiggleAmount);
         const ctrl1Y = branchY1 - 20;
@@ -93,7 +92,7 @@ export function drawTree(score, treeContainer) {
         const ctrl2X = branchMidX + (side === 'left' ? wiggleAmount : -wiggleAmount);
         const ctrl2Y = branchY2 - 20;
 
-        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, trunkWidthAtBranch, 1);
+        drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, trunkWidthAtBranch/2, 1);
 
         for (let i = 0; i < leavesOnThisBranch; i++) {
             const isFirst = i === 0;

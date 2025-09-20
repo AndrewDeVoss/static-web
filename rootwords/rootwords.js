@@ -91,10 +91,12 @@ document.addEventListener('word-committed', (e) => {
 function scoreTree(rootNode = treeRoot) {
   const letterDivToDepthMap = new Map();
   let wordCount = 0;
+  let numLetters = 0;
 
   function traverse(node, depth) {
     if (!node || !node.letterDivs) return;
     wordCount++;
+    numLetters += node.word.length;
 
     for (const letterDiv of node.letterDivs) {
       const currentMax = letterDivToDepthMap.get(letterDiv) ?? -1;
@@ -117,9 +119,8 @@ function scoreTree(rootNode = treeRoot) {
   // for (let i = 0; i < depthList.length; i++) {
   //   score += depthList[i] * (depthList.length-i); // more points for letters from shallow roots. Gotta grow deep!
   // }
-  score = depthList[0] * depthList[depthList.length-1] + wordCount - 1;
-  // console.log(`${depthList[0]} * ${depthList[depthList.length-1]} + ${wordCount} - 1 = ${score}`)
-
+  // score = depthList[0] * depthList[depthList.length-1] + wordCount - 1;
+  score = numLetters - rootNode.word.length;
 
   document.getElementById('score-scroll').textContent = score;
 

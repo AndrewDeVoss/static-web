@@ -57,6 +57,7 @@ body.no-flex {
   width: 100%;
   overflow: hidden;
   background: var(--sky-gradient); /* Will set via JS or class */
+  z-index: 3;
 }
 
 #celestial {

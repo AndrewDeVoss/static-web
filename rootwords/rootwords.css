@@ -51,8 +51,9 @@ body.no-flex {
 
 /* Above-ground */
 #over-world {
-  position: relative;
-  min-height: 90vh; /* or any height you want for the above-ground area */
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
   width: 100%;
   overflow: hidden;
   background: var(--sky-gradient); /* Will set via JS or class */
@@ -61,7 +62,7 @@ body.no-flex {
 
 #celestial {
   position: absolute;
-  top: 0;
+  bottom: 0;
   left: 0;
   width: 100%;
   height: 100%;
@@ -73,10 +74,7 @@ body.no-flex {
 }
 
 #tree {
-  position: absolute;
-  bottom: 0;
-  left: 50%; /* Moves the left edge of the child to the horizontal center of the parent */
-  transform: translateX(-50%);
+
   z-index: 2;
   pointer-events: none;
   width: auto;
@@ -86,16 +84,7 @@ body.no-flex {
 }
 
 #grassery {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100px; /* or tweak for realistic grass height */
-  background-image: url('../utility/grassets/grass-1.png');
-  filter: sepia(0.5) hue-rotate(70deg) saturate(2) brightness(1.1);
-  background-repeat: repeat-x;  
-  z-index: 3;
-  pointer-events: none;
+  
 }
 
 /* Game area box */

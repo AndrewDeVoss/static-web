@@ -142,6 +142,30 @@ export function drawTree(score, treeContainer) {
         if (leafIndex >= numLeaves) break;
     }
 
+    // Re-order the svg elements
+    const items = Array.from(svg.children); // Get all children and convert to an array
+
+    // Define the custom sort order
+    const sortedItems = items.sort((a, b) => {
+        const aType = a.dataset.order;
+        const bType = b.dataset.order;
+
+        // If `a` is a 'branch' and `b` is a 'leaf', `a` comes first.
+        if (aType === 'branch' && bType === 'leaf') {
+            return -1;
+        }
+        // If `a` is a 'leaf' and `b` is a 'branch', `b` comes first.
+        if (aType === 'leaf' && bType === 'branch') {
+            return 1;
+        }
+        // Otherwise, maintain original relative order.
+        return 0;
+    });
+
+    sortedItems.forEach(item => {
+        svg.appendChild(item);
+    });
+
     treeContainer.appendChild(svg);
 }
 
@@ -208,6 +232,7 @@ function drawTaperedTrunk(svg, baseX, baseY, height = 200, widthAtBase = 14, wid
     `;
     path.setAttribute("d", pathData);
     path.setAttribute("fill", "#7b4b25");
+    path.setAttribute("data-order", "trunk");
     svg.appendChild(path);
 }
 
@@ -240,7 +265,7 @@ function drawBranch(svg, x1, y1, x2, y2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, startTh
 
     path.setAttribute("d", pathData);
     path.setAttribute("fill", "#7b4b25");
-    path.setAttribute("z-index", 1)
+    path.setAttribute("data-order", "branch")
     svg.appendChild(path);
 }
 
@@ -283,6 +308,6 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
     }
 
     leafGroup.setAttribute("transform", transform);
-    leafGroup.setAttribute("z-index", 2);
+    leafGroup.setAttribute("data-order", "branch");
     svg.appendChild(leafGroup);
 }

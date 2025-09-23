@@ -287,7 +287,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         C ${leftCtrlBottom.x} ${leftCtrlBottom.y}, ${leftCtrlTop.x} ${leftCtrlTop.y}, ${top.x} ${top.y}
         Z
     `);
-    leftPath.setAttribute("fill", "#7ed957");
+    leftPath.setAttribute("fill", "#ffc08a");
 
     const rightPath = document.createElementNS(svg.namespaceURI, "path");
     rightPath.setAttribute("d", `
@@ -295,7 +295,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         C ${rightCtrlBottom.x} ${rightCtrlBottom.y}, ${rightCtrlTop.x} ${rightCtrlTop.y}, ${top.x} ${top.y}
         Z
     `);
-    rightPath.setAttribute("fill", "#4caf50");
+    rightPath.setAttribute("fill", "#cc5500");
 
     leafGroup.appendChild(leftPath);
     leafGroup.appendChild(rightPath);

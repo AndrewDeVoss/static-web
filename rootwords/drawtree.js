@@ -102,9 +102,9 @@ export function drawTree(score, treeContainer) {
                 t = 1;
             } else {
                 const slotIndex = i - 1;
-                const linearT = (slotIndex + 1) / (leavesOnThisBranch); // normalized 0–1
+                const linearT = (slotIndex + 1) / (leavesOnThisBranch + 1); // normalized 0–1
                 const compression = 1.9; // try 1.5–2.0
-                const easedT = 1 - Math.pow(linearT, compression);
+                const easedT = .9 - Math.pow(linearT, compression);
                 t = easedT;
             }
 

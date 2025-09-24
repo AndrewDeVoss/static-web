@@ -287,7 +287,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         C ${leftCtrlBottom.x} ${leftCtrlBottom.y}, ${leftCtrlTop.x} ${leftCtrlTop.y}, ${top.x} ${top.y}
         Z
     `);
-    leftPath.setAttribute("fill", "#ffc08a");
+    leftPath.setAttribute("fill", "#cc6e2bff");
 
     const rightPath = document.createElementNS(svg.namespaceURI, "path");
     rightPath.setAttribute("d", `

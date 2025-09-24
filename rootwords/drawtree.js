@@ -232,7 +232,7 @@ function drawTaperedTrunk(svg, baseX, baseY, height = 200, widthAtBase = 14, wid
     `;
     path.setAttribute("d", pathData);
     path.setAttribute("fill", "#7b4b25");
-    path.setAttribute("data-order", "trunk");
+    path.dataset.order = "trunk";
     svg.appendChild(path);
 }
 
@@ -265,7 +265,7 @@ function drawBranch(svg, x1, y1, x2, y2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, startTh
 
     path.setAttribute("d", pathData);
     path.setAttribute("fill", "#7b4b25");
-    path.setAttribute("data-order", "branch")
+    path.dataset.order = "branch";
     svg.appendChild(path);
 }
 
@@ -308,6 +308,6 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
     }
 
     leafGroup.setAttribute("transform", transform);
-    leafGroup.setAttribute("data-order", "branch");
+    leafGroup.dataset.order = "leaf";
     svg.appendChild(leafGroup);
 }

@@ -5,7 +5,7 @@ export function drawTree(score, treeContainer) {
     const numLeaves = 1 + score;
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
-    const branchStartOffset = 100 + 3.0*numLeaves;
+    const branchStartOffset = 100 + 2.0*numLeaves;
 
     // Teardrop shape: narrow bottom, bulge, taper top
     const controlPoints = [0.5, 1.0, 0.85, 0.5];
@@ -45,7 +45,7 @@ export function drawTree(score, treeContainer) {
     const leafSize = 15;
 
     const trunkHeight = branchStartOffset + (numBranches * 20);
-    const trunkWidthAtBase = Math.round(10 + numLeaves * 0.1);
+    const trunkWidthAtBase = 6 + numLeaves * 0.1;
     const trunkWidthAtTop = trunkWidthAtBase / 5;
     const maxBranchLength = (1 + maxLeavesOnLevel) * (leafSize * .8);
     const horizontalBuffer = 40;
@@ -68,12 +68,12 @@ export function drawTree(score, treeContainer) {
         const usableTrunkHeight = trunkHeight - branchStartOffset;
         const y = baseY - branchStartOffset - (usableTrunkHeight / (numBranches - 1)) * branch;
         const heightFromBase = baseY - y;
-        const side = branch % 2 === 0 ? 'left' : 'right';
+        let side = branch % 2 === 0 ? 'left' : 'right';
         const minAngle = -15;
-        const maxAngle = 90;
+        const maxAngle = 80;
         const levelParam = Math.pow(branch / (numBranches - 1), 2);  // Normalized level from 0 to 1
         const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
-        const branchLength = (1 + leavesOnThisBranch) * leafSize*.9;
+        const branchLength = (1 + leavesOnThisBranch) * leafSize*.8;
         const branchWidth = trunkWidthAtBase - ((trunkWidthAtBase - trunkWidthAtTop) * (heightFromBase / trunkHeight));
 
         const branchX1 = baseX;
@@ -85,7 +85,7 @@ export function drawTree(score, treeContainer) {
 
         const branchMidX = (branchX1 + branchX2) / 2;
         const branchMidY = (branchY1 + branchY2) / 2;
-        const wiggleAmount = 7;
+        const wiggleAmount = 2*leavesOnThisBranch;
 
         const ctrl1X = branchMidX + (side === 'left' ? -wiggleAmount : wiggleAmount);
         const ctrl1Y = branchMidY - wiggleAmount;
@@ -104,7 +104,7 @@ export function drawTree(score, treeContainer) {
         const lut = buildBezierArcLengthLUT(p0, p1, p2, p3);
         const totalLength = lut[lut.length - 1].length;
         const spacing = leafSize * 0.7; // or adjust as needed TODO needs factor of total length
-        const notFirstOffsetPercent = .15;
+        const notFirstOffsetPercent = .10;
 
         for (let i = 0; i < leavesOnThisBranch; i++) {
             const isFirst = i === 0;

@@ -5,7 +5,7 @@ export function drawTree(score, treeContainer) {
     const numLeaves = 1 + score;
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
-    const branchStartOffset = 100 + 3.5*numLeaves;
+    const branchStartOffset = 100 + 3.0*numLeaves;
 
     // Teardrop shape: narrow bottom, bulge, taper top
     const controlPoints = [0.5, 1.0, 0.85, 0.5];
@@ -45,7 +45,7 @@ export function drawTree(score, treeContainer) {
     const leafSize = 15;
 
     const trunkHeight = branchStartOffset + (numBranches * 20);
-    const trunkWidthAtBase = Math.round(15 + numLeaves * 0.1);
+    const trunkWidthAtBase = Math.round(10 + numLeaves * 0.1);
     const trunkWidthAtTop = trunkWidthAtBase / 5;
     const maxBranchLength = (1 + maxLeavesOnLevel) * (leafSize * .8);
     const horizontalBuffer = 40;
@@ -70,7 +70,7 @@ export function drawTree(score, treeContainer) {
         const heightFromBase = baseY - y;
         const side = branch % 2 === 0 ? 'left' : 'right';
         const minAngle = -15;
-        const maxAngle = 75;
+        const maxAngle = 90;
         const levelParam = Math.pow(branch / (numBranches - 1), 2);  // Normalized level from 0 to 1
         const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
         const branchLength = (1 + leavesOnThisBranch) * leafSize*.9;
@@ -85,7 +85,7 @@ export function drawTree(score, treeContainer) {
 
         const branchMidX = (branchX1 + branchX2) / 2;
         const branchMidY = (branchY1 + branchY2) / 2;
-        const wiggleAmount = 5 * (numBranches - branch - 1);
+        const wiggleAmount = 7;
 
         const ctrl1X = branchMidX + (side === 'left' ? -wiggleAmount : wiggleAmount);
         const ctrl1Y = branchMidY - wiggleAmount;
@@ -93,33 +93,32 @@ export function drawTree(score, treeContainer) {
         const ctrl2X = ctrl1X;
         const ctrl2Y = ctrl1Y;
 
-
         drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, branchWidth, 2);
+
+        const p0 = { x: branchX1, y: branchY1 };
+        const p1 = { x: ctrl1X, y: ctrl1Y };
+        const p2 = { x: ctrl2X, y: ctrl2Y };
+        const p3 = { x: branchX2, y: branchY2 };
+
+        // Build LUT once per branch
+        const lut = buildBezierArcLengthLUT(p0, p1, p2, p3);
+        const totalLength = lut[lut.length - 1].length;
+        const spacing = leafSize * 0.7; // or adjust as needed TODO needs factor of total length
+        const notFirstOffsetPercent = .15;
 
         for (let i = 0; i < leavesOnThisBranch; i++) {
             const isFirst = i === 0;
             let t;
 
+            // TODO t should be a function of the branch curve and the leaf size so that they do not overlap but barely
             if (isFirst) {
-                t = .98;
+                t = 1;
             } else {
-                const slotIndex = i - 1;
-                const linearT = (slotIndex + 1) / (leavesOnThisBranch + 1); // normalized 0–1
-                const compression = 1.9; // try 1.5–2.0
-                const easedT = .9 - Math.pow(linearT, compression);
-                t = easedT;
+                const distance = totalLength - totalLength*notFirstOffsetPercent - spacing * i;
+                t = getTAtLength(lut, distance);  
             }
 
-            const branchStart = { x: branchX1, y: branchY1 };
-            const branchEnd = { x: branchX2, y: branchY2 };
-
-            const { x: bx, y: by, dx, dy } = getPointAndTangentOnCubicBezier(
-                branchStart,
-                { x: ctrl1X, y: ctrl1Y },
-                { x: ctrl2X, y: ctrl2Y },
-                branchEnd,
-                t
-            );
+            const { x: bx, y: by, dx, dy } = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, t);
 
             const length = Math.sqrt(dx * dx + dy * dy);
             const nx = -dy / length;
@@ -127,12 +126,14 @@ export function drawTree(score, treeContainer) {
 
             const orientation = isFirst ? 0 : (i % 2 === 0 ? 1 : -1);
 
-            let cx = bx;
-            let cy = by;
-
-            if (!isFirst) {
-                cx += nx * leafSize * orientation;
-                cy += ny * leafSize * orientation;
+            let cx, cy;
+            if (isFirst) {
+                // Shift forward along the branch direction by half the leaf size
+                cx = bx + dx / length * (leafSize / 2);
+                cy = by + dy / length * (leafSize / 2);
+            } else {
+                cx = bx + nx * leafSize * orientation;
+                cy = by + ny * leafSize * orientation;
             }
 
             drawLeaf(svg, cx, cy, leafSize, dx, dy, orientation);
@@ -170,6 +171,43 @@ export function drawTree(score, treeContainer) {
     });
 
     treeContainer.appendChild(svg);
+}
+
+function buildBezierArcLengthLUT(p0, p1, p2, p3, steps = 100) {
+    const lut = [];
+    let length = 0;
+    let prev = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, 0);
+
+    lut.push({ t: 0, length: 0 });
+
+    for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const pt = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, t);
+        const dx = pt.x - prev.x;
+        const dy = pt.y - prev.y;
+        const segmentLength = Math.sqrt(dx * dx + dy * dy);
+        length += segmentLength;
+        lut.push({ t, length });
+        prev = pt;
+    }
+
+    return lut;
+}
+
+function getTAtLength(lut, targetLength) {
+    for (let i = 1; i < lut.length; i++) {
+        const prev = lut[i - 1];
+        const curr = lut[i];
+
+        if (targetLength <= curr.length) {
+            const segmentLen = curr.length - prev.length;
+            const segmentT = curr.t - prev.t;
+            const proportion = (targetLength - prev.length) / segmentLen;
+            return prev.t + proportion * segmentT;
+        }
+    }
+
+    return 1; // fallback to end of curve
 }
 
 // Quadratic bezier evaluator for leaf distribution

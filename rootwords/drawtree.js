@@ -5,7 +5,7 @@ export function drawTree(score, treeContainer) {
     const numLeaves = 1 + score;
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
-    const branchStartOffset = 100 + 2.0*numLeaves;
+    const branchStartOffset = 50 + 2.0*numLeaves;
 
     // Teardrop shape: narrow bottom, bulge, taper top
     const controlPoints = [0.5, 1.0, 0.85, 0.5];

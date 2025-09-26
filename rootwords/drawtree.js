@@ -50,7 +50,7 @@ export function drawTree(score, treeContainer) {
     const maxBranchLength = (1 + maxLeavesOnLevel) * (leafSize * .8);
     const horizontalBuffer = 40;
     const totalWidth = maxBranchLength * 2 + horizontalBuffer * 2;
-    const totalHeight = trunkHeight * 1.5;
+    const totalHeight = trunkHeight * 1.8;
     const baseX = totalWidth / 2;
     const baseY = totalHeight;
 

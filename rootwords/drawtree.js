@@ -70,10 +70,10 @@ export function drawTree(score, treeContainer) {
         const heightFromBase = baseY - y;
         const side = branch % 2 === 0 ? 'left' : 'right';
         const minAngle = -15;
-        const maxAngle = 90;
+        const maxAngle = 75;
         const levelParam = Math.pow(branch / (numBranches - 1), 2);  // Normalized level from 0 to 1
         const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
-        const branchLength = (1 + leavesOnThisBranch) * leafSize*.8;
+        const branchLength = (1 + leavesOnThisBranch) * leafSize*.9;
         const branchWidth = trunkWidthAtBase - ((trunkWidthAtBase - trunkWidthAtTop) * (heightFromBase / trunkHeight));
 
         const branchX1 = baseX;
@@ -84,13 +84,15 @@ export function drawTree(score, treeContainer) {
         const branchY2 = branchY1 - dy;
 
         const branchMidX = (branchX1 + branchX2) / 2;
-        const wiggleAmount = 5 * (numBranches - branch - 1); // Increase for more curve
+        const branchMidY = (branchY1 + branchY2) / 2;
+        const wiggleAmount = 5 * (numBranches - branch - 1);
 
-        const ctrl1X = branchX1 + (side === 'left' ? -wiggleAmount : wiggleAmount);
-        const ctrl1Y = branchY1 - 20;
+        const ctrl1X = branchMidX + (side === 'left' ? -wiggleAmount : wiggleAmount);
+        const ctrl1Y = branchMidY - wiggleAmount;
 
-        const ctrl2X = branchMidX + (side === 'left' ? wiggleAmount : -wiggleAmount);
-        const ctrl2Y = branchY2 - 20;
+        const ctrl2X = ctrl1X;
+        const ctrl2Y = ctrl1Y;
+
 
         drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, branchWidth, 2);
 
@@ -99,7 +101,7 @@ export function drawTree(score, treeContainer) {
             let t;
 
             if (isFirst) {
-                t = 1;
+                t = .98;
             } else {
                 const slotIndex = i - 1;
                 const linearT = (slotIndex + 1) / (leavesOnThisBranch + 1); // normalized 0–1
@@ -149,14 +151,15 @@ export function drawTree(score, treeContainer) {
     const sortedItems = items.sort((a, b) => {
         const aType = a.dataset.order;
         const bType = b.dataset.order;
-
-        // If `a` is a 'branch' and `b` is a 'leaf', `a` comes first.
+        
+        if (aType==='trunk') return 1;
+        if (bType==='trunk') return -1;
+        
         if (aType === 'branch' && bType === 'leaf') {
-            return -1;
-        }
-        // If `a` is a 'leaf' and `b` is a 'branch', `b` comes first.
-        if (aType === 'leaf' && bType === 'branch') {
             return 1;
+        }
+        if (aType === 'leaf' && bType === 'branch') {
+            return -1;
         }
         // Otherwise, maintain original relative order.
         return 0;
@@ -297,8 +300,20 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
     `);
     rightPath.setAttribute("fill", "#da6709ff");
 
+    // Point 1/3 up from bottom to top
+    const stemStartY = bottom.y - (bottom.y - top.y) * (1 / 9);
+    const stemStart = { x: bottom.x, y: stemStartY };
+    const stemEnd = { x: bottom.x, y: bottom.y + size * 0.01 };
+
+    const stemPath = document.createElementNS(svg.namespaceURI, "path");
+    stemPath.setAttribute("d", `M ${stemStart.x} ${stemStart.y} L ${stemEnd.x} ${stemEnd.y}`);
+    stemPath.setAttribute("stroke", "#5a3e1b");
+    stemPath.setAttribute("stroke-width", size * 0.05);
+    stemPath.setAttribute("fill", "none");
+
     leafGroup.appendChild(leftPath);
     leafGroup.appendChild(rightPath);
+    leafGroup.appendChild(stemPath);
 
     const angle = Math.atan2(dy, dx) * 180 / Math.PI + 90 + 90 * orientation;
     let transform = `rotate(${angle}, ${cx}, ${cy})`;

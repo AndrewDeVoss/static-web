@@ -73,7 +73,7 @@ export function drawTree(score, treeContainer) {
         const maxAngle = 80;
         const levelParam = Math.pow(branch / (numBranches - 1), 2);  // Normalized level from 0 to 1
         const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
-        const branchLength = (1 + leavesOnThisBranch) * leafSize*.8;
+        const branchLength = (1 + leavesOnThisBranch) * leafSize*.75;
         const branchWidth = trunkWidthAtBase - ((trunkWidthAtBase - trunkWidthAtTop) * (heightFromBase / trunkHeight));
 
         const branchX1 = baseX;

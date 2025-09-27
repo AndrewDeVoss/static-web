@@ -129,15 +129,15 @@ body.no-flex {
   -webkit-user-select: none;  /* For Safari on iOS */
 }
 
-.grid-cell:hover {
-  color: #422108;
-}
-
 .grid-cell.selected {
   color: #070503;
 }
 
-.grid-cell.long-press-start {
+.word-wrapper {
+  color: #61311b;
+}
+
+.word-wrapper.long-press-start {
   transition: background-color 0.2s linear;
 }
 

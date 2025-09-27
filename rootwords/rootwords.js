@@ -149,7 +149,6 @@ function updateLettersFromSwiper() {
 function drawRoots() {
   const numCols = treeRoot.word.length;  // The width is always equal to the root's word length
   const drawList = [];
-  const processedLevels = {};
   let numRows = 0;
 
   function traverse(node, row, col) {
@@ -209,7 +208,11 @@ function drawGrid(drawList, numCols) {
     cell.style.gridColumnStart = nodeInfoDict.column + 1;
     cell.style.gridColumnEnd = nodeInfoDict.column + nodeInfoDict.span + 1;
     cell.style.gridRowStart = nodeInfoDict.row + 1;
-    cell.textContent = nodeInfoDict.word;
+
+    const wordWrapper = document.createElement('div');
+    wordWrapper.textContent = nodeInfoDict.word;
+    cell.wordWrapper = wordWrapper;
+    cell.appendChild(wordWrapper);
 
     nodeInfoDict.cell = cell;
     nodeToInfo.set(nodeInfoDict.treeNode, nodeInfoDict);
@@ -218,7 +221,7 @@ function drawGrid(drawList, numCols) {
       selectNode(nodeInfoDict.treeNode);
     });
 
-    addLongPressListener(cell, nodeInfoDict.treeNode);
+    addLongPressListener(wordWrapper, nodeInfoDict.treeNode);
 
     grid.appendChild(cell);
 
@@ -292,18 +295,32 @@ function removeSubtrees(startNode) {
   scoreTree();
 }
 
-function addLongPressListener(cell, node, holdTime = 1000) {
+function addLongPressListener(wordWrapper, node, holdTime = 1000) {
   let holdTimer;
   let delayTimer;
   let progress = 0;
   const interval = 50;
   const steps = holdTime / interval;
-  const animationDelay = 200; // Delay before starting animation
+  const animationDelay = 200; // Delay before starting 
+  const nodeWordWrappers = new Set();
 
   const startHold = () => {
+    nodeWordWrappers.clear();
+    function collectNodeWordWrappers(node) {
+      const info = nodeToInfo.get(node);
+      if (info && info.cell && info.cell.wordWrapper) {
+        nodeWordWrappers.add(info.cell.wordWrapper);
+      }
+
+      for (let child of node.children) {
+        collectNodeWordWrappers(child);
+      }
+    }
+    collectNodeWordWrappers(node);
+
     delayTimer = setTimeout(() => {
       progress = 0;
-      cell.classList.add('long-press-start');
+      nodeWordWrappers.forEach(div => div.classList.add('long-press-start'));
 
       holdTimer = setInterval(() => {
         progress++;
@@ -311,12 +328,12 @@ function addLongPressListener(cell, node, holdTime = 1000) {
 
         // Text color fade from dark red to bright red
         const redValue = Math.min(255, Math.floor(100 + 155 * ratio));
-        cell.style.color = `rgb(${redValue}, 0, 0)`;
+        wordWrapper.style.color = `rgb(${redValue}, 0, 0)`;
 
         if (progress >= steps) {
           clearInterval(holdTimer);
-          cell.style.color = '';
-          cell.classList.remove('long-press-start');
+          wordWrapper.style.color = '';
+          nodeWordWrappers.forEach(div => div.classList.remove('long-press-start'));
           const leaf = node.children.length === 0;
           removeSubtrees(node);
           if (node.parent) {
@@ -332,19 +349,19 @@ function addLongPressListener(cell, node, holdTime = 1000) {
   const cancelHold = () => {
     clearTimeout(delayTimer);
     clearInterval(holdTimer);
-    cell.style.color = '';
-    cell.classList.remove('long-press-start');
+    wordWrapper.style.color = '';
+    nodeWordWrappers.forEach(div => div.classList.remove('long-press-start'));
   };
 
   // Mouse support
-  cell.addEventListener('mousedown', startHold);
-  cell.addEventListener('mouseup', cancelHold);
-  cell.addEventListener('mouseleave', cancelHold);
+  wordWrapper.addEventListener('mousedown', startHold);
+  wordWrapper.addEventListener('mouseup', cancelHold);
+  wordWrapper.addEventListener('mouseleave', cancelHold);
 
   // Touch support
-  cell.addEventListener('touchstart', startHold);
-  cell.addEventListener('touchend', cancelHold);
-  cell.addEventListener('touchcancel', cancelHold);
+  wordWrapper.addEventListener('touchstart', startHold);
+  wordWrapper.addEventListener('touchend', cancelHold);
+  wordWrapper.addEventListener('touchcancel', cancelHold);
 }
 
 

@@ -2,6 +2,7 @@
 import { loadDictionary, isWord, chooseRandomWordSet, loadBorderlineWords, loadForbiddenWords } from '../utility/isword/isword.js';
 import { TreeNode } from './word-tree.js';
 import { drawTree } from './drawtree.js'
+import { drawGrass } from './drawgrass.js';
 
 
 const grid = document.getElementById('word-grid');
@@ -24,6 +25,8 @@ const usedWords = new Set(); // Track previously submitted words
 const nodeToInfo = new Map(); // Map to link TreeNode to its corresponding grid cell
 let lineCounter = 0; // Ensures unique gradient IDs
 
+const grassContainer = document.getElementById("grassery");
+drawGrass(grassContainer);
 
 // Initialize the dictionary and update grid layout
 updateLettersFromSwiper();

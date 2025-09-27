@@ -52,8 +52,9 @@ body.no-flex {
 /* Above-ground */
 #over-world {
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  align-items: baseline;
+  align-items: center;
   width: 100%;
   overflow: hidden;
   background: var(--sky-gradient); /* Will set via JS or class */
@@ -74,17 +75,36 @@ body.no-flex {
 }
 
 #tree {
-
   z-index: 2;
   pointer-events: none;
   width: auto;
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  transform: translateY(10px); 
 }
 
 #grassery {
-  
+  width: 100%;
+  height: 15px;
+  position: relative; /* Required for absolute children */
+}
+
+.grass-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* optional */
+}
+
+.grass-layer.background {
+  z-index: 1;
+}
+
+.grass-layer.foreground {
+  z-index: 2;
 }
 
 /* Game area box */

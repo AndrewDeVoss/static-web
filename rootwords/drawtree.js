@@ -70,7 +70,7 @@ export function drawTree(score, treeContainer) {
         const heightFromBase = baseY - y;
         let side = branch % 2 === 0 ? 'left' : 'right';
         const minAngle = -15;
-        const maxAngle = 80;
+        const maxAngle = 90;
         const levelParam = Math.pow(branch / (numBranches - 1), 2);  // Normalized level from 0 to 1
         const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
         const branchLength = (1 + leavesOnThisBranch) * leafSize*.75;
@@ -87,12 +87,18 @@ export function drawTree(score, treeContainer) {
         const branchMidY = (branchY1 + branchY2) / 2;
         const wiggleAmount = 2*leavesOnThisBranch;
 
-        const ctrl1X = branchMidX + (side === 'left' ? -wiggleAmount : wiggleAmount);
-        const ctrl1Y = branchMidY - wiggleAmount;
+        let ctrl1X = branchMidX + (side === 'left' ? -wiggleAmount : wiggleAmount);
+        let ctrl1Y = branchMidY - wiggleAmount;
 
-        const ctrl2X = ctrl1X;
-        const ctrl2Y = ctrl1Y;
+        let ctrl2X = ctrl1X;
+        let ctrl2Y = ctrl1Y;
 
+        // if (branch !== 0 && branch === numBranches-1) {
+        //     ctrl1X = branchX1;
+        //     ctrl1Y = branchY1;
+        //     ctrl2X = branchX2;
+        //     ctrl2Y = branchY2;
+        // }
         drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, branchWidth, 2);
 
         const p0 = { x: branchX1, y: branchY1 };

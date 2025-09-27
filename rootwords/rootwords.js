@@ -1,5 +1,5 @@
 // rootwords.js
-import { loadDictionary, isWord, chooseRandomWordSet } from '../utility/isword/isword.js';
+import { loadDictionary, isWord, chooseRandomWordSet, loadBorderlineWords, loadForbiddenWords } from '../utility/isword/isword.js';
 import { TreeNode } from './word-tree.js';
 import { drawTree } from './drawtree.js'
 
@@ -9,7 +9,9 @@ const swiper = document.querySelector('word-swiper');
 await customElements.whenDefined('word-swiper');
 await swiper.isReady(); // ✅ Wait for letterDivs to be initialized
 await loadDictionary();
-const { words, letters } = chooseRandomWordSet(11);
+await loadBorderlineWords();
+await loadForbiddenWords();
+const letters = chooseRandomWordSet(11);
 swiper.setLetters(letters.toUpperCase());
 
 const rootLetterDivs = swiper.getLetterDivs();

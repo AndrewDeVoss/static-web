@@ -1,14 +1,32 @@
 let wordSet = new Set();
+let forbiddenWords = new Set();
+let borderlineWords = new Set();
 
-export async function loadDictionary(url = new URL('../../dictionary.txt', import.meta.url).href) {
+export async function loadDictionary() {
+  const url = new URL('../../dictionary.txt', import.meta.url).href;
   const response = await fetch(url);
   const text = await response.text();
   wordSet = new Set(text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean));
 }
 
-export function isWord(word) {
-  return wordSet.has(word.toLowerCase());
+export async function loadForbiddenWords() {
+  const url = new URL('../../forbidden.txt', import.meta.url).href
+  const response = await fetch(url);
+  const text = await response.text();
+  forbiddenWords = new Set(text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean));
 }
+
+export async function loadBorderlineWords() {
+  const url = new URL('../../borderline.txt', import.meta.url).href
+  const response = await fetch(url);
+  const text = await response.text();
+  borderlineWords = new Set(text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean));
+}
+
+export function isWord(word) {
+  const lower = word.toLowerCase();
+  return (wordSet.has(lower) || borderlineWords.has(lower)) && !forbiddenWords.has(lower);
+} 
 
 // ----------------------------
 // Seed helpers
@@ -40,17 +58,39 @@ export function chooseRandomWordSet(targetLength = 12) {
   const seed = daysSinceJune15();
   const rng = mulberry32(seed);
 
-  const words = Array.from(wordSet);
-  const chosen = [];
+  const words = Array.from(wordSet).filter(w => !forbiddenWords.has(w) && !borderlineWords.has(w));
+
+
+  // Helper function to get a random word of a specific length
+  function getRandomWordOfLength(length) {
+    const filtered = words.filter(w => w.length === length);
+    if (filtered.length === 0) {
+      throw new Error(`No words of length ${length} found in dictionary.`);
+    }
+    return filtered[Math.floor(rng() * filtered.length)];
+  }
+
   let letters = "";
 
+  // Step 1: Add a 6-letter word
+  if (targetLength >= 6) {
+    const word6 = getRandomWordOfLength(6);
+    letters += word6;
+  }
+
+  // Step 2: Add a 5-letter word
+  if (targetLength - letters.length >= 5) {
+    const word5 = getRandomWordOfLength(5);
+    letters += word5;
+  }
+
+  // Step 3: Fill the rest with any random words
   while (letters.length < targetLength) {
     const word = words[Math.floor(rng() * words.length)];
     if (letters.length + word.length <= targetLength) {
-      chosen.push(word);
       letters += word;
     }
   }
 
-  return { words: chosen, letters };
+  return letters;
 }

@@ -328,11 +328,11 @@ function addLongPressListener(wordWrapper, node, holdTime = 1000) {
 
         // Text color fade from dark red to bright red
         const redValue = Math.min(255, Math.floor(100 + 155 * ratio));
-        wordWrapper.style.color = `rgb(${redValue}, 0, 0)`;
+        nodeWordWrappers.forEach(div => div.style.color = `rgb(${redValue}, 0, 0)`);
 
         if (progress >= steps) {
           clearInterval(holdTimer);
-          wordWrapper.style.color = '';
+          nodeWordWrappers.forEach(div => div.style.color = '');
           nodeWordWrappers.forEach(div => div.classList.remove('long-press-start'));
           const leaf = node.children.length === 0;
           removeSubtrees(node);
@@ -349,7 +349,7 @@ function addLongPressListener(wordWrapper, node, holdTime = 1000) {
   const cancelHold = () => {
     clearTimeout(delayTimer);
     clearInterval(holdTimer);
-    wordWrapper.style.color = '';
+    nodeWordWrappers.forEach(div => div.style.color = '');
     nodeWordWrappers.forEach(div => div.classList.remove('long-press-start'));
   };
 

@@ -130,7 +130,7 @@ function scoreTree(rootNode = treeRoot) {
   document.getElementById('score-scroll').textContent = score;
 
   saveTreeAsCookie();
-  updateBestTreeInLocalStorage(score);
+  // updateBestTreeInLocalStorage(score);
 
   const treeContainer = document.getElementById("tree");
   drawTree(score, treeContainer);
@@ -623,7 +623,7 @@ function getLetterDivsByWord(word, letterDivs) {
 
 
 function saveTreeAsCookie() {
-  const cookie = 'savedWordTree';
+  const cookie = 'temp-tree';
   const encoded = encodeTree(treeRoot);
 
   // Save as cookie with expiration at midnight
@@ -669,7 +669,7 @@ function updateBestTreeInLocalStorage(score) {
 }
 
 
-function loadTreeFromStorage(cookie = 'savedWordTree') {
+function loadTreeFromStorage(cookie = 'temp-tree') {
   let encoded = getCookie(cookie);
 
   if (!encoded) return; // Nothing to load

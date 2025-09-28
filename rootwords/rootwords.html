@@ -26,16 +26,21 @@
     <!-- Bottom Navigation Banner -->
     <div class="bottom-banner">
       <div class="nav-controls">
-        <a href="../index.html" class="root-words-home-button" title="Home">🏠</a>
+        <a href="../index.html" id="home-button" title="Home">🏠</a>
+
+        <div id="undo-button" title="Undo">↩️</div>
 
         <div class="score-box">
           <div class="score-scroll" id="score-scroll">0</div>
         </div>
 
-        <div class="root-words-shuffle-button" title="Shuffle">🔀</div>
-        <div class="root-words-help-button" title="Help">❓</div>
+        <div id="redo-button" title="Redo">↪️</div>
+
+        <div id="shuffle-button" title="Shuffle">🔀</div>
+        <div id="help-button" title="Help">❓</div>
       </div>
     </div>
+
 
     <script type="module" src="../utility/wordswiper/wordswiper.js"></script>
     <script type="module" src="./drawtree.js"></script>

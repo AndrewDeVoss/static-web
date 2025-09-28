@@ -192,8 +192,11 @@ body.no-flex {
 }
 
 /* Home & Help buttons */
-.root-words-home-button,
-.root-words-help-button {
+#home-button,
+#help-button,
+#undo-button,
+#redo-button,
+#shuffle-button {
   text-decoration: none;
   color: white;
   font-size: 1.8rem;

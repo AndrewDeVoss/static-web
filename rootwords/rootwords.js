@@ -20,7 +20,6 @@ let treeRoot = new TreeNode(rootLetterDivs);  // Safe now
 let currentNode = treeRoot;
 
 let rootLetters = [];
-let totalColumns = 0;
 const usedWords = new Set(); // Track previously submitted words
 const nodeToInfo = new Map(); // Map to link TreeNode to its corresponding grid cell
 let lineCounter = 0; // Ensures unique gradient IDs
@@ -29,6 +28,7 @@ const grassContainer = document.getElementById("grassery");
 drawGrass(grassContainer);
 
 // Initialize the dictionary and update grid layout
+let totalColumns = 0;
 updateLettersFromSwiper();
 drawRoots();
 
@@ -39,8 +39,8 @@ loadTreeFromStorage();
 const observer = new MutationObserver(updateLettersFromSwiper);
 observer.observe(swiper, { attributes: true, attributeFilter: ['letters'] });
 
-const shuffleButton = document.querySelector('.root-words-shuffle-button');
-
+// Shuffle
+const shuffleButton = document.getElementById('shuffle-button');
 if (swiper && shuffleButton) {
   shuffleButton.addEventListener('click', () => {
     swiper.shuffleLetters();
@@ -49,6 +49,9 @@ if (swiper && shuffleButton) {
   console.warn('Could not find swiper or shuffle button');
 }
 
+// Undo and Redo
+const undoButton = document.getElementById('undo-button');
+const redoButton = document.getElementById('redo-button');
 
 
 // Listen for committed words
@@ -129,8 +132,8 @@ function scoreTree(rootNode = treeRoot) {
 
   document.getElementById('score-scroll').textContent = score;
 
-  saveTreeAsCookie();
-  // updateBestTreeInLocalStorage(score);
+  updateCurrentTree();
+  tryUpdateBestTree(score);
 
   const treeContainer = document.getElementById("tree");
   drawTree(score, treeContainer);
@@ -622,8 +625,8 @@ function getLetterDivsByWord(word, letterDivs) {
 }
 
 
-function saveTreeAsCookie() {
-  const cookie = 'temp-tree';
+function updateCurrentTree() {
+  const cookie = 'current-tree';
   const encoded = encodeTree(treeRoot);
 
   // Save as cookie with expiration at midnight
@@ -634,14 +637,15 @@ function saveTreeAsCookie() {
   document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
 
-function updateBestTreeInLocalStorage(score) {
-  const encodedTree = encodeTree(treeRoot);
+function tryUpdateBestTree(score) {
+  const encoded = encodeTree(treeRoot);
 
   // Format today's date as YYYY-MM-DD
   const now = new Date();
   const day = String(now.getDate()).padStart(2, '0');
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const year = now.getFullYear();
+  const cookie = `best-tree`;
   const dateKey = `best-tree-${year}-${month}-${day}`;
 
   // Check for existing data
@@ -659,17 +663,22 @@ function updateBestTreeInLocalStorage(score) {
     }
   }
 
-  // Save new data with tree and score
+  // This tree is certified best
   const dataToSave = {
     score: score,
-    tree: encodedTree
+    tree: encoded
   };
 
-  localStorage.setItem(dateKey, JSON.stringify(dataToSave));
+  // TODO actually save to local storage when persistent features are available
+  // localStorage.setItem(dateKey, JSON.stringify(dataToSave));
+
+  // Save current best as cookie that expires at midnight
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
 
-
-function loadTreeFromStorage(cookie = 'temp-tree') {
+function loadTreeFromStorage(cookie = 'current-tree') {
   let encoded = getCookie(cookie);
 
   if (!encoded) return; // Nothing to load

@@ -129,7 +129,8 @@ function scoreTree(rootNode = treeRoot) {
 
   document.getElementById('score-scroll').textContent = score;
 
-  saveTreeToStorage();
+  saveTreeAsCookie();
+  updateBestTreeInLocalStorage(score);
 
   const treeContainer = document.getElementById("tree");
   drawTree(score, treeContainer);
@@ -621,30 +622,55 @@ function getLetterDivsByWord(word, letterDivs) {
 }
 
 
-function saveTreeToStorage(cookie = 'savedWordTree', todayOnly = true) {
+function saveTreeAsCookie() {
+  const cookie = 'savedWordTree';
   const encoded = encodeTree(treeRoot);
 
-  if (todayOnly) {
-    // Save as cookie with expiration at midnight
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0); // Next midnight (local time)
+  // Save as cookie with expiration at midnight
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0); // Next midnight (local time)
 
-    document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
-  } else {
-    // Default: use localStorage
-    localStorage.setItem(cookie, encoded);
-  }
+  document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
 
-function loadTreeFromStorage(cookie = 'savedWordTree') {
-  // First try to load from localStorage
-  let encoded = getCookie(cookie);
+function updateBestTreeInLocalStorage(score) {
+  const encodedTree = encodeTree(treeRoot);
 
-  // If localStorage is empty, try cookies
-  if (!encoded) {
-    encoded = localStorage.getItem(cookie);
+  // Format today's date as YYYY-MM-DD
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const dateKey = `best-tree-${year}-${month}-${day}`;
+
+  // Check for existing data
+  const existingDataJSON = localStorage.getItem(dateKey);
+  if (existingDataJSON) {
+    try {
+      const existingData = JSON.parse(existingDataJSON);
+      if (existingData.score >= score) {
+        // Existing score is higher or equal, don't overwrite
+        return;
+      }
+    } catch (e) {
+      console.warn(`Failed to parse existing data for ${dateKey}:`, e);
+      // Proceed to overwrite if parsing fails
+    }
   }
+
+  // Save new data with tree and score
+  const dataToSave = {
+    score: score,
+    tree: encodedTree
+  };
+
+  localStorage.setItem(dateKey, JSON.stringify(dataToSave));
+}
+
+
+function loadTreeFromStorage(cookie = 'savedWordTree') {
+  let encoded = getCookie(cookie);
 
   if (!encoded) return; // Nothing to load
 

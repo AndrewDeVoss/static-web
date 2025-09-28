@@ -52,6 +52,22 @@ if (swiper && shuffleButton) {
 // Undo and Redo
 const undoButton = document.getElementById('undo-button');
 const redoButton = document.getElementById('redo-button');
+const treeStackCookie = 'tree-stack';
+let treeStack = tryLoadTreeStack();
+let treeStackIndex = treeStack.length - 1; // Points to the current tree
+undoButton.addEventListener('click', () => {
+  if (treeStackIndex > 0) {
+    treeStackIndex--;
+    loadTreeFromEncoded(treeStack[treeStackIndex]);
+  }
+});
+redoButton.addEventListener('click', () => {
+  if (treeStackIndex < treeStack.length - 1) {
+    treeStackIndex++;
+    loadTreeFromEncoded(treeStack[treeStackIndex]);
+  }
+});
+
 
 
 // Listen for committed words
@@ -134,6 +150,18 @@ function scoreTree(rootNode = treeRoot) {
 
   updateCurrentTree();
   tryUpdateBestTree(score);
+
+  // Encode and push to treeStack
+  const encodedTree = encodeTree(treeRoot);
+
+  // Trim forward stack if we undid before
+  treeStack = treeStack.slice(0, treeStackIndex + 1);
+
+  treeStack.push(encodedTree);
+  treeStackIndex = treeStack.length - 1;
+
+  // Optional: save to cookie or localStorage
+  document.cookie = `${treeStackCookie}=${encodeURIComponent(JSON.stringify(treeStack))}; path=/`;
 
   const treeContainer = document.getElementById("tree");
   drawTree(score, treeContainer);
@@ -637,6 +665,17 @@ function updateCurrentTree() {
   document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
 
+function tryLoadTreeStack() {
+  const loaded = getCookie(treeStackCookie);
+  try {
+    return loaded ? JSON.parse(loaded) : [];
+  } catch (e) {
+    console.warn("Failed to parse treeStack from cookie:", e);
+    return [];
+  }
+}
+
+
 function tryUpdateBestTree(score) {
   const encoded = encodeTree(treeRoot);
 
@@ -677,6 +716,26 @@ function tryUpdateBestTree(score) {
   midnight.setHours(24, 0, 0, 0);
   document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
+
+function loadTreeFromEncoded(encoded) {
+  try {
+    const newTree = decodeTree(encoded, getLetterDivsByWord);
+    if (newTree.word !== treeRoot.word) {
+      console.warn("Tree root mismatch; skipping");
+      return;
+    }
+
+    treeRoot = newTree;
+    currentNode = newTree;
+
+    drawRoots();
+    scoreTree();
+    selectNode(newTree);
+  } catch (e) {
+    console.error("Failed to decode tree from history stack:", e);
+  }
+}
+
 
 function loadTreeFromStorage(cookie = 'current-tree') {
   let encoded = getCookie(cookie);

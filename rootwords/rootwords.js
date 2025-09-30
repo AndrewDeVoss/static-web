@@ -86,8 +86,6 @@ document.addEventListener('word-committed', (e) => {
     return;
   }
 
-  usedWords.add(word);
-
   // Create a new node for this word
   const newNode = new TreeNode(letterDivs);
 
@@ -96,7 +94,7 @@ document.addEventListener('word-committed', (e) => {
 
   // Draw the subtree TODO starting from the newly added node
   drawRoots();
-  scoreTree();
+  scoreRoots();
 
   // Select node according to a few rules
   if (newNode.word.length === 1) {
@@ -112,15 +110,17 @@ document.addEventListener('word-committed', (e) => {
   }
 });
 
-function scoreTree(rootNode = treeRoot) {
+function scoreRoots(rootNode = treeRoot) {
   const letterDivToDepthMap = new Map();
   let wordCount = 0;
   let numLetters = 0;
+  usedWords.clear();
 
   function traverse(node, depth) {
     if (!node || !node.letterDivs) return;
     wordCount++;
     numLetters += node.word.length;
+    usedWords.add(node.word);
 
     for (const letterDiv of node.letterDivs) {
       const currentMax = letterDivToDepthMap.get(letterDiv) ?? -1;
@@ -312,7 +312,6 @@ function removeSubtrees(startNode) {
       info.cell.remove();
     }
     nodeToInfo.delete(node);
-    usedWords.delete(node.word);
 
     // Remove node from parent's children
     const parent = node.parent;
@@ -327,7 +326,7 @@ function removeSubtrees(startNode) {
   }
 
   drawRoots();
-  scoreTree();
+  scoreRoots();
 }
 
 function addLongPressListener(wordWrapper, node, holdTime = 1000) {
@@ -729,7 +728,7 @@ function loadTreeFromEncoded(encoded) {
     currentNode = newTree;
 
     drawRoots();
-    scoreTree();
+    scoreRoots();
     selectNode(newTree);
   } catch (e) {
     console.error("Failed to decode tree from history stack:", e);
@@ -754,7 +753,7 @@ function loadTreeFromStorage(cookie = 'current-tree') {
     currentNode = newTree;
 
     drawRoots();
-    scoreTree();
+    scoreRoots();
     selectNode(newTree);
   } catch (err) {
     console.error('Failed to decode saved tree:', err);

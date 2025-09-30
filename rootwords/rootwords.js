@@ -30,10 +30,6 @@ drawGrass(grassContainer);
 // Initialize the dictionary and update grid layout
 let totalColumns = 0;
 updateLettersFromSwiper();
-drawRoots();
-
-// Try load
-loadTreeFromStorage();
 
 // Observe changes to <word-swiper letters="...">
 const observer = new MutationObserver(updateLettersFromSwiper);
@@ -68,7 +64,10 @@ redoButton.addEventListener('click', () => {
   }
 });
 
-
+// Initialize
+loadTreeFromStorage();
+drawRoots();
+scoreRoots();
 
 // Listen for committed words
 document.addEventListener('word-committed', (e) => {
@@ -164,6 +163,7 @@ function scoreRoots(rootNode = treeRoot) {
   document.cookie = `${treeStackCookie}=${encodeURIComponent(JSON.stringify(treeStack))}; path=/`;
 
   const treeContainer = document.getElementById("tree");
+  console.log('drawing tree');
   drawTree(score, treeContainer);
 }
 

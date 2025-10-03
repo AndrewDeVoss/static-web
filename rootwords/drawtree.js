@@ -5,7 +5,6 @@ let colors = new Map();
 export function drawTree(score, treeContainer) {
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
-    score += 30;
 
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
@@ -171,12 +170,16 @@ export function drawTree(score, treeContainer) {
             
             // Draw butterfly if there is one for this flower
             if (butterflyParameters.length > 0) {
-                console.log(`drawing butterfly at flower ${numFlowers - flowerPetalCounts.length} on branch ${branch}`);
                 const butterflyParameter = butterflyParameters.shift();
                 const start = {x: 0, y:0};
                 const end = {x: fx, y: fy};
                 const center = {x: (start.x + end.x)*butterflyParameter, y: (start.y + end.y)*butterflyParameter};
-                drawButterfly(svg, center.x, center.y, butterflySize, 0);
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                let rotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+                if (butterflyParameter === 1) rotation = 0;
+
+                drawButterfly(svg, center.x, center.y, butterflySize, rotation);
             }
         }
 

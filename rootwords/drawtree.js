@@ -91,7 +91,6 @@ export function drawTree(score, treeContainer) {
         const maxAngle = 70;
         const levelParam = Math.pow(branch / (numBranches - 1), 1.75);  // Point more up closer to top
         const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
-        console.log(branchAngle);
         const branchLength = (1 + leavesOnThisBranch) * leafSize*.7;
         const branchWidth = trunkWidthAtBase - ((trunkWidthAtBase - trunkWidthAtTop) * (heightFromBase / trunkHeight));
 
@@ -168,7 +167,7 @@ export function drawTree(score, treeContainer) {
             const flowerT = 0.6;
             const { x: fx, y: fy } = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, flowerT);
             const petalCount = flowerPetalCounts.shift();
-            const rotation = 41 * branch;
+            const rotation = 41 * (branch + 1);
             drawFlower(svg, fx, fy, rotation, petalCount, flowerSize);
         }
     }

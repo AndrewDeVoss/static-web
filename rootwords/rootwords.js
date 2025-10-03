@@ -51,12 +51,11 @@ if (swiper && shuffleButton) {
 // Undo and Redo
 const undoButton = document.getElementById('undo-button');
 const redoButton = document.getElementById('redo-button');
-const rootStackCookie = 'root-stack';
-let rootStack = tryLoadRootStack();
+let rootStack = [];
 let rootStackIndex = rootStack.length - 1; // Points to the current tree
 undoButton.addEventListener('click', () => {
   console.log('undo');
-  console.log(rootStack);
+  console.log(`at pos ${rootStackIndex} for size ${rootStack.length}`);
   if (rootStackIndex > 0) {
     rootStackIndex--;
     loadTreeFromEncoded(rootStack[rootStackIndex]);
@@ -64,17 +63,22 @@ undoButton.addEventListener('click', () => {
 });
 redoButton.addEventListener('click', () => {
   console.log('redo');
-  console.log(rootStack);
+  console.log(`at pos ${rootStackIndex} for size ${rootStack.length}`);
   if (rootStackIndex < rootStack.length - 1) {
     rootStackIndex++;
     loadTreeFromEncoded(rootStack[rootStackIndex]);
   }
 });
+function addToStack(encodedTree) {
+  rootStack.push(encodedTree);
+  rootStackIndex = rootStack.length - 1;
+}
 
 // Initialize
 loadTreeFromStorage();
 drawRoots();
 scoreRoots();
+rootStack.push(encodeTree(treeRoot)); // Initial state
 
 // Listen for committed words
 document.addEventListener('word-committed', (e) => {
@@ -114,6 +118,9 @@ document.addEventListener('word-committed', (e) => {
       selectNode(newNode); // Move to the new node
     }
   }
+
+  rootStack = rootStack.slice(0, rootStackIndex + 1); // Any time we commit a word, discard future states
+  addToStack(encodeTree(treeRoot));
 });
 
 function scoreRoots(rootNode = treeRoot) {
@@ -157,23 +164,7 @@ function scoreRoots(rootNode = treeRoot) {
   updateCurrentTree();
   tryUpdateBestTree(score);
 
-  // Encode and push to treeStack
-  const encodedTree = encodeTree(treeRoot);
-
-  // Trim forward stack if we undid before
-  rootStack = rootStack.slice(0, rootStackIndex + 1); // TODO when we call word-committed need to undo part of the stack since last ... something
-  // TODO keep a flag that maintains position to trim 
-  // TODO ensure we don't have too much duplication in stack
-  // TODO maximum stack length of 20?
-
-  rootStack.push(encodedTree);
-  rootStackIndex = rootStack.length - 1;
-
-  // Optional: save to cookie or localStorage
-  document.cookie = `${rootStackCookie}=${encodeURIComponent(JSON.stringify(rootStack))}; path=/`;
-
   const treeContainer = document.getElementById("tree");
-  console.log('drawing tree');
   drawTree(score, treeContainer);
 }
 
@@ -337,6 +328,7 @@ function removeSubtrees(startNode) {
 
   drawRoots();
   scoreRoots();
+  addToStack(encodeTree(treeRoot));
 }
 
 function addLongPressListener(wordWrapper, node, holdTime = 1000) {
@@ -661,7 +653,6 @@ function getLetterDivsByWord(word, letterDivs) {
   return result;
 }
 
-
 function updateCurrentTree() {
   const cookie = 'current-tree';
   const encoded = encodeTree(treeRoot);
@@ -673,17 +664,6 @@ function updateCurrentTree() {
 
   document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
-
-function tryLoadRootStack() {
-  const loaded = getCookie(rootStackCookie);
-  try {
-    return loaded ? JSON.parse(loaded) : [];
-  } catch (e) {
-    console.warn("Failed to parse treeStack from cookie:", e);
-    return [];
-  }
-}
-
 
 function tryUpdateBestTree(score) {
   const encoded = encodeTree(treeRoot);

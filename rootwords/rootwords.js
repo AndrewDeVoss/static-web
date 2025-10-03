@@ -48,19 +48,23 @@ if (swiper && shuffleButton) {
 // Undo and Redo
 const undoButton = document.getElementById('undo-button');
 const redoButton = document.getElementById('redo-button');
-const treeStackCookie = 'tree-stack';
-let treeStack = tryLoadTreeStack();
-let treeStackIndex = treeStack.length - 1; // Points to the current tree
+const rootStackCookie = 'root-stack';
+let rootStack = tryLoadRootStack();
+let rootStackIndex = rootStack.length - 1; // Points to the current tree
 undoButton.addEventListener('click', () => {
-  if (treeStackIndex > 0) {
-    treeStackIndex--;
-    loadTreeFromEncoded(treeStack[treeStackIndex]);
+  console.log('undo');
+  console.log(rootStack);
+  if (rootStackIndex > 0) {
+    rootStackIndex--;
+    loadTreeFromEncoded(rootStack[rootStackIndex]);
   }
 });
 redoButton.addEventListener('click', () => {
-  if (treeStackIndex < treeStack.length - 1) {
-    treeStackIndex++;
-    loadTreeFromEncoded(treeStack[treeStackIndex]);
+  console.log('redo');
+  console.log(rootStack);
+  if (rootStackIndex < rootStack.length - 1) {
+    rootStackIndex++;
+    loadTreeFromEncoded(rootStack[rootStackIndex]);
   }
 });
 
@@ -154,13 +158,16 @@ function scoreRoots(rootNode = treeRoot) {
   const encodedTree = encodeTree(treeRoot);
 
   // Trim forward stack if we undid before
-  treeStack = treeStack.slice(0, treeStackIndex + 1);
+  rootStack = rootStack.slice(0, rootStackIndex + 1); // TODO when we call word-committed need to undo part of the stack since last ... something
+  // TODO keep a flag that maintains position to trim 
+  // TODO ensure we don't have too much duplication in stack
+  // TODO maximum stack length of 20?
 
-  treeStack.push(encodedTree);
-  treeStackIndex = treeStack.length - 1;
+  rootStack.push(encodedTree);
+  rootStackIndex = rootStack.length - 1;
 
   // Optional: save to cookie or localStorage
-  document.cookie = `${treeStackCookie}=${encodeURIComponent(JSON.stringify(treeStack))}; path=/`;
+  document.cookie = `${rootStackCookie}=${encodeURIComponent(JSON.stringify(rootStack))}; path=/`;
 
   const treeContainer = document.getElementById("tree");
   console.log('drawing tree');
@@ -664,8 +671,8 @@ function updateCurrentTree() {
   document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
 
-function tryLoadTreeStack() {
-  const loaded = getCookie(treeStackCookie);
+function tryLoadRootStack() {
+  const loaded = getCookie(rootStackCookie);
   try {
     return loaded ? JSON.parse(loaded) : [];
   } catch (e) {

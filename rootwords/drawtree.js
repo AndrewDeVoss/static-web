@@ -1,3 +1,5 @@
+import { getColors } from '../utility/color/color.js';
+
 export function drawTree(score, treeContainer) {
     treeContainer.innerHTML = ''; // Clear previous tree
 
@@ -278,7 +280,7 @@ function drawTaperedTrunk(svg, baseX, baseY, height = 200, widthAtBase = 14, wid
         Z
     `;
     path.setAttribute("d", pathData);
-    path.setAttribute("fill", "#7b4b25");
+    path.setAttribute("fill", getColors().tree);
     path.dataset.order = "trunk";
     svg.appendChild(path);
 }
@@ -311,7 +313,7 @@ function drawBranch(svg, x1, y1, x2, y2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, startTh
     `;
 
     path.setAttribute("d", pathData);
-    path.setAttribute("fill", "#7b4b25");
+    path.setAttribute("fill", getColors().tree);
     path.dataset.order = "branch";
     svg.appendChild(path);
 }
@@ -334,7 +336,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         C ${leftCtrlBottom.x} ${leftCtrlBottom.y}, ${leftCtrlTop.x} ${leftCtrlTop.y}, ${top.x} ${top.y}
         Z
     `);
-    leftPath.setAttribute("fill", "#ff853f");
+    leftPath.setAttribute("fill", getColors().leaf1);
 
     const rightPath = document.createElementNS(svg.namespaceURI, "path");
     rightPath.setAttribute("d", `
@@ -342,7 +344,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         C ${rightCtrlBottom.x} ${rightCtrlBottom.y}, ${rightCtrlTop.x} ${rightCtrlTop.y}, ${top.x} ${top.y}
         Z
     `);
-    rightPath.setAttribute("fill", "#da6709ff");
+    rightPath.setAttribute("fill", getColors().leaf2);
 
     // Point 1/3 up from bottom to top
     const stemStartY = bottom.y - (bottom.y - top.y) * (1 / 9);
@@ -351,7 +353,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
 
     const stemPath = document.createElementNS(svg.namespaceURI, "path");
     stemPath.setAttribute("d", `M ${stemStart.x} ${stemStart.y} L ${stemEnd.x} ${stemEnd.y}`);
-    stemPath.setAttribute("stroke", "#5a3e1b");
+    stemPath.setAttribute("stroke", getColors().tree);
     stemPath.setAttribute("stroke-width", size * 0.05);
     stemPath.setAttribute("fill", "none");
 

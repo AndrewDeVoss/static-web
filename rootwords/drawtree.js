@@ -7,14 +7,43 @@ export function drawTree(score, treeContainer) {
     colors = getColors();
 
     const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
+
+    // Leaves and branches
     const numLeaves = Math.min(1 + score, 50);
-    const numPetals = Math.max(score-numLeaves, 0);
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
-    const maxNumFlowers = numBranches;
     const trunkHeight = 50 + numBranches * 50;
     const branchStartOffset = trunkHeight * .6;
+    const controlPoints = [0.5, 1.0, 0.85, 0.5]; // Teardrop
+    let weights = [];
+    let weightSum = 0;
+    for (let i = 0; i < numBranches; i++) {
+      const t = i / (numBranches - 1);
+      const w = cubicBezierLevelDistribution(t, ...controlPoints);
+      weights.push(w);
+      weightSum += w;
+    }
+    let leavesPerBranch = weights.map(w => Math.round((w / weightSum) * numLeaves));
+    let totalAllocated = leavesPerBranch.reduce((a, b) => a + b, 0);
+    while (totalAllocated < numLeaves) {
+        const maxIdx = leavesPerBranch.indexOf(Math.max(...leavesPerBranch));
+        leavesPerBranch[maxIdx]++;
+        totalAllocated++;
+    }
+    while (totalAllocated > numLeaves) {
+        const maxIdx = leavesPerBranch.indexOf(Math.max(...leavesPerBranch));
+        leavesPerBranch[maxIdx]--;
+        totalAllocated--;
+    }
+    const maxLeavesOnLevel = Math.max(...leavesPerBranch);
+    let leafIndex = 0;
+    const leafSize = 15;
 
+    // Flowers
+    const numPetals = Math.max(score-numLeaves, 0);
+    const maxNumFlowers = numBranches;
     const numFlowers = (numPetals > 0) ? Math.min(maxNumFlowers, numPetals) : 0;
     const flowerPetalCounts = [];
     let flowerIndex = 0;
@@ -25,44 +54,9 @@ export function drawTree(score, treeContainer) {
         flowerPetalCounts[flowerIndex]++;
         flowerIndex = (flowerIndex + 1) % numFlowers;
     }
-
-    // Teardrop shape: narrow bottom, bulge, taper top
-    const controlPoints = [0.5, 1.0, 0.85, 0.5];
-
-    // Generate Bezier weights per level
-    let weights = [];
-    let weightSum = 0;
-    for (let i = 0; i < numBranches; i++) {
-      const t = i / (numBranches - 1);
-      const w = cubicBezierLevelDistribution(t, ...controlPoints);
-      weights.push(w);
-      weightSum += w;
-    }
-
-    // Convert weights to leaf counts
-    let leavesPerBranch = weights.map(w => Math.round((w / weightSum) * numLeaves));
-
-    // Adjust to ensure sum matches numLeaves exactly
-    let totalAllocated = leavesPerBranch.reduce((a, b) => a + b, 0);
-
-    while (totalAllocated < numLeaves) {
-        const maxIdx = leavesPerBranch.indexOf(Math.max(...leavesPerBranch));
-        leavesPerBranch[maxIdx]++;
-        totalAllocated++;
-    }
-
-    while (totalAllocated > numLeaves) {
-        const maxIdx = leavesPerBranch.indexOf(Math.max(...leavesPerBranch));
-        leavesPerBranch[maxIdx]--;
-        totalAllocated--;
-    }
-
-    const maxLeavesOnLevel = Math.max(...leavesPerBranch);
-
-    let leafIndex = 0;
-    const leafSize = 15;
     const flowerSize = leafSize * .4;
 
+    // Trunk
     const trunkWidthAtBase = 6 + numLeaves * 0.1;
     const trunkWidthAtTop = trunkWidthAtBase / 5;
     const maxBranchLength = (1 + maxLeavesOnLevel) * (leafSize * .8);
@@ -71,12 +65,9 @@ export function drawTree(score, treeContainer) {
     const totalHeight = trunkHeight * 1.8;
     const baseX = totalWidth / 2;
     const baseY = totalHeight;
-
-    const svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
-
     drawTaperedTrunk(svg, baseX, baseY, trunkHeight, trunkWidthAtBase, trunkWidthAtTop);
 
+    // Draw items by branch
     for (let branch = 0; branch < numBranches; branch++) {
         const leavesOnThisBranch = leavesPerBranch[branch];
         if (leavesOnThisBranch==0) continue;

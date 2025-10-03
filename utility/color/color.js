@@ -47,14 +47,13 @@ export function getColors() {
 
     // Seasonal colors
     let season = getSeasonFromDate(time);
-    season = "autumn";
 
     switch (season) {
         case "winter":
             colors.leaf1 = "#cce3e6";
             colors.leaf2 = "#a3bfc5";
-            colors.petal1 = "#d6d6f5";
-            colors.petal2 = "#eaeaff";
+            colors.petal1 = "#90c7d4ff";
+            colors.petal2 = "#95c6d3ff";
             colors.flowerCenter = "#ccd6dd";
             break;
 

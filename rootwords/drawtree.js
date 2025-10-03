@@ -361,6 +361,8 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         Z
     `);
     leftPath.setAttribute("fill", colors.leaf1);
+    leftPath.setAttribute("stroke", "black");
+    leftPath.setAttribute("stroke-width", "0.17");
 
     const rightPath = document.createElementNS(svg.namespaceURI, "path");
     rightPath.setAttribute("d", `
@@ -369,6 +371,8 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         Z
     `);
     rightPath.setAttribute("fill", colors.leaf2);
+    rightPath.setAttribute("stroke", "black");
+    rightPath.setAttribute("stroke-width", "0.17");
 
     // Point 1/3 up from bottom to top
     const stemStartY = bottom.y - (bottom.y - top.y) * (1 / 9);

@@ -8,7 +8,6 @@ export function getColors() {
 
     // Time of day colors
     let timeOfDay = getTimeOfDay(time);
-    timeOfDay = "twilight";
     switch (timeOfDay) {
         case "dawn":
             colors.sky1 = "#3c1053";
@@ -133,15 +132,15 @@ function getSunTimes(date, lat, lng) {
   const J_civilDawn = J_transit - H_civil / 360;
   const J_civilDusk = J_transit + H_civil / 360;
 
- const msInDay = 86400000;
- const jdToMs = jd => (jd - 2440587.5) * msInDay;
+  const msInDay = 86400000;
+  const jdToMs = jd => (jd - 2440587.5) * msInDay;
 
- return {
-  civilDawn: jdToMs(J_civilDawn),
-  sunrise:   jdToMs(J_rise),
-  solarNoon: jdToMs(J_transit),
-  sunset:    jdToMs(J_set),
-  civilDusk: jdToMs(J_civilDusk)
-};
+  return {
+    civilDawn: jdToMs(J_civilDawn),
+    sunrise:   jdToMs(J_rise),
+    solarNoon: jdToMs(J_transit),
+    sunset:    jdToMs(J_set),
+    civilDusk: jdToMs(J_civilDusk)
+  };
 
 }

@@ -28,8 +28,8 @@ export function getColors() {
             colors.sky2 = "#87cefa";
             break;
         case "midafternoon":
-            colors.sky1 = "#99e4daff";
-            colors.sky2 = "#b6abcaff";
+            colors.sky1 = "#0077ffff";
+            colors.sky2 = "#87b5faff";
             break;
         case "evening":
             colors.sky1 = "#f0af9fff";

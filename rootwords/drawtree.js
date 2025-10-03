@@ -7,7 +7,8 @@ export function drawTree(score, treeContainer) {
     const numLeaves = 1 + score;
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
-    const branchStartOffset = 50 + 2.2*numLeaves;
+    const trunkHeight = 50 + numBranches * 50;
+    const branchStartOffset = trunkHeight * .6;
 
     // Teardrop shape: narrow bottom, bulge, taper top
     const controlPoints = [0.5, 1.0, 0.85, 0.5];
@@ -42,11 +43,9 @@ export function drawTree(score, treeContainer) {
 
     const maxLeavesOnLevel = Math.max(...leavesPerBranch);
 
-
     let leafIndex = 0;
     const leafSize = 15;
 
-    const trunkHeight = branchStartOffset + (numBranches * 20);
     const trunkWidthAtBase = 6 + numLeaves * 0.1;
     const trunkWidthAtTop = trunkWidthAtBase / 5;
     const maxBranchLength = (1 + maxLeavesOnLevel) * (leafSize * .8);
@@ -71,11 +70,12 @@ export function drawTree(score, treeContainer) {
         const y = baseY - branchStartOffset - (usableTrunkHeight / (numBranches - 1)) * branch;
         const heightFromBase = baseY - y;
         let side = branch % 2 === 0 ? 'left' : 'right';
-        const minAngle = -15;
-        const maxAngle = 90;
-        const levelParam = Math.pow(branch / (numBranches - 1), 2);  // Normalized level from 0 to 1
+        const minAngle = -15 + 5*numBranches;
+        const maxAngle = 70;
+        const levelParam = Math.pow(branch / (numBranches - 1), 1.75);  // Point more up closer to top
         const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
-        const branchLength = (1 + leavesOnThisBranch) * leafSize*.75;
+        console.log(branchAngle);
+        const branchLength = (1 + leavesOnThisBranch) * leafSize*.7;
         const branchWidth = trunkWidthAtBase - ((trunkWidthAtBase - trunkWidthAtTop) * (heightFromBase / trunkHeight));
 
         const branchX1 = baseX;
@@ -87,20 +87,14 @@ export function drawTree(score, treeContainer) {
 
         const branchMidX = (branchX1 + branchX2) / 2;
         const branchMidY = (branchY1 + branchY2) / 2;
-        const wiggleAmount = 2*leavesOnThisBranch;
+        const wiggleAmount = 1.5*leavesOnThisBranch;
 
         let ctrl1X = branchMidX + (side === 'left' ? -wiggleAmount : wiggleAmount);
-        let ctrl1Y = branchMidY - wiggleAmount;
+        let ctrl1Y = branchMidY + wiggleAmount;
 
         let ctrl2X = ctrl1X;
         let ctrl2Y = ctrl1Y;
 
-        // if (branch !== 0 && branch === numBranches-1) {
-        //     ctrl1X = branchX1;
-        //     ctrl1Y = branchY1;
-        //     ctrl2X = branchX2;
-        //     ctrl2Y = branchY2;
-        // }
         drawBranch(svg, branchX1, branchY1, branchX2, branchY2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, branchWidth, 2);
 
         const p0 = { x: branchX1, y: branchY1 };
@@ -111,19 +105,18 @@ export function drawTree(score, treeContainer) {
         // Build LUT once per branch
         const lut = buildBezierArcLengthLUT(p0, p1, p2, p3);
         const totalLength = lut[lut.length - 1].length;
-        const spacing = leafSize * 0.7; // or adjust as needed TODO needs factor of total length
-        const notFirstOffsetPercent = .10;
+
+        const leafSpacingFactor = 0.75; // tune this for overlap control
+        let currentLength = totalLength - leafSize * 0.1; // start from tip
 
         for (let i = 0; i < leavesOnThisBranch; i++) {
             const isFirst = i === 0;
             let t;
 
-            // TODO t should be a function of the branch curve and the leaf size so that they do not overlap but barely
             if (isFirst) {
                 t = 1;
             } else {
-                const distance = totalLength - totalLength*notFirstOffsetPercent - spacing * i;
-                t = getTAtLength(lut, distance);  
+                t = getTAtLength(lut, currentLength);  
             }
 
             const { x: bx, y: by, dx, dy } = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, t);
@@ -146,6 +139,7 @@ export function drawTree(score, treeContainer) {
 
             drawLeaf(svg, cx, cy, leafSize, dx, dy, orientation);
 
+            currentLength -= leafSize * leafSpacingFactor;
             leafIndex++;
             if (leafIndex >= numLeaves) break;
         }

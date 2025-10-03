@@ -56,7 +56,6 @@ export function getColors() {
             colors.leaf1 = "#ff853f"
             colors.leaf2 = "#da6709ff"
             colors.grass1 = "#1d661dff"
-            colors.grass2 = "#489248ff"
             break;
     }
 

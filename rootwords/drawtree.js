@@ -73,9 +73,6 @@ export function drawTree(score, treeContainer) {
     const baseY = totalHeight;
 
     const svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("width", totalWidth);
-    svg.setAttribute("height", totalHeight);
-    svg.setAttribute("viewBox", `0 0 ${totalWidth} ${totalHeight}`);
     svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
 
     drawTaperedTrunk(svg, baseX, baseY, trunkHeight, trunkWidthAtBase, trunkWidthAtTop);
@@ -198,6 +195,14 @@ export function drawTree(score, treeContainer) {
     });
 
     treeContainer.appendChild(svg);
+
+    treeContainer.appendChild(svg);
+
+    const bbox = svg.getBBox();
+    const margin = 10;
+    svg.setAttribute("viewBox", `${bbox.x - margin} ${bbox.y - margin} ${bbox.width + margin * 2} ${bbox.height + margin * 2}`);
+    svg.setAttribute("width", bbox.width + margin * 2);
+    svg.setAttribute("height", bbox.height + margin * 2);
 }
 
 function buildBezierArcLengthLUT(p0, p1, p2, p3, steps = 100) {

@@ -8,7 +8,7 @@ export function getColors() {
 
     // Time of day colors
     let timeOfDay = getTimeOfDay(time);
-
+    timeOfDay = "twilight";
     switch (timeOfDay) {
         case "dawn":
             colors.sky1 = "#3c1053";
@@ -18,16 +18,24 @@ export function getColors() {
             colors.sky1 = "#87ceeb";
             colors.sky2 = "#ddba69ff";
             break;
+        case "midmorning":
+            colors.sky1 = "#75c0ddff";
+            colors.sky2 = "#d8d0baff";
+            break;
         case "afternoon":
             colors.sky1 = "#00bfff";
             colors.sky2 = "#87cefa";
             break;
+        case "midafternoon":
+            colors.sky1 = "#99e4daff";
+            colors.sky2 = "#b6abcaff";
+            break;
         case "evening":
-            colors.sky1 = "#da8772ff";
-            colors.sky2 = "#6b5a86ff";
+            colors.sky1 = "#f0af9fff";
+            colors.sky2 = "#9386a5ff";
             break;
         case "twilight":
-            colors.sky1 = "#203449ff";
+            colors.sky1 = "#352049ff";
             colors.sky2 = "#4b79a1";
             break;
         case "night":
@@ -37,16 +45,20 @@ export function getColors() {
     }
 
     // Seasonal colors
-    const season = getSeasonFromDate(time);
+    let season = getSeasonFromDate(time);
     switch (season) {
         case "winter":
+            break;
         case "spring":
+            break;
         case "summer":
+            break;
         case "autumn":
             colors.leaf1 = "#ff853f"
             colors.leaf2 = "#da6709ff"
             colors.grass1 = "#1d661dff"
             colors.grass2 = "#489248ff"
+            break;
     }
 
     return colors;
@@ -81,10 +93,14 @@ function getTimeOfDay(timestamp = Date.now()) {
     return "night";
   } else if (time < times.sunrise) {
     return "dawn";
-  } else if (time < times.solarNoon) {
+  } else if (time < (times.sunrise+time.solarNoon)/2) {
     return "morning";
-  } else if (time < times.sunset) {
+   } else if (time < times.solarNoon) {
+    return "midmorning"; 
+  } else if (time < (times.solarNoon+times.sunset)/2) {
     return "afternoon";
+  } else if (time < times.sunset) {
+    return "midafternoon";
   } else if (time < times.civilDusk) {
     return "evening";
   } else {

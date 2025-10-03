@@ -5,6 +5,7 @@ let colors = new Map();
 export function drawTree(score, treeContainer) {
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
+    score += 30;
 
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
@@ -42,8 +43,8 @@ export function drawTree(score, treeContainer) {
     const leafSize = 15;
 
     // Flowers
-    const numPetals = Math.max(score-numLeaves, 0);
     const maxNumFlowers = numBranches;
+    const numPetals = Math.max(0, Math.min(score-numLeaves, maxNumFlowers*5));
     const numFlowers = (numPetals > 0) ? Math.min(maxNumFlowers, numPetals) : 0;
     const flowerPetalCounts = [];
     let flowerIndex = 0;
@@ -55,6 +56,17 @@ export function drawTree(score, treeContainer) {
         flowerIndex = (flowerIndex + 1) % numFlowers;
     }
     const flowerSize = leafSize * .4;
+
+    // Butterflies
+    const butterflySize = flowerSize * 2.5;
+    const spacesPerButterfly = 10;
+    let spacesLeft = Math.max(0, Math.min(numFlowers * spacesPerButterfly, score - numLeaves - numPetals));
+    let butterflyParameters = [];
+    while (spacesLeft>0) {
+        const parameter = Math.min(1, spacesLeft / spacesPerButterfly);
+        butterflyParameters.push(parameter);
+        spacesLeft -= spacesPerButterfly;
+    }
 
     // Trunk
     const trunkWidthAtBase = 6 + numLeaves * 0.1;
@@ -148,8 +160,6 @@ export function drawTree(score, treeContainer) {
             if (leafIndex >= numLeaves) break;
         }
 
-        if (leafIndex >= numLeaves) break;
-
         // Draw flower on this branch if we have more flowers to place
         if (flowerPetalCounts.length > 0) {
             const flowerT = 0.6;
@@ -157,7 +167,21 @@ export function drawTree(score, treeContainer) {
             const petalCount = flowerPetalCounts.shift();
             const rotation = 41 * (branch + 1);
             drawFlower(svg, fx, fy, rotation, petalCount, flowerSize);
+
+            
+            // Draw butterfly if there is one for this flower
+            if (butterflyParameters.length > 0) {
+                console.log(`drawing butterfly at flower ${numFlowers - flowerPetalCounts.length} on branch ${branch}`);
+                const butterflyParameter = butterflyParameters.shift();
+                const start = {x: 0, y:0};
+                const end = {x: fx, y: fy};
+                const center = {x: (start.x + end.x)*butterflyParameter, y: (start.y + end.y)*butterflyParameter};
+                drawButterfly(svg, center.x, center.y, butterflySize, 0);
+            }
         }
+
+        if (leafIndex >= numLeaves) break;
+
     }
 
     // Re-order the svg elements
@@ -487,4 +511,128 @@ function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
 
     flowerGroup.dataset.order = "flower";
     svg.appendChild(flowerGroup);
+}
+
+function drawButterfly(svg, cx, cy, size = 20, rotation = 0) {
+    const svgNS = svg.namespaceURI;
+    const butterflyGroup = document.createElementNS(svgNS, 'g');
+
+    // Colors
+    const butterflyBody = colors.butterflyBody;
+    const outerWing = colors.butterflyWing1;
+    const innerWing = colors.butterflyWing2;
+    const stroke = colors.butterflyBodyStroke;
+    const stroke2 = colors.butterflyWingStroke;
+
+    // Body
+    const bodyLength = size * 0.8;
+    const bodyWidth = size * 0.15;
+    const body = document.createElementNS(svgNS, 'ellipse');
+    body.setAttribute('cx', cx);
+    body.setAttribute('cy', cy);
+    body.setAttribute('rx', bodyWidth / 2);
+    body.setAttribute('ry', bodyLength / 2);
+    body.setAttribute('fill', butterflyBody);  // fallback color
+    body.setAttribute('stroke', stroke);
+    body.setAttribute('stroke-width', 0.8);
+    butterflyGroup.appendChild(body);
+
+    // Antennae
+    for (const direction of [-1, 1]) {
+        const antenna = document.createElementNS(svgNS, 'path');
+        const startX = cx;
+        const startY = cy - bodyLength / 2;
+        const controlX = cx + direction * size * 0.25;
+        const controlY = cy - bodyLength / 2 - size * 0.3;
+        const endX = cx + direction * size * 0.15;
+        const endY = cy - bodyLength / 2 - size * 0.5;
+        const d = `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`;
+        antenna.setAttribute('d', d);
+        antenna.setAttribute('stroke', stroke);
+        antenna.setAttribute('stroke-width', 0.7);
+        antenna.setAttribute('fill', 'none');
+        butterflyGroup.appendChild(antenna);
+    }
+
+    // Left Wings - Outer
+    const leftWingOuter = document.createElementNS(svgNS, 'path');
+    leftWingOuter.setAttribute('d', `
+        M ${cx} ${cy - bodyLength * 0.3}
+        C ${cx - size * 1.2} ${cy - size * 0.6},
+          ${cx - size * 1.1} ${cy + size * 0.8},
+          ${cx} ${cy + size * 0.6}
+        Z
+    `);
+    leftWingOuter.setAttribute('fill', outerWing);
+    leftWingOuter.setAttribute('stroke', stroke2);
+    leftWingOuter.setAttribute('stroke-width', 1);
+    butterflyGroup.appendChild(leftWingOuter);
+
+    // Left Wings - Inner
+    const leftWingInner = document.createElementNS(svgNS, 'path');
+    leftWingInner.setAttribute('d', `
+        M ${cx} ${cy - bodyLength * 0.2}
+        C ${cx - size * 0.9} ${cy - size * 0.3},
+          ${cx - size * 0.9} ${cy + size * 0.5},
+          ${cx} ${cy + size * 0.4}
+        Z
+    `);
+    leftWingInner.setAttribute('fill', innerWing);
+    leftWingInner.setAttribute('stroke', stroke2);
+    leftWingInner.setAttribute('stroke-width', 0.7);
+    butterflyGroup.appendChild(leftWingInner);
+
+    // Right Wings - Outer
+    const rightWingOuter = document.createElementNS(svgNS, 'path');
+    rightWingOuter.setAttribute('d', `
+        M ${cx} ${cy - bodyLength * 0.3}
+        C ${cx + size * 1.2} ${cy - size * 0.6},
+          ${cx + size * 1.1} ${cy + size * 0.8},
+          ${cx} ${cy + size * 0.6}
+        Z
+    `);
+    rightWingOuter.setAttribute('fill', outerWing);
+    rightWingOuter.setAttribute('stroke', stroke2);
+    rightWingOuter.setAttribute('stroke-width', 1);
+    butterflyGroup.appendChild(rightWingOuter);
+
+    // Right Wings - Inner
+    const rightWingInner = document.createElementNS(svgNS, 'path');
+    rightWingInner.setAttribute('d', `
+        M ${cx} ${cy - bodyLength * 0.2}
+        C ${cx + size * 0.9} ${cy - size * 0.3},
+          ${cx + size * 0.9} ${cy + size * 0.5},
+          ${cx} ${cy + size * 0.4}
+        Z
+    `);
+    rightWingInner.setAttribute('fill', innerWing);
+    rightWingInner.setAttribute('stroke', stroke2);
+    rightWingInner.setAttribute('stroke-width', 0.7);
+    butterflyGroup.appendChild(rightWingInner);
+
+    // Add some wing spots (circles) on each wing inner
+    const spotPositions = [
+        { x: -0.4, y: 0.1 },
+        { x: -0.7, y: 0.4 },
+        { x: 0.4, y: 0.1 },
+        { x: 0.7, y: 0.4 },
+    ];
+    const spotRadius = size * 0.1;
+    for (const pos of spotPositions) {
+        const spot = document.createElementNS(svgNS, 'circle');
+        spot.setAttribute('cx', cx + pos.x * size);
+        spot.setAttribute('cy', cy + pos.y * size);
+        spot.setAttribute('r', spotRadius);
+        spot.setAttribute('fill', stroke2);
+        spot.setAttribute('opacity', 0.6);
+        butterflyGroup.appendChild(spot);
+    }
+
+    // Rotate group if needed
+    if (rotation !== 0) {
+        butterflyGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
+    }
+
+    butterflyGroup.dataset.order = 'butterfly';
+    svg.appendChild(butterflyGroup);
 }

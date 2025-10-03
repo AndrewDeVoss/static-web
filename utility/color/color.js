@@ -47,40 +47,59 @@ export function getColors() {
 
     // Seasonal colors
     let season = getSeasonFromDate(time);
-
     switch (season) {
-        case "winter":
-            colors.leaf1 = "#cce3e6";
-            colors.leaf2 = "#a3bfc5";
-            colors.petal1 = "#90c7d4ff";
-            colors.petal2 = "#95c6d3ff";
-            colors.flowerCenter = "#ccd6dd";
-            break;
+      case "winter":
+          colors.leaf1 = "#cce3e6";
+          colors.leaf2 = "#a3bfc5";
+          colors.petal1 = "#90c7d4ff";
+          colors.petal2 = "#95c6d3ff";
+          colors.flowerCenter = "#ccd6dd";
+          colors.butterflyWing1 = "#ff6666ff";
+          colors.butterflyWing2 = "#f70505ff";
+          colors.butterflyWingStroke = "#3a3a3aff";
+          colors.butterflyBody = "#5d4037";
+          colors.butterflyBodyStroke = "#1b0000ff";
+          break;
 
-        case "spring":
-            colors.leaf1 = "#4caf50";
-            colors.leaf2 = "#81c784";
-            colors.petal1 = "#FF69B4";
-            colors.petal2 = "#FFC0CB";
-            colors.flowerCenter = "#FFD700";
-            break;
+      case "spring":
+          colors.leaf1 = "#4caf50";
+          colors.leaf2 = "#81c784";
+          colors.petal1 = "#FF69B4";
+          colors.petal2 = "#FFC0CB";
+          colors.flowerCenter = "#FFD700";
+          colors.butterflyWing1 = "#7fffd4";
+          colors.butterflyWing2 = "#00ced1";
+          colors.butterflyWingStroke = "#2f4f4f";
+          colors.butterflyBody = "#5d4037";
+          colors.butterflyBodyStroke = "#1b0000ff";
+          break;
 
-        case "summer":
-            colors.leaf1 = "#2e7d32";
-            colors.leaf2 = "#66bb6a";
-            colors.petal1 = "#ffa500";
-            colors.petal2 = "#ffcc80";
-            colors.flowerCenter = "#ffeb3b";
-            break;
+      case "summer":
+          colors.leaf1 = "#2e7d32";
+          colors.leaf2 = "#66bb6a";
+          colors.petal1 = "#ffa500";
+          colors.petal2 = "#ffcc80";
+          colors.flowerCenter = "#ffeb3b";
+          colors.butterflyWing1 = "#bc9ad1ff";
+          colors.butterflyWing2 = "#7e569eff";
+          colors.butterflyWingStroke = "#484886ff";
+          colors.butterflyBody = "#5d4037";
+          colors.butterflyBodyStroke = "#1b0000ff";
+          break;
 
-        case "autumn":
-            colors.leaf1 = "#ff853f";
-            colors.leaf2 = "#da6709ff";
-            colors.petal1 = "#c10e35ff";
-            colors.petal2 = "#e04439ff";
-            colors.flowerCenter = "#d1954bff";
-            break;
-    }
+      case "autumn":
+          colors.leaf1 = "#ff853f";
+          colors.leaf2 = "#da6709ff";
+          colors.petal1 = "#c10e35ff";
+          colors.petal2 = "#e04439ff";
+          colors.flowerCenter = "#d1954bff";
+          colors.butterflyWing1 = "#f07f0dff";
+          colors.butterflyWing2 = "#ffb300";
+          colors.butterflyWingStroke = "#4e342e";
+          colors.butterflyBody = "#5d4037";
+          colors.butterflyBodyStroke = "#1b0000ff";
+          break;
+      }
 
 
     return colors;

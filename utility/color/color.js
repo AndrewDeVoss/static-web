@@ -5,6 +5,8 @@ export function getColors() {
 
     // Constant colors
     colors.tree = "#5a3e1b";
+    colors.grass1 = "#1d661dff"
+
 
     // Time of day colors
     let timeOfDay = getTimeOfDay(time);
@@ -45,19 +47,42 @@ export function getColors() {
 
     // Seasonal colors
     let season = getSeasonFromDate(time);
+    season = "autumn";
+
     switch (season) {
         case "winter":
+            colors.leaf1 = "#cce3e6";
+            colors.leaf2 = "#a3bfc5";
+            colors.petal1 = "#d6d6f5";
+            colors.petal2 = "#eaeaff";
+            colors.flowerCenter = "#ccd6dd";
             break;
+
         case "spring":
+            colors.leaf1 = "#4caf50";
+            colors.leaf2 = "#81c784";
+            colors.petal1 = "#FF69B4";
+            colors.petal2 = "#FFC0CB";
+            colors.flowerCenter = "#FFD700";
             break;
+
         case "summer":
+            colors.leaf1 = "#2e7d32";
+            colors.leaf2 = "#66bb6a";
+            colors.petal1 = "#ffa500";
+            colors.petal2 = "#ffcc80";
+            colors.flowerCenter = "#ffeb3b";
             break;
+
         case "autumn":
-            colors.leaf1 = "#ff853f"
-            colors.leaf2 = "#da6709ff"
-            colors.grass1 = "#1d661dff"
+            colors.leaf1 = "#ff853f";
+            colors.leaf2 = "#da6709ff";
+            colors.petal1 = "#c10e35ff";
+            colors.petal2 = "#e04439ff";
+            colors.flowerCenter = "#d1954bff";
             break;
     }
+
 
     return colors;
 }

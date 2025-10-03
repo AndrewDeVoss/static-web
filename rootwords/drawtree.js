@@ -1,14 +1,30 @@
 import { getColors } from '../utility/color/color.js';
 
+let colors = new Map();
+
 export function drawTree(score, treeContainer) {
     treeContainer.innerHTML = ''; // Clear previous tree
+    colors = getColors();
 
     const svgNS = "http://www.w3.org/2000/svg";
-    const numLeaves = 1 + score;
+    const numLeaves = Math.min(1 + score, 50);
+    const numPetals = Math.max(score-numLeaves, 0);
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
+    const maxNumFlowers = numBranches;
     const trunkHeight = 50 + numBranches * 50;
     const branchStartOffset = trunkHeight * .6;
+
+    const numFlowers = (numPetals > 0) ? Math.min(maxNumFlowers, numPetals) : 0;
+    const flowerPetalCounts = [];
+    let flowerIndex = 0;
+    for (let petal=0; petal<numPetals; petal++) {
+        if (flowerPetalCounts.length < flowerIndex+1) {
+            flowerPetalCounts.push(0);
+        }
+        flowerPetalCounts[flowerIndex]++;
+        flowerIndex = (flowerIndex + 1) % numFlowers;
+    }
 
     // Teardrop shape: narrow bottom, bulge, taper top
     const controlPoints = [0.5, 1.0, 0.85, 0.5];
@@ -45,6 +61,7 @@ export function drawTree(score, treeContainer) {
 
     let leafIndex = 0;
     const leafSize = 15;
+    const flowerSize = leafSize * .4;
 
     const trunkWidthAtBase = 6 + numLeaves * 0.1;
     const trunkWidthAtTop = trunkWidthAtBase / 5;
@@ -145,6 +162,15 @@ export function drawTree(score, treeContainer) {
         }
 
         if (leafIndex >= numLeaves) break;
+
+        // Draw flower on this branch if we have more flowers to place
+        if (flowerPetalCounts.length > 0) {
+            const flowerT = 0.6;
+            const { x: fx, y: fy } = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, flowerT);
+            const petalCount = flowerPetalCounts.shift();
+            const rotation = 41 * branch;
+            drawFlower(svg, fx, fy, rotation, petalCount, flowerSize);
+        }
     }
 
     // Re-order the svg elements
@@ -274,7 +300,7 @@ function drawTaperedTrunk(svg, baseX, baseY, height = 200, widthAtBase = 14, wid
         Z
     `;
     path.setAttribute("d", pathData);
-    path.setAttribute("fill", getColors().tree);
+    path.setAttribute("fill", colors.tree);
     path.dataset.order = "trunk";
     svg.appendChild(path);
 }
@@ -307,7 +333,7 @@ function drawBranch(svg, x1, y1, x2, y2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, startTh
     `;
 
     path.setAttribute("d", pathData);
-    path.setAttribute("fill", getColors().tree);
+    path.setAttribute("fill", colors.tree);
     path.dataset.order = "branch";
     svg.appendChild(path);
 }
@@ -330,7 +356,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         C ${leftCtrlBottom.x} ${leftCtrlBottom.y}, ${leftCtrlTop.x} ${leftCtrlTop.y}, ${top.x} ${top.y}
         Z
     `);
-    leftPath.setAttribute("fill", getColors().leaf1);
+    leftPath.setAttribute("fill", colors.leaf1);
 
     const rightPath = document.createElementNS(svg.namespaceURI, "path");
     rightPath.setAttribute("d", `
@@ -338,7 +364,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
         C ${rightCtrlBottom.x} ${rightCtrlBottom.y}, ${rightCtrlTop.x} ${rightCtrlTop.y}, ${top.x} ${top.y}
         Z
     `);
-    rightPath.setAttribute("fill", getColors().leaf2);
+    rightPath.setAttribute("fill", colors.leaf2);
 
     // Point 1/3 up from bottom to top
     const stemStartY = bottom.y - (bottom.y - top.y) * (1 / 9);
@@ -347,7 +373,7 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
 
     const stemPath = document.createElementNS(svg.namespaceURI, "path");
     stemPath.setAttribute("d", `M ${stemStart.x} ${stemStart.y} L ${stemEnd.x} ${stemEnd.y}`);
-    stemPath.setAttribute("stroke", getColors().tree);
+    stemPath.setAttribute("stroke", colors.tree);
     stemPath.setAttribute("stroke-width", size * 0.05);
     stemPath.setAttribute("fill", "none");
 
@@ -365,4 +391,101 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
     leafGroup.setAttribute("transform", transform);
     leafGroup.dataset.order = "leaf";
     svg.appendChild(leafGroup);
+}
+
+function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
+    const flowerGroup = document.createElementNS(svg.namespaceURI, "g");
+
+    const strokeColor = "#222";
+    const outerColor = colors.petal1;
+    const innerColor = colors.petal2;
+
+    if (petals === 1) {
+        // Draw a small, simple bud
+        const bud = document.createElementNS(svg.namespaceURI, "ellipse");
+        bud.setAttribute("cx", cx);
+        bud.setAttribute("cy", cy);
+        bud.setAttribute("rx", petalSize * 0.4);
+        bud.setAttribute("ry", petalSize * 0.7);
+        bud.setAttribute("fill", outerColor);
+        bud.setAttribute("stroke", strokeColor);
+        bud.setAttribute("stroke-width", 0.5);
+        flowerGroup.appendChild(bud);
+
+        const budHighlight = document.createElementNS(svg.namespaceURI, "ellipse");
+        budHighlight.setAttribute("cx", cx - petalSize * 0.1);
+        budHighlight.setAttribute("cy", cy - petalSize * 0.2);
+        budHighlight.setAttribute("rx", petalSize * 0.2);
+        budHighlight.setAttribute("ry", petalSize * 0.35);
+        budHighlight.setAttribute("fill", innerColor);
+        budHighlight.setAttribute("fill-opacity", 0.5);
+        flowerGroup.appendChild(budHighlight);
+    } else {
+        // Draw full flower with multiple petals
+        const petalLength = petalSize * 2;
+        const petalWidth = petalSize;
+
+        for (let i = 0; i < petals; i++) {
+            const angle = (360 / petals) * i;
+
+            // Outer petal
+            const petal = document.createElementNS(svg.namespaceURI, "path");
+            const d = `
+                M ${cx} ${cy}
+                C ${cx + petalWidth} ${cy - petalLength / 3}, ${cx + petalWidth} ${cy - petalLength}, ${cx} ${cy - petalLength}
+                C ${cx - petalWidth} ${cy - petalLength}, ${cx - petalWidth} ${cy - petalLength / 3}, ${cx} ${cy}
+                Z
+            `;
+            petal.setAttribute("d", d);
+            petal.setAttribute("fill", outerColor);
+            petal.setAttribute("stroke", strokeColor);
+            petal.setAttribute("stroke-width", 0.5);
+            petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
+            flowerGroup.appendChild(petal);
+
+            // Center vein
+            const vein = document.createElementNS(svg.namespaceURI, "line");
+            vein.setAttribute("x1", cx);
+            vein.setAttribute("y1", cy);
+            vein.setAttribute("x2", cx);
+            vein.setAttribute("y2", cy - petalLength * 0.9);
+            vein.setAttribute("stroke", strokeColor);
+            vein.setAttribute("stroke-width", 0.3);
+            vein.setAttribute("stroke-opacity", 0.4);
+            vein.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
+            flowerGroup.appendChild(vein);
+
+            // Inner overlay
+            const innerPetal = document.createElementNS(svg.namespaceURI, "path");
+            const innerWidth = petalWidth * 0.6;
+            const innerLength = petalLength * 0.8;
+            const dInner = `
+                M ${cx} ${cy}
+                C ${cx + innerWidth} ${cy - innerLength / 3}, ${cx + innerWidth} ${cy - innerLength}, ${cx} ${cy - innerLength}
+                C ${cx - innerWidth} ${cy - innerLength}, ${cx - innerWidth} ${cy - innerLength / 3}, ${cx} ${cy}
+                Z
+            `;
+            innerPetal.setAttribute("d", dInner);
+            innerPetal.setAttribute("fill", innerColor);
+            innerPetal.setAttribute("fill-opacity", 0.7);
+            innerPetal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
+            flowerGroup.appendChild(innerPetal);
+        }
+
+        // Center circle
+        const center = document.createElementNS(svg.namespaceURI, "circle");
+        center.setAttribute("cx", cx);
+        center.setAttribute("cy", cy);
+        center.setAttribute("r", petalSize / 2);
+        center.setAttribute("fill", colors.flowerCenter);
+        center.setAttribute("stroke", strokeColor);
+        center.setAttribute("stroke-width", 0.5);
+        flowerGroup.appendChild(center);
+    }
+
+    // Apply random rotation to entire flower group
+    flowerGroup.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+
+    flowerGroup.dataset.order = "flower";
+    svg.appendChild(flowerGroup);
 }

@@ -1,3 +1,5 @@
+import { getColors } from '../utility/color/color.js';
+
 export function drawGrass(grassContainer) {
     grassContainer.innerHTML = ''; // Clear previous grass
 
@@ -51,21 +53,13 @@ export function drawGrass(grassContainer) {
         // Main blade
         const pathMain = document.createElementNS(svgNS, 'path');
         pathMain.setAttribute('d', d);
-        pathMain.setAttribute('fill', 'green');
+        pathMain.setAttribute('fill', getColors().grass1);
         pathMain.setAttribute('stroke', 'none');
-
-        // Slightly offset shadow layer (behind)
-        // const pathShadow = document.createElementNS(svgNS, 'path');
-        // pathShadow.setAttribute('d', d);
-        // pathShadow.setAttribute('fill', '#2a5d2e'); // darker green
-        // pathShadow.setAttribute('transform', `translate(${baseWidth * -0.2}, -1.5)`); // left + up
-        // pathShadow.setAttribute('opacity', 0.9);
-        // svg.insertBefore(pathShadow, pathMain); // behind main blade
 
         // Highlight layer (in front)
         const pathHighlight = document.createElementNS(svgNS, 'path');
         pathHighlight.setAttribute('d', d);
-        pathHighlight.setAttribute('fill', '#8fe36d'); // lighter green
+        pathHighlight.setAttribute('fill', getColors().grass2); // lighter green
         pathHighlight.setAttribute('transform', `translate(${baseWidth * 0.45}, -2)`); // right + 
         pathHighlight.setAttribute('opacity', 0.9);
         

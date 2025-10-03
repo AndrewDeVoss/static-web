@@ -15,58 +15,40 @@ export function drawGrass(grassContainer) {
     svg.setAttribute('xmlns', svgNS);
     svg.setAttribute('class', 'grass-layer foreground');
 
-    const svgBackground = document.createElementNS(svgNS, 'svg');
-    svgBackground.setAttribute('width', containerWidth);
-    svgBackground.setAttribute('height', containerHeight);
-    svgBackground.setAttribute('viewBox', `0 0 ${containerWidth} ${containerHeight}`);
-    svgBackground.setAttribute('xmlns', svgNS);
-    svgBackground.setAttribute('class', 'grass-layer background');
-
     // Blade settings
-    const bladeCount = Math.floor(containerWidth / 8); // how many blades
-    const baseWidth = 6; // bottom width of the blade
-    const bladeHeight = containerHeight*.9;
+    const bladeCount = Math.floor(containerWidth)*1.75; // how many blades
+    const baseY = containerHeight;
 
     for (let i = 0; i < bladeCount; i++) {
-        const baseX = i * (containerWidth / bladeCount);
-        const baseY = containerHeight;
+        const spacing = containerWidth / bladeCount;
+        const baseX = i * spacing + (Math.random() * spacing * 0.5 - spacing * 0.25);
 
-        const peakX = baseX + baseWidth / 2;
-        const peakY = baseY - bladeHeight;
+        // Random height between 15–25px
+        const height = Math.random() * 15;
 
-        const leftX = baseX;
-        const rightX = baseX + baseWidth;
+        // Tip of the blade, randomly curved to left or right
+        const tipX = baseX + (Math.random() * 10 - 5); // -5 to +5 px offset
+        const tipY = baseY - height;
 
-        const ctrlLeftX = baseX - baseWidth * 0.2;
-        const ctrlLeftY = baseY - bladeHeight * 0.5;
-
-        const ctrlRightX = baseX + baseWidth * 1.2;
-        const ctrlRightY = baseY - bladeHeight * 0.5;
+        // Control point — midway, with extra curve
+        const ctrlX = baseX + (Math.random() * 10 - 5); // random curve
+        const ctrlY = baseY - height * 0.5;
 
         const d = `
-            M ${leftX} ${baseY}
-            C ${ctrlLeftX} ${ctrlLeftY}, ${ctrlLeftX} ${ctrlLeftY}, ${peakX} ${peakY}
-            C ${ctrlRightX} ${ctrlRightY}, ${ctrlRightX} ${ctrlRightY}, ${rightX} ${baseY}
-            Z
+            M ${baseX} ${baseY}
+            Q ${ctrlX} ${ctrlY}, ${tipX} ${tipY}
         `.trim();
 
-        // Main blade
-        const pathMain = document.createElementNS(svgNS, 'path');
-        pathMain.setAttribute('d', d);
-        pathMain.setAttribute('fill', getColors().grass1);
-        pathMain.setAttribute('stroke', 'none');
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', getColors().grass1);
+        path.setAttribute('stroke-width', .8);
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('opacity', 0.9);
 
-        // Highlight layer (in front)
-        const pathHighlight = document.createElementNS(svgNS, 'path');
-        pathHighlight.setAttribute('d', d);
-        pathHighlight.setAttribute('fill', getColors().grass2); // lighter green
-        pathHighlight.setAttribute('transform', `translate(${baseWidth * 0.45}, -2)`); // right + 
-        pathHighlight.setAttribute('opacity', 0.9);
-        
-        svgBackground.appendChild(pathHighlight);
-        svg.appendChild(pathMain);
+        svg.appendChild(path);
     }
 
-    grassContainer.appendChild(svgBackground);
     grassContainer.appendChild(svg);
 }

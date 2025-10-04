@@ -5,8 +5,8 @@ export function getColors() {
 
     // Constant colors
     colors.tree = "#5a3e1b";
-    colors.grass1 = "#1d661dff"
-
+    colors.treeStroke = "#271a0aff";
+    colors.grass1 = "#1d661dff";
 
     // Time of day colors
     let timeOfDay = getTimeOfDay(time);
@@ -47,6 +47,7 @@ export function getColors() {
 
     // Seasonal colors
     let season = getSeasonFromDate(time);
+
     switch (season) {
       case "winter":
           colors.leaf1 = "#cce3e6";
@@ -93,8 +94,8 @@ export function getColors() {
           colors.petal1 = "#c10e35ff";
           colors.petal2 = "#e04439ff";
           colors.flowerCenter = "#d1954bff";
-          colors.butterflyWing1 = "#f07f0dff";
-          colors.butterflyWing2 = "#ffb300";
+          colors.butterflyWing1 = "#755e59ff";
+          colors.butterflyWing2 = "#f1b718ff";
           colors.butterflyWingStroke = "#4e342e";
           colors.butterflyBody = "#5d4037";
           colors.butterflyBodyStroke = "#1b0000ff";

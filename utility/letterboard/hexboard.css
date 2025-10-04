@@ -1,51 +1,58 @@
+:host {
+    --hex-size: 50px;
+    --hex-width: calc(var(--hex-size) * 2);
+    --hex-height: calc(sqrt(3) * var(--hex-size));
+}
 
-#word-display {
-  text-align: center;
-  font-size: 2em;
-  margin-bottom: 1rem;
-  color: #333;
+#hex-board {
+    margin: 20px auto;
+    position: fixed;
+    bottom: 3.5rem;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
 }
 
 #hex-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
 }
 
 #letter-container {
-  position: relative;
-  width: 100%;
-  height: 100%;
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 /* Base hex tile */
 .letter {
-  position: absolute;
-  width: 100px;
-  height: 86.6px; /* height = width * sqrt(3)/2 */
-  background: #eee;
-  clip-path: polygon(
-    50% 0%, 
-    93% 25%, 
-    93% 75%, 
-    50% 100%, 
-    7% 75%, 
-    7% 25%
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #333;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s, transform 0.2s;
+    position: absolute;
+    width: var(--hex-width);
+    height: var(--hex-height);
+    background: #eee;
+    clip-path: polygon(50% 0%,
+            93% 25%,
+            93% 75%,
+            50% 100%,
+            7% 75%,
+            7% 25%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s, transform 0.2s;
 }
 
 .letter.enter {
-  background: #4caf50;
-  color: white;
+    background: #4caf50;
+    color: white;
 }
-

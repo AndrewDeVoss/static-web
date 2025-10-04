@@ -6,7 +6,7 @@ class HexBoard extends LetterBoard {
         this.selectedLetterEls = [];
         this.centerDisplay = null;
     }
-    
+
     connectedCallback() {
         const attr = this.getAttribute('letters');
         this.letters = attr ? [...attr] : [];
@@ -46,10 +46,16 @@ class HexBoard extends LetterBoard {
         this.letterDivs = [];
         this.selectedLetterEls = [];
 
-        const cols = 4; // roughly square-ish grid
-        const size = 50; // side length of hex
+        const sizeAttr = this.getAttribute('hex-size');
+        const size = sizeAttr ? parseInt(sizeAttr) : 50;
+
         const width = size * 2;
         const height = Math.sqrt(3) * size;
+        const horizSpacing = width * 0.5; // horizontal distance between centers
+        const vertSpacing = height * 0.45;    // vertical step for staggering
+
+        const centerX = 200;
+        const centerY = 200;
 
         this.letters.forEach((letter, i) => {
             const div = document.createElement('div');
@@ -57,33 +63,31 @@ class HexBoard extends LetterBoard {
             div.dataset.letter = letter;
             div.innerText = letter;
 
-            const row = Math.floor(i / cols);
-            const col = i % cols;
+            // Now stagger every letter diagonally
+            const x = centerX + i * horizSpacing;
+            const y = centerY + (i % 2 === 0 ? -vertSpacing : vertSpacing); // alternate rows
 
-            const offsetX = col * (width * 0.75);
-            const offsetY = row * height + (col % 2 === 1 ? height / 2 : 0);
-
-            div.style.left = `${offsetX}px`;
-            div.style.top = `${offsetY}px`;
+            div.style.left = `${x}px`;
+            div.style.top = `${y}px`;
 
             this.letterContainer.appendChild(div);
             this.letterDivs.push(div);
         });
 
-        // Add Enter button
+        // Add Enter button at the next diagonal position
         const enterBtn = document.createElement('div');
-        enterBtn.className = 'hex enter';
+        enterBtn.className = 'letter enter';
         enterBtn.dataset.letter = '↵';
         enterBtn.innerText = '↵';
 
-        const enterOffsetX = (cols + 1) * (width * 0.75);
-        const enterOffsetY = height;
+        // Continue the same stagger pattern as the last letter
+        const enterX = centerX + this.letters.length * horizSpacing;
+        const enterY = centerY + (this.letters.length % 2 === 0 ? -vertSpacing : vertSpacing);
 
-        enterBtn.style.left = `${enterOffsetX}px`;
-        enterBtn.style.top = `${enterOffsetY}px`;
+        enterBtn.style.left = `${enterX}px`;
+        enterBtn.style.top = `${enterY}px`;
 
         this.letterContainer.appendChild(enterBtn);
-        // this.letterDivs.push(enterBtn);
 
         if (this.letterDivs.length > 0) {
             this._resolveReady?.();
@@ -93,7 +97,7 @@ class HexBoard extends LetterBoard {
 
     addEventListeners() {
         this.letterContainer.addEventListener('click', e => {
-            const target = e.target.closest('.hex');
+            const target = e.target.closest('.letter');
             if (!target) return;
             this.selectLetter(target);
         });

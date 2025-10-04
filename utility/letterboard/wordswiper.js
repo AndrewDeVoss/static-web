@@ -5,10 +5,7 @@ import { LetterBoard } from './letterboard.js';
 class WordSwiper extends LetterBoard {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
 
-    this.letters = [];
-    this.letterDivs = [];
     this.letterPositions = new Map();
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
@@ -48,8 +45,8 @@ class WordSwiper extends LetterBoard {
   }
 
   static get observedAttributes() {
-  return ['letters'];
-}
+    return ['letters'];
+  }
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'letters' && newValue !== oldValue) {
@@ -61,11 +58,11 @@ class WordSwiper extends LetterBoard {
   }
 
   layoutLetters() {
-    if (!this.letterContainer) return; // safety check
+    if (!this.letterContainer) return;
 
     this.letterContainer.innerHTML = '';
     this.letterPositions.clear();
-    this.letterDivs = []; // reset here!
+    this.letterDivs = [];
     this.selectedLetterEls = [];
     this.selectedLetterPositions = [];
 
@@ -89,11 +86,12 @@ class WordSwiper extends LetterBoard {
       this.letterPositions.set(div, { x, y });
       this.letterDivs.push(div);
     });
-  }
 
-  setLetters(letters) {
-    this.letters = [...letters];
-    this.layoutLetters();
+    // FIX: resolve isReady now that layout is complete
+    if (this.letterDivs.length > 0) {
+      this._resolveReady?.();
+      this._resolveReady = null; // prevent duplicate resolution
+    }
   }
 
 
@@ -124,8 +122,6 @@ class WordSwiper extends LetterBoard {
       this.letterPositions.set(div, { x, y });
     });
   }
-
-
 
   addEventListeners() {
     this.circleContainer.addEventListener('mousedown', this.startSwipe.bind(this));
@@ -272,9 +268,9 @@ class WordSwiper extends LetterBoard {
       gradient.setAttribute('y2', p2.y);
 
       const stops = [
-        { offset: '0%',   color: '#5a321c', opacity: '0.05' },
-        { offset: '40%',  color: '#5a321c', opacity: '0.7' },
-        { offset: '60%',  color: '#5a321c', opacity: '0.7' },
+        { offset: '0%', color: '#5a321c', opacity: '0.05' },
+        { offset: '40%', color: '#5a321c', opacity: '0.7' },
+        { offset: '60%', color: '#5a321c', opacity: '0.7' },
         { offset: '100%', color: '#5a321c', opacity: '0.05' }
       ];
 
@@ -309,11 +305,7 @@ class WordSwiper extends LetterBoard {
     }
   }
 
-  getLetterDivs() {
-    return this.letterDivs;
-  }
-
-  updateLetterAvailability(lettersToEnable, usedLetterDivs=[]) {
+  updateLetterAvailability(lettersToEnable, usedLetterDivs = []) {
     this.letterDivs.forEach(letterDiv => {
       letterDiv.className = 'letter'; // Resets it cleanly
       if (!lettersToEnable.includes(letterDiv)) {
@@ -321,28 +313,6 @@ class WordSwiper extends LetterBoard {
       } else if (usedLetterDivs.includes(letterDiv)) {
         letterDiv.classList.add('used');
       }
-    });
-  }
-
-  isReady() {
-    return new Promise(resolve => {
-      // Wait until the next animation frame to ensure layoutLetters has run
-      requestAnimationFrame(() => {
-        // Resolve only when letterDivs are available
-        if (this.letterDivs.length > 0) {
-          resolve();
-        } else {
-          // Try again on next frame (recursive retry)
-          const waitUntilReady = () => {
-            if (this.letterDivs.length > 0) {
-              resolve();
-            } else {
-              requestAnimationFrame(waitUntilReady);
-            }
-          };
-          waitUntilReady();
-        }
-      });
     });
   }
 }

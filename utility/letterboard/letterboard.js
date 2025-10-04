@@ -1,33 +1,64 @@
 export class LetterBoard extends HTMLElement {
-  constructor() {
-    super();
+    constructor() {
+        super();
 
-    if (new.target === LetterBoard) {
-      throw new TypeError("Cannot instantiate LetterBoard directly");
+        this.attachShadow({ mode: 'open' });
+        this.letters = 'XOXOXOXOXOXO'
+        this.letterDivs = [];
+        this._ready = new Promise(resolve => {
+            this._resolveReady = resolve;
+        })
+        if (new.target === LetterBoard) {
+            throw new TypeError("Cannot instantiate LetterBoard directly");
+        }
     }
-  }
 
-  isReady() {
-    throw new Error("Method 'isReady()' must be implemented.");
-  }
+    connectedCallback() {
+        throw new Error("Method 'connectedCallback()' must be implemented.");
+    }
 
-  setLetters(letters) {
-    throw new Error("Method 'setLetters()' must be implemented.");
-  }
+    setLetters(letters) {
+        this.letters = [...letters];
 
-  getLetterDivs() {
-    throw new Error("Method 'getLetterDivs()' must be implemented.");
-  }
+        // Defer layout if letterContainer isn't ready yet
+        if (this.letterContainer) {
+            this.layoutLetters();
+        } else {
+            // Wait for the browser to connect the element
+            requestAnimationFrame(() => {
+                this.layoutLetters();
+            });
+        }
+    }
 
-  shuffleLetters() {
-    throw new Error("Method 'shuffleLetters()' must be implemented.");
-  }
 
-  clearSelection() {
-    throw new Error("Method 'clearSelection()' must be implemented.");
-  }
+    isReady() {
+        return this._ready;
+    }
 
-  updateLetterAvailability(lettersToEnable, usedLetterDivs = []) {
-    throw new Error("Method 'updateLetterAvailability()' must be implemented.");
-  }
+    getLetterDivs() {
+        return this.letterDivs;
+    }
+
+    layoutLetters() {
+        // NOTE: This is an abstract placeholder.
+
+        // After layout completes:
+        if (this.letterDivs?.length > 0) {
+            this._resolveReady?.();
+        }
+    }
+
+
+    shuffleLetters() {
+        throw new Error("Method 'shuffleLetters()' must be implemented.");
+    }
+
+    clearSelection() {
+        throw new Error("Method 'clearSelection()' must be implemented.");
+    }
+
+    updateLetterAvailability(lettersToEnable, usedLetterDivs = []) {
+        throw new Error("Method 'updateLetterAvailability()' must be implemented.");
+    }
 }

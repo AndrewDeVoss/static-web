@@ -7,16 +7,25 @@ import { drawSky } from './drawsky.js';
 
 
 const grid = document.getElementById('word-grid');
-const swiper = document.querySelector('word-swiper');
-await customElements.whenDefined('word-swiper');
-await swiper.isReady(); // ✅ Wait for letterDivs to be initialized
+
+async function createLetterBoardComponent(tagName, letters) {
+  await customElements.whenDefined(tagName);
+  const letterboard = document.createElement(tagName);
+  const placeholder = document.getElementById('letter-board');
+  placeholder.replaceWith(letterboard);
+
+  letterboard.setLetters(letters.toUpperCase());
+  await letterboard.isReady?.();
+  return letterboard;
+}
 await loadDictionary();
 await loadBorderlineWords();
 await loadForbiddenWords();
 const letters = chooseRandomWordSet(11);
-swiper.setLetters(letters.toUpperCase());
+const letterboardTag = 'word-swiper';
+const letterboard = await createLetterBoardComponent(letterboardTag, letters);
 
-const rootLetterDivs = swiper.getLetterDivs();
+const rootLetterDivs = letterboard.getLetterDivs();
 let treeRoot = new TreeNode(rootLetterDivs);  // Safe now
 let currentNode = treeRoot;
 
@@ -32,17 +41,17 @@ drawGrass(grassContainer);
 
 // Initialize the dictionary and update grid layout
 let totalColumns = 0;
-updateLettersFromSwiper();
+updateLettersFromBoard();
 
-// Observe changes to <word-swiper letters="...">
-const observer = new MutationObserver(updateLettersFromSwiper);
-observer.observe(swiper, { attributes: true, attributeFilter: ['letters'] });
+// Observe changes to letterboard letters attribute
+const observer = new MutationObserver(updateLettersFromBoard);
+observer.observe(letterboard, { attributes: true, attributeFilter: ['letters'] });
 
 // Shuffle
 const shuffleButton = document.getElementById('shuffle-button');
-if (swiper && shuffleButton) {
+if (letterboard && shuffleButton) {
   shuffleButton.addEventListener('click', () => {
-    swiper.shuffleLetters();
+    letterboard.shuffleLetters();
   });
 } else {
   console.warn('Could not find swiper or shuffle button');
@@ -54,16 +63,12 @@ const redoButton = document.getElementById('redo-button');
 let rootStack = [];
 let rootStackIndex = rootStack.length - 1; // Points to the current tree
 undoButton.addEventListener('click', () => {
-  console.log('undo');
-  console.log(`at pos ${rootStackIndex} for size ${rootStack.length}`);
   if (rootStackIndex > 0) {
     rootStackIndex--;
     loadTreeFromEncoded(rootStack[rootStackIndex]);
   }
 });
 redoButton.addEventListener('click', () => {
-  console.log('redo');
-  console.log(`at pos ${rootStackIndex} for size ${rootStack.length}`);
   if (rootStackIndex < rootStack.length - 1) {
     rootStackIndex++;
     loadTreeFromEncoded(rootStack[rootStackIndex]);
@@ -170,10 +175,10 @@ function scoreRoots(rootNode = treeRoot) {
 
 
 /**
- * Update the root letter set and grid layout from <word-swiper>
+ * Update the root letter set and grid layout from letterboard
  */
-function updateLettersFromSwiper() {
-  const attr = swiper.getAttribute('letters');
+function updateLettersFromBoard() {
+  const attr = letterboard.getAttribute('letters');
   rootLetters = attr ? attr.split(',').map(l => l.trim().toUpperCase()) : [];
   totalColumns = rootLetters.length;
 
@@ -403,7 +408,7 @@ function addLongPressListener(wordWrapper, node, holdTime = 1000) {
 
 function selectNode(treeNode) {
   // clear the word selection first
-  swiper.clearSelection();
+  letterboard.clearSelection();
   currentNode = treeNode;
   const cell = nodeToInfo.get(treeNode).cell;
   highlightSelectedCell(cell);
@@ -414,7 +419,7 @@ function selectNode(treeNode) {
     usedLetterDivs.push(...child.letterDivs);
   }
 
-  swiper.updateLetterAvailability(treeNode.letterDivs, usedLetterDivs);
+  letterboard.updateLetterAvailability(treeNode.letterDivs, usedLetterDivs);
 }
 
 function highlightSelectedCell(selectedCell) {
@@ -602,7 +607,7 @@ function encodeTree(root) {
 
 function decodeTree(jsonStr, getLetterDivsByWord) {
   const data = JSON.parse(jsonStr);
-  const allDivs = Array.from(swiper.getLetterDivs());
+  const allDivs = Array.from(letterboard.getLetterDivs());
   const root = new TreeNode(allDivs);
   const queue = [];
   queue.push({ nodeData: data, parentNode: root, availableDivs: allDivs.slice() });

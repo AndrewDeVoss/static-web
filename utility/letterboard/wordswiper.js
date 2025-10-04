@@ -1,6 +1,8 @@
 let swipeLineCounter = 0; // keep unique IDs for gradients
 
-class WordSwiper extends HTMLElement {
+import { LetterBoard } from './letterboard.js';
+
+class WordSwiper extends LetterBoard {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });

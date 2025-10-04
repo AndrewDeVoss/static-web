@@ -22,8 +22,9 @@ await loadDictionary();
 await loadBorderlineWords();
 await loadForbiddenWords();
 const letters = chooseRandomWordSet(11);
-const letterboardTag = 'word-swiper';
-const letterboard = await createLetterBoardComponent(letterboardTag, letters);
+const board1 = 'word-swiper';
+const board2 = 'hex-board';
+const letterboard = await createLetterBoardComponent(board1, letters);
 
 const rootLetterDivs = letterboard.getLetterDivs();
 let treeRoot = new TreeNode(rootLetterDivs);  // Safe now

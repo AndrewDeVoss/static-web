@@ -17,22 +17,27 @@ class WordSwiper extends LetterBoard {
     const attr = this.getAttribute('letters');
     this.letters = attr ? [...attr] : [];
 
+    // Set inner HTML *first*
+    this.shadowRoot.innerHTML = `
+    <div id="word-swiper">
+      <div id="word-display"></div>
+      <div id="circle-container">
+        <div id="letter-container"></div> 
+        <svg id="line-canvas" width="100%" height="100%"></svg>
+      </div>
+    </div>
+  `;
+
+    // Add stylesheets *after* innerHTML to avoid overwriting
+    const sharedLink = document.createElement('link');
+    sharedLink.setAttribute('rel', 'stylesheet');
+    sharedLink.setAttribute('href', new URL('./letterboard.css', import.meta.url).href);
+
     const linkEl = document.createElement('link');
     linkEl.setAttribute('rel', 'stylesheet');
-    const cssURL = new URL('./wordswiper.css', import.meta.url);
-    linkEl.setAttribute('href', cssURL.href);
+    linkEl.setAttribute('href', new URL('./wordswiper.css', import.meta.url).href);
 
-    this.shadowRoot.innerHTML = `
-      <div id="word-swiper">
-        <div id="word-display"></div>
-        <div id="circle-container">
-          <div id="letter-container"></div> 
-          <svg id="line-canvas" width="100%" height="100%"></svg>
-        </div>
-      </div>
-    `;
-
-    this.shadowRoot.prepend(linkEl);
+    this.shadowRoot.prepend(linkEl, sharedLink); // Order: component first, then shared
 
     // this.circleContainer = this.shadowRoot.querySelector('#circle-container');
     this.centerDisplay = this.shadowRoot?.querySelector('#word-display') || document.querySelector('#word-display');

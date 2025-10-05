@@ -1,5 +1,5 @@
 :host {
-    --hex-side-length: calc(min(50px, 100vw / 13.8564));
+    --hex-side-length: calc(min(50px, 100vw / 17));
     --hex-bounding-width: calc(1.73205 * var(--hex-side-length));
     --hex-bounding-height: calc(2 * var(--hex-side-length));
 }

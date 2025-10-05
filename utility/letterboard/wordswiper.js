@@ -31,11 +31,11 @@ class WordSwiper extends LetterBoard {
     // Add stylesheets *after* innerHTML to avoid overwriting
     const sharedLink = document.createElement('link');
     sharedLink.setAttribute('rel', 'stylesheet');
-    sharedLink.setAttribute('href', new URL('./letterboard.css', import.meta.url).href);
+    sharedLink.setAttribute('href', new URL(`./letterboard.css?v=${Date.now()}`, import.meta.url).href);
 
     const linkEl = document.createElement('link');
     linkEl.setAttribute('rel', 'stylesheet');
-    linkEl.setAttribute('href', new URL('./wordswiper.css', import.meta.url).href);
+    linkEl.setAttribute('href', new URL(`./wordswiper.css?v=${Date.now()}`, import.meta.url).href);
 
     this.shadowRoot.prepend(linkEl, sharedLink); // Order: component first, then shared
 

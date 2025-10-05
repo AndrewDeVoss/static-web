@@ -22,11 +22,11 @@ class HexBoard extends LetterBoard {
         // Now add both stylesheets
         const sharedLink = document.createElement('link');
         sharedLink.setAttribute('rel', 'stylesheet');
-        sharedLink.setAttribute('href', new URL('./letterboard.css', import.meta.url).href);
+        sharedLink.setAttribute('href', new URL(`./letterboard.css?v=${Date.now()}`, import.meta.url).href);
 
         const linkEl = document.createElement('link');
         linkEl.setAttribute('rel', 'stylesheet');
-        linkEl.setAttribute('href', new URL('./hexboard.css', import.meta.url).href);
+        linkEl.setAttribute('href', new URL(`./hexboard.css?v=${Date.now()}`, import.meta.url).href);
 
         // Order: component-specific first, shared after (optional)
         this.shadowRoot.prepend(linkEl, sharedLink);
@@ -46,54 +46,67 @@ class HexBoard extends LetterBoard {
         this.letterDivs = [];
         this.selectedLetterEls = [];
 
-        const sizeAttr = this.getAttribute('hex-size');
-        const size = sizeAttr ? parseInt(sizeAttr) : 50;
+        const sideLengthAttr = this.getAttribute('hex-side-length');
+        const sideLength = sideLengthAttr ? parseInt(sideLengthAttr) : 50;
+        console.log('side length ' + sideLength);
+        const boundingWidth = 2 * (Math.sqrt(3) / 2) * sideLength;
+        const vertShift = sideLength * 3 / 2; // Shift down just enough so sides would touch
 
-        const width = size * 2;
-        const height = Math.sqrt(3) * size;
-        const horizSpacing = width * 0.5; // horizontal distance between centers
-        const vertSpacing = height * 0.45;    // vertical step for staggering
+        // Calculate all positions
+        const positions = [];
+        const halfwayIdx = Math.round(this.letters.length/2);
 
-        const centerX = 200;
-        const centerY = 200;
+        // First half of letters go on top row
+        for (let idx = 0; idx < halfwayIdx; idx++) {
+            const letter = this.letters[idx];
+            const x = idx * boundingWidth;
+            const y = 0;
+            positions.push({ x, y, letter });
+        }
 
-        this.letters.forEach((letter, i) => {
+        // Second half go on bottom row
+        const xStart = this.letters.length % 2 === 0 ? -boundingWidth / 2 : boundingWidth / 2; // shift left or right by half a hex
+        for (let idx = halfwayIdx; idx < this.letters.length; idx++) {
+            const letter = this.letters[idx];
+            const x = xStart + (idx - halfwayIdx) * boundingWidth;
+            const y = vertShift;
+            positions.push({ x, y, letter });
+        }
+
+        // Add enter button at the end
+        const enterX = xStart + (halfwayIdx-1) * boundingWidth;
+        const enterY = vertShift;
+        positions.push({ x: enterX, y: enterY, letter: '↵', isEnter: true });
+
+        // Compute bounding box to center group
+        const minX = Math.min(...positions.map(p => p.x));
+        const maxX = Math.max(...positions.map(p => p.x));
+        const minY = Math.min(...positions.map(p => p.y));
+        const maxY = Math.max(...positions.map(p => p.y));
+
+        const offsetX = (maxX + minX) / 2;
+        const offsetY = (maxY + minY) / 2;
+
+        positions.forEach(({ x, y, letter, isEnter }) => {
             const div = document.createElement('div');
-            div.className = 'letter';
+            div.className = 'letter' + (isEnter ? ' enter' : '');
             div.dataset.letter = letter;
             div.innerText = letter;
 
-            // Now stagger every letter diagonally
-            const x = centerX + i * horizSpacing;
-            const y = centerY + (i % 2 === 0 ? -vertSpacing : vertSpacing); // alternate rows
-
-            div.style.left = `${x}px`;
-            div.style.top = `${y}px`;
+            div.style.left = `${x - offsetX}px`;
+            div.style.top = `${y - offsetY}px`;
 
             this.letterContainer.appendChild(div);
-            this.letterDivs.push(div);
+
+            if (!isEnter) this.letterDivs.push(div);
         });
-
-        // Add Enter button at the next diagonal position
-        const enterBtn = document.createElement('div');
-        enterBtn.className = 'letter enter';
-        enterBtn.dataset.letter = '↵';
-        enterBtn.innerText = '↵';
-
-        // Continue the same stagger pattern as the last letter
-        const enterX = centerX + this.letters.length * horizSpacing;
-        const enterY = centerY + (this.letters.length % 2 === 0 ? -vertSpacing : vertSpacing);
-
-        enterBtn.style.left = `${enterX}px`;
-        enterBtn.style.top = `${enterY}px`;
-
-        this.letterContainer.appendChild(enterBtn);
 
         if (this.letterDivs.length > 0) {
             this._resolveReady?.();
             this._resolveReady = null;
         }
     }
+
 
     addEventListeners() {
         this.letterContainer.addEventListener('click', e => {

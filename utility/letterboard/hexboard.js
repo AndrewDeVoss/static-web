@@ -50,14 +50,8 @@ class HexBoard extends LetterBoard {
 
         const sideLengthVar = getComputedStyle(this).getPropertyValue('--hex-side-length');
         let sideLength = sideLengthVar ? parseFloat(sideLengthVar) : 50;
+        sideLength += 2; // small gap between hexes
 
-        if (sideLengthVar && sideLengthVar.trim()) {
-            console.log('side length:', sideLength);
-        } else {
-            console.log('no side len CSS var');
-        }
-
-        sideLength += 5;
         const boundingWidth = 2 * (Math.sqrt(3) / 2) * sideLength;
         const vertShift = sideLength * 3 / 2; // Shift down just enough so sides would touch
 

@@ -10,7 +10,7 @@ class HexBoard extends LetterBoard {
     connectedCallback() {
         const attr = this.getAttribute('letters');
         this.letters = attr ? [...attr] : [];
-        const computed = Math.min(50, window.innerWidth / 17);
+        const computed = Math.min(50, window.innerWidth / 15.5);
         this.style.setProperty('--hex-side-length', `${computed}px`);
 
         // Set shadow DOM HTML first — so we don't wipe out styles later

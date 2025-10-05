@@ -47,8 +47,9 @@ class HexBoard extends LetterBoard {
         this.selectedLetterEls = [];
 
         const sideLengthAttr = this.getAttribute('hex-side-length');
-        const sideLength = sideLengthAttr ? parseInt(sideLengthAttr) : 50;
+        let sideLength = sideLengthAttr ? parseInt(sideLengthAttr) : 50;
         console.log('side length ' + sideLength);
+        sideLength += 5;
         const boundingWidth = 2 * (Math.sqrt(3) / 2) * sideLength;
         const vertShift = sideLength * 3 / 2; // Shift down just enough so sides would touch
 

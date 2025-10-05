@@ -1,9 +1,9 @@
 :host {
-    --hex-side-length: 50px;
-    --hex-bounding-width: calc(2 * (sqrt(3)/2) * var(--hex-side-length));
-    --hex-bounding-height: calc(var(--hex-side-length) * 2);
-
+    --hex-side-length: calc(min(50px, 100vw / 13.8564));
+    --hex-bounding-width: calc(1.73205 * var(--hex-side-length));
+    --hex-bounding-height: calc(2 * var(--hex-side-length));
 }
+
 
 #hex-board {
     margin: 20px auto;

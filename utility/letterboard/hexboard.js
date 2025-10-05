@@ -10,6 +10,8 @@ class HexBoard extends LetterBoard {
     connectedCallback() {
         const attr = this.getAttribute('letters');
         this.letters = attr ? [...attr] : [];
+        const computed = Math.min(50, window.innerWidth / 13.8564);
+        this.style.setProperty('--hex-side-length', `${computed}px`);
 
         // Set shadow DOM HTML first — so we don't wipe out styles later
         this.shadowRoot.innerHTML = `
@@ -46,16 +48,22 @@ class HexBoard extends LetterBoard {
         this.letterDivs = [];
         this.selectedLetterEls = [];
 
-        const sideLengthAttr = this.getAttribute('hex-side-length');
-        let sideLength = sideLengthAttr ? parseInt(sideLengthAttr) : 50;
-        console.log('side length ' + sideLength);
+        const sideLengthVar = getComputedStyle(this).getPropertyValue('--hex-side-length');
+        let sideLength = sideLengthVar ? parseFloat(sideLengthVar) : 50;
+
+        if (sideLengthVar && sideLengthVar.trim()) {
+            console.log('side length:', sideLength);
+        } else {
+            console.log('no side len CSS var');
+        }
+
         sideLength += 5;
         const boundingWidth = 2 * (Math.sqrt(3) / 2) * sideLength;
         const vertShift = sideLength * 3 / 2; // Shift down just enough so sides would touch
 
         // Calculate all positions
         const positions = [];
-        const halfwayIdx = Math.round(this.letters.length/2);
+        const halfwayIdx = Math.round(this.letters.length / 2);
 
         // First half of letters go on top row
         for (let idx = 0; idx < halfwayIdx; idx++) {
@@ -75,7 +83,7 @@ class HexBoard extends LetterBoard {
         }
 
         // Add enter button at the end
-        const enterX = xStart + (halfwayIdx-1) * boundingWidth;
+        const enterX = xStart + (halfwayIdx - 1) * boundingWidth;
         const enterY = vertShift;
         positions.push({ x: enterX, y: enterY, letter: '↵', isEnter: true });
 

@@ -28,6 +28,40 @@ export function isWord(word) {
   return (wordSet.has(lower) || borderlineWords.has(lower)) && !forbiddenWords.has(lower);
 } 
 
+export function getValidWordsFromLetters(charString, dictionarySet = null) {
+  const availableLetters = {};
+  for (const char of charString.toLowerCase()) {
+    availableLetters[char] = (availableLetters[char] || 0) + 1;
+  }
+
+  function canBuildWord(word) {
+    const letterCounts = {};
+    for (const char of word) {
+      letterCounts[char] = (letterCounts[char] || 0) + 1;
+      if (!availableLetters[char] || letterCounts[char] > availableLetters[char]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const result = new Set();
+
+  const sourceWords = dictionarySet 
+    ? dictionarySet 
+    : new Set([...wordSet, ...borderlineWords]);
+
+  for (const word of sourceWords) {
+    const lowerWord = word.toLowerCase();
+    if (!forbiddenWords.has(lowerWord) && canBuildWord(lowerWord)) {
+      result.add(lowerWord);
+    }
+  }
+
+  return result;
+}
+
+
 // ----------------------------
 // Seed helpers
 // ----------------------------

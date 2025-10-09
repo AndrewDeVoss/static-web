@@ -1,5 +1,5 @@
 // rootwords.js
-import { loadDictionary, isWord, chooseRandomWordSet, loadBorderlineWords, loadForbiddenWords } from '../utility/isword/isword.js';
+import { loadDictionary, isWord, chooseRandomWordSet, loadBorderlineWords, loadForbiddenWords, getValidWordsFromLetters } from '../utility/isword/isword.js';
 import { TreeNode } from './word-tree.js';
 import { drawTree } from './drawtree.js'
 import { drawGrass } from './drawgrass.js';
@@ -40,14 +40,6 @@ drawSky(overWorld);
 const grassContainer = document.getElementById("grassery");
 drawGrass(grassContainer);
 
-// Initialize the dictionary and update grid layout
-let totalColumns = 0;
-updateLettersFromBoard();
-
-// Observe changes to letterboard letters attribute
-const observer = new MutationObserver(updateLettersFromBoard);
-observer.observe(letterboard, { attributes: true, attributeFilter: ['letters'] });
-
 // Shuffle
 const shuffleButton = document.getElementById('shuffle-button');
 if (letterboard && shuffleButton) {
@@ -81,6 +73,8 @@ function addToStack(encodedTree) {
 }
 
 // Initialize
+const greedyScore = checkOrComputeGreedyScore(treeRoot.word);
+console.log(greedyScore);
 loadTreeFromStorage();
 drawRoots();
 scoreRoots();
@@ -172,20 +166,6 @@ function scoreRoots(rootNode = treeRoot) {
 
   const treeContainer = document.getElementById("tree");
   drawTree(score, treeContainer);
-}
-
-
-/**
- * Update the root letter set and grid layout from letterboard
- */
-function updateLettersFromBoard() {
-  const attr = letterboard.getAttribute('letters');
-  rootLetters = attr ? attr.split(',').map(l => l.trim().toUpperCase()) : [];
-  totalColumns = rootLetters.length;
-
-  // Optional: clear previous words on letter change
-  usedWords.clear();
-  grid.innerHTML = '';
 }
 
 function drawRoots() {
@@ -764,3 +744,72 @@ function getCookie(name) {
   return cookieString ? decodeURIComponent(cookieString.split('=')[1]) : null;
 }
 
+
+function getTodayString() {
+  const today = new Date();
+  return today.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+}
+
+export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
+  const todayKey = `${cookie}-${getTodayString()}`;
+  const cached = getCookie(todayKey);
+
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      console.log("Using cached score from cookie:", parsed);
+      return parsed.score;
+    } catch (err) {
+      console.warn("Failed to parse cached score from cookie:", err);
+    }
+  }
+
+  const usedGreedyWords = new Set();
+  let score = 0;
+
+  const initialDictionary = getValidWordsFromLetters(letters);
+
+  function recurse(currentLetters) {
+    let validWords = getValidWordsFromLetters(currentLetters, initialDictionary);
+
+    validWords = new Set([...validWords].filter(w => !usedGreedyWords.has(w)));
+
+    if (validWords.size === 0) return;
+
+    const sortedWords = [...validWords].sort((a, b) => b.length - a.length);
+    const bestWord = sortedWords[0];
+    if (!bestWord) return;
+
+    usedGreedyWords.add(bestWord);
+    score += bestWord.length;
+
+    const usedLetters = bestWord.split('');
+    const allLetters = currentLetters.split('');
+    const remainingLetters = [...allLetters];
+
+    for (const ch of usedLetters) {
+      const index = remainingLetters.indexOf(ch);
+      if (index !== -1) remainingLetters.splice(index, 1);
+    }
+
+    recurse(bestWord);
+    recurse(remainingLetters.join(''));
+  }
+
+  recurse(letters.toLowerCase());
+
+  const resultToCache = {
+    score,
+    words: [...usedGreedyWords],
+  };
+
+  // ✅ Set cookie with expiration at midnight
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+
+  document.cookie = `${encodeURIComponent(todayKey)}=${encodeURIComponent(JSON.stringify(resultToCache))}; expires=${midnight.toUTCString()}; path=/`;
+
+  console.log("Computed and stored in cookie:", resultToCache);
+  return score;
+}

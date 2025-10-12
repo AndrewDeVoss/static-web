@@ -115,11 +115,11 @@ class HexBoard extends LetterBoard {
         this.letterContainer.addEventListener('click', e => {
             const target = e.target.closest('.letter');
             if (!target) return;
-            this.selectLetter(target);
+            this.selectOrDeselectLetter(target);
         });
     }
 
-    selectLetter(el) {
+    selectOrDeselectLetter(el) {
         const letter = el.dataset.letter;
 
         if (letter === '↵') {
@@ -127,7 +127,15 @@ class HexBoard extends LetterBoard {
             return;
         }
 
-        if (!this.selectedLetterEls.includes(el)) {
+        let index = this.selectedLetterEls.indexOf(el);
+
+        if (index !== -1) {
+            // Was previously selected. Remove
+            el.classList.remove('selected');
+            this.selectedLetterEls.splice(index, 1);
+            this.updateCenterText();
+        } else {
+            // Not in list, add
             el.classList.add('selected');
             this.selectedLetterEls.push(el);
             this.updateCenterText();

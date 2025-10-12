@@ -803,7 +803,6 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
     words: [...usedGreedyWords],
   };
 
-  // ✅ Set cookie with expiration at midnight
   const now = new Date();
   const midnight = new Date(now);
   midnight.setHours(24, 0, 0, 0);

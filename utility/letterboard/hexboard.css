@@ -42,14 +42,14 @@
     width: var(--hex-bounding-width);
     height: var(--hex-bounding-height);
     background: #eee;
-clip-path: polygon(
-  50% 0%,
-  100% 25%,
-  100% 75%,
-  50% 100%,
-  0% 75%,
-  0% 25%
-);
+    clip-path: polygon(
+    50% 0%,
+    100% 25%,
+    100% 75%,
+    50% 100%,
+    0% 75%,
+    0% 25%
+    );
 
     display: flex;
     align-items: center;
@@ -65,4 +65,8 @@ clip-path: polygon(
 .letter.enter {
     background: #4caf50;
     color: white;
+}
+
+#hex-board .letter.selected {
+  pointer-events: all;
 }

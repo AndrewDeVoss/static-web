@@ -197,14 +197,19 @@ export function drawTree(score, treeContainer) {
         
         if (aType==='trunk') return 1;
         if (bType==='trunk') return -1;
-        
-        if (aType === 'branch' && bType === 'leaf') {
-            return 1;
+
+        const orderDictionary = {
+            'branch': 1,
+            'leaf': 2,
+            'blossom': 3,
+            'butterfly': 4
         }
-        if (aType === 'leaf' && bType === 'branch') {
-            return -1;
-        }
-        // Otherwise, maintain original relative order.
+
+        const aOrder = orderDictionary[aType];
+        const bOrder = orderDictionary[bType];
+
+        if (a<b) return 1;
+        if (b<a) return -1;
         return 0;
     });
 
@@ -516,7 +521,7 @@ function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
     // Apply random rotation to entire flower group
     flowerGroup.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
 
-    flowerGroup.dataset.order = "flower";
+    flowerGroup.dataset.order = "blossom";
     svg.appendChild(flowerGroup);
 }
 

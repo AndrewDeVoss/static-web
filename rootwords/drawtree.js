@@ -208,8 +208,8 @@ export function drawTree(score, treeContainer) {
         const aOrder = orderDictionary[aType];
         const bOrder = orderDictionary[bType];
 
-        if (a<b) return 1;
-        if (b<a) return -1;
+        if (aOrder<bOrder) return -1;
+        if (bOrder<aOrder) return 1;
         return 0;
     });
 

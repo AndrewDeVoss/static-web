@@ -41,25 +41,26 @@ class HexBoard extends LetterBoard {
         this.addEventListeners?.();
     }
 
-    layoutLetters() {
+    layoutLetters(existingLetterDivs = null) {
         if (!this.letterContainer) return;
 
-        this.letterContainer.innerHTML = '';
-        this.letterDivs = [];
-        this.selectedLetterEls = [];
+        if (!existingLetterDivs) {
+            this.letterContainer.innerHTML = '';
+            this.letterDivs = [];
+            this.selectedLetterEls = [];
+        }
 
         const sideLengthVar = getComputedStyle(this).getPropertyValue('--hex-side-length');
         let sideLength = sideLengthVar ? parseFloat(sideLengthVar) : 50;
         sideLength += 2; // small gap between hexes
 
         const boundingWidth = 2 * (Math.sqrt(3) / 2) * sideLength;
-        const vertShift = sideLength * 3 / 2; // Shift down just enough so sides would touch
+        const vertShift = sideLength * 3 / 2;
 
-        // Calculate all positions
         const positions = [];
         const halfwayIdx = Math.round(this.letters.length / 2);
 
-        // First half of letters go on top row
+        // Top row
         for (let idx = 0; idx < halfwayIdx; idx++) {
             const letter = this.letters[idx];
             const x = idx * boundingWidth;
@@ -67,8 +68,8 @@ class HexBoard extends LetterBoard {
             positions.push({ x, y, letter });
         }
 
-        // Second half go on bottom row
-        const xStart = this.letters.length % 2 === 0 ? -boundingWidth / 2 : boundingWidth / 2; // shift left or right by half a hex
+        // Bottom row
+        const xStart = this.letters.length % 2 === 0 ? -boundingWidth / 2 : boundingWidth / 2;
         for (let idx = halfwayIdx; idx < this.letters.length; idx++) {
             const letter = this.letters[idx];
             const x = xStart + (idx - halfwayIdx) * boundingWidth;
@@ -76,12 +77,11 @@ class HexBoard extends LetterBoard {
             positions.push({ x, y, letter });
         }
 
-        // Add enter button at the end
+        // Enter button
         const enterX = xStart + (halfwayIdx - 1) * boundingWidth;
         const enterY = vertShift;
         positions.push({ x: enterX, y: enterY, letter: '↵', isEnter: true });
 
-        // Compute bounding box to center group
         const minX = Math.min(...positions.map(p => p.x));
         const maxX = Math.max(...positions.map(p => p.x));
         const minY = Math.min(...positions.map(p => p.y));
@@ -90,26 +90,38 @@ class HexBoard extends LetterBoard {
         const offsetX = (maxX + minX) / 2;
         const offsetY = (maxY + minY) / 2;
 
-        positions.forEach(({ x, y, letter, isEnter }) => {
-            const div = document.createElement('div');
-            div.className = 'letter' + (isEnter ? ' enter' : '');
-            div.dataset.letter = letter;
-            div.innerText = letter;
+        if (existingLetterDivs) {
+            // Reuse existing divs
+            existingLetterDivs.forEach((div, idx) => {
+                const { x, y } = positions[idx];
+                div.style.left = `${x - offsetX}px`;
+                div.style.top = `${y - offsetY}px`;
+                this.letterContainer.appendChild(div); // re-append in correct order
+            });
 
-            div.style.left = `${x - offsetX}px`;
-            div.style.top = `${y - offsetY}px`;
+            this.letterDivs = existingLetterDivs;
+        } else {
+            // Create all from scratch
+            positions.forEach(({ x, y, letter, isEnter }) => {
+                const div = document.createElement('div');
+                div.className = 'letter' + (isEnter ? ' enter' : '');
+                div.dataset.letter = letter;
+                div.innerText = letter;
 
-            this.letterContainer.appendChild(div);
+                div.style.left = `${x - offsetX}px`;
+                div.style.top = `${y - offsetY}px`;
 
-            if (!isEnter) this.letterDivs.push(div);
-        });
+                this.letterContainer.appendChild(div);
+
+                if (!isEnter) this.letterDivs.push(div);
+            });
+        }
 
         if (this.letterDivs.length > 0) {
             this._resolveReady?.();
             this._resolveReady = null;
         }
     }
-
 
     addEventListeners() {
         this.letterContainer.addEventListener('click', e => {
@@ -183,11 +195,11 @@ class HexBoard extends LetterBoard {
         }
 
         this.letters = '';
-        for (let i=0; i<this.letterDivs.length; i++) {
+        for (let i = 0; i < this.letterDivs.length; i++) {
             this.letters += this.letterDivs[i].textContent;
         }
 
-        this.layoutLetters();
+        this.layoutLetters(this.letterDivs);
     }
 
     updateLetterAvailability(lettersToEnable, usedLetterDivs = []) {

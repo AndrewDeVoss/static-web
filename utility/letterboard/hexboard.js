@@ -174,24 +174,20 @@ class HexBoard extends LetterBoard {
     }
 
     shuffleLetters() {
-        // console.log('call shuffle');
-        // if (!this.letterDivs || this.letterDivs.length === 0) return;
+        if (!this.letterDivs || this.letterDivs.length === 0) return;
 
-        // console.log('trying to shuffle');
+        // Shuffle the existing DOM elements (Fisher–Yates)
+        for (let i = this.letterDivs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.letterDivs[i], this.letterDivs[j]] = [this.letterDivs[j], this.letterDivs[i]];
+        }
 
-        // // Shuffle the existing DOM elements (Fisher–Yates)
-        // for (let i = this.letterDivs.length - 1; i > 0; i--) {
-        //     const j = Math.floor(Math.random() * (i + 1));
-        //     [this.letterDivs[i], this.letterDivs[j]] = [this.letterDivs[j], this.letterDivs[i]];
-        // }
+        this.letters = '';
+        for (let i=0; i<this.letterDivs.length; i++) {
+            this.letters += this.letterDivs[i].textContent;
+        }
 
-        // this.letters = '';
-        // for (let i=0; i<this.letterDivs.length; i++) {
-        //     this.letters += this.letterDivs[i].textContent;
-        // }
-
-        // console.log(this.letters);
-        // this.layoutLetters();
+        this.layoutLetters();
     }
 
     updateLetterAvailability(lettersToEnable, usedLetterDivs = []) {

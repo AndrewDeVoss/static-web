@@ -220,9 +220,8 @@ body.no-flex {
 .score-box {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: stretch;
   min-width: 80px;
-  padding: 16px;
   border: 2px solid #532915;
   border-radius: 6px;
   background-color: #fff8f0;
@@ -234,21 +233,35 @@ body.no-flex {
   overflow: hidden;
 }
 
-.score-left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: .7rem;
-}
-
 #current-score {
-  font-size: 2rem;
-  padding-left: 40px;
-  padding-right: 40px;
+  font-size: 2.5rem;
+  margin: 10px 40px;
 }
 
-#high-score {
+.side-score-box {
   display: flex;
   align-items: center;
-  font-size: 1.3rem;
+  justify-content: center;
+  font-size: 1rem;
+  padding: 0px 8px;
+}
+
+#bronze-score {
+  background: linear-gradient(to bottom, #e0a25d, #cd7f32);
+  color: #4a2c0a; /* rich brown for readability */
+}
+
+#silver-score {
+  background: linear-gradient(to bottom, #e6e6e6, #b0b0b0);
+  color: #3a3a3a; /* dark steel grey */
+}
+
+#gold-score {
+  background: linear-gradient(to bottom, #ffef8f, #ffd700);
+  color: #7a6000; /* deep gold-brown */
+}
+
+#best-score {
+  background: linear-gradient(to bottom, #b3e5f9, #87ceeb);
+  color: #225b72; /* complementary soft navy blue */
 }

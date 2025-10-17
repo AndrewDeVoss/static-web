@@ -68,13 +68,13 @@ let rootStackIndex = rootStack.length - 1; // Points to the current tree
 undoButton.addEventListener('click', () => {
   if (rootStackIndex > 0) {
     rootStackIndex--;
-    loadTreeFromEncoded(rootStack[rootStackIndex]);
+    loadRootFromEncoded(rootStack[rootStackIndex]);
   }
 });
 redoButton.addEventListener('click', () => {
   if (rootStackIndex < rootStack.length - 1) {
     rootStackIndex++;
-    loadTreeFromEncoded(rootStack[rootStackIndex]);
+    loadRootFromEncoded(rootStack[rootStackIndex]);
   }
 });
 function addToStack(encodedTree) {
@@ -685,6 +685,7 @@ function tryUpdateBestRoots(score) {
       const existingData = JSON.parse(existingDataJSON);
       if (existingData.score >= score) {
         // Existing score is higher or equal, don't overwrite
+        bestScore.textContent = `${existingData.score}`;
         return;
       }
     } catch (e) {
@@ -713,7 +714,7 @@ function tryUpdateBestRoots(score) {
   document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
 
-function loadTreeFromEncoded(encoded) {
+function loadRootFromEncoded(encoded) {
   try {
     const newTree = decodeRoot(encoded, getLetterDivsByWord);
     if (newTree.word !== treeRoot.word) {

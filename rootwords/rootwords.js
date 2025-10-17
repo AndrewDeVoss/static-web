@@ -40,6 +40,13 @@ drawSky(overWorld);
 const grassContainer = document.getElementById("grassery");
 drawGrass(grassContainer);
 
+// toggle for nav
+const navControls = document.getElementById('nav-controls');
+const toggleNav = document.getElementById('toggle-nav');
+toggleNav.addEventListener('click', function () {
+  navControls.classList.toggle('hidden');
+});
+
 // Shuffle
 const shuffleButton = document.getElementById('shuffle-button');
 if (letterboard && shuffleButton) {
@@ -150,7 +157,7 @@ function scoreRoots(rootNode = treeRoot) {
   traverse(rootNode, 0);
 
   const depthList = Array.from(letterDivToDepthMap.values());
-  depthList.sort((a, b) => a-b); // sort low to high
+  depthList.sort((a, b) => a - b); // sort low to high
   let score = 0;
 
   // for (let i = 0; i < depthList.length; i++) {
@@ -184,15 +191,15 @@ function drawRoots() {
     nodeInfoDict.parent = node.parent;
     nodeInfoDict.treeNode = node;
 
-    if (row>numRows) {
+    if (row > numRows) {
       numRows = row;
     }
 
     drawList.push(nodeInfoDict);
-  
+
     let column = col;
     for (let child of node.children) {
-      traverse(child, row+1, column);
+      traverse(child, row + 1, column);
       column += child.word.length;
     }
   }
@@ -212,7 +219,7 @@ function drawRoots() {
 function drawGrid(drawList, numCols) {
   grid.innerHTML = '';  // Clear the existing grid
 
-   // Create an SVG overlay for the squiggly lines
+  // Create an SVG overlay for the squiggly lines
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('class', 'grid-lines');
   svg.style.position = 'absolute';
@@ -271,7 +278,7 @@ function drawGrid(drawList, numCols) {
   const rowHeight = firstRow ? firstRow.offsetHeight : 50; // Default 50px if not found
 
   // Dynamically apply padding-bottom based on row height
-  grid.style.paddingBottom = `${Math.round(rowHeight*1.5)}px`;
+  grid.style.paddingBottom = `${Math.round(rowHeight * 1.5)}px`;
 }
 
 function removeSubtrees(startNode) {
@@ -285,9 +292,9 @@ function removeSubtrees(startNode) {
       toRemove.push(node);
     }
     for (const child of node.children) {
-        toRemove.push(child);
-        collectNodesToRemove(child);
-      }
+      toRemove.push(child);
+      collectNodesToRemove(child);
+    }
   }
 
   collectNodesToRemove(startNode);
@@ -595,17 +602,17 @@ function decodeTree(jsonStr, getLetterDivsByWord) {
 
   while (queue.length > 0) {
     const { nodeData, parentNode, availableDivs } = queue.shift();
-    
+
     // Track used divs for siblings
-    let usedDivs = new Set(); 
-    
+    let usedDivs = new Set();
+
     nodeData.children.forEach(childData => {
       // Filter availableDivs to exclude the already used ones for this sibling
       const filteredDivs = availableDivs.filter(div => !usedDivs.has(div));
-      
+
       // Get the letterDivs for the current child
       const letterDivs = getLetterDivsByWord(childData.word, filteredDivs);
-      
+
       // Mark the divs as used
       letterDivs.forEach(div => usedDivs.add(div));
 

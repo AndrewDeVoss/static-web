@@ -159,23 +159,33 @@ body.no-flex {
   bottom: 0;
   width: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   background-color: #222;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
   z-index: 1000;
   padding: 10px 0;
 }
 
-/* Navigation bar inside banner */
-.nav-controls {
-  width: 100%;
-  max-width: 800px; /* Matches container */
+.game-controls, .nav-controls {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+
   padding: 0 20px;
+  width: 100%;
+  gap: 20px;
+  max-width: 800px;
   color: white;
-  font-size: 24px;
+}
+
+#toggle-nav {
+  cursor: pointer;
+}
+
+.nav-controls.hidden {
+  display: none;
 }
 
 /* Home & Help buttons */

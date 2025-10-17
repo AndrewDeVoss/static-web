@@ -1,49 +1,58 @@
 <!doctype html>
 <html lang="en-US">
-  <head>
-    <meta charset="utf-8" />
-    <title>RootWords</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="../style.css" />
-    <link rel="stylesheet" href="./rootwords.css" />
-  </head>
-  <body class="no-flex">
-    <h1 class="header">RootWords</h1>
-    
-    <div class="drawn-wrapper">
-      <div id="over-world">
-        <div id="tree"></div>
-        <div id="grassery"></div>
-      </div>
-      <div class="root-container">
-        <div id="word-grid"></div>
-      </div>
+
+<head>
+  <meta charset="utf-8" />
+  <title>RootWords</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./rootwords.css" />
+</head>
+
+<body class="no-flex">
+  <h1 class="header">RootWords</h1>
+
+  <div class="drawn-wrapper">
+    <div id="over-world">
+      <div id="tree"></div>
+      <div id="grassery"></div>
     </div>
-  
-    <div id="letter-board"></div>
+    <div class="root-container">
+      <div id="word-grid"></div>
+    </div>
+  </div>
 
-    <!-- Bottom Navigation Banner -->
-    <div class="bottom-banner">
-      <div class="nav-controls">
-        <a href="../index.html" id="home-button" title="Home">🏠</a>
+  <div id="letter-board"></div>
 
-        <div id="undo-button" title="Undo">↩️</div>
+  <!-- Bottom Navigation Banner -->
+  <div class="bottom-banner">
+    <!-- Always visible game controls -->
+    <div class="game-controls">
+      <div id="undo-button" title="Undo">↩️</div>
 
-        <div class="score-box">
-          <div class="score-scroll" id="score-scroll">0</div>
-        </div>
-
-        <div id="redo-button" title="Redo">↪️</div>
-
-        <div id="shuffle-button" title="Shuffle">🔀</div>
-        <div id="help-button" title="Help">❓</div>
+      <div class="score-box">
+        <div class="score-scroll" id="score-scroll">0</div>
       </div>
+
+      <div id="redo-button" title="Redo">↪️</div>
+      <div id="shuffle-button" title="Shuffle">🔀</div>
+
+      <!-- Twirl toggle button -->
+      <div id="toggle-nav" title="More">⋮</div>
     </div>
 
+    <!-- Hidden navigation controls -->
+    <div class="nav-controls hidden" id="nav-controls">
+      <a href="../index.html" id="home-button" title="Home">🏠</a>
+      <div id="help-button" title="Help">❓</div>
+    </div>
+  </div>
 
-    <script type="module" src="../utility/letterboard/wordswiper.js"></script>
-    <script type="module" src="../utility/letterboard/hexboard.js"></script>
-    <script type="module" src="./drawtree.js"></script>
-    <script type="module" src="./rootwords.js"></script>
-  </body>
+
+  <script type="module" src="../utility/letterboard/wordswiper.js"></script>
+  <script type="module" src="../utility/letterboard/hexboard.js"></script>
+  <script type="module" src="./drawtree.js"></script>
+  <script type="module" src="./rootwords.js"></script>
+</body>
+
 </html>

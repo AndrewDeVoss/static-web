@@ -705,8 +705,8 @@ function tryUpdateBestRoots(score) {
     root: encoded
   };
 
-  // Save to local storage if the game was played
-  if (score>0) localStorage.setItem(dateKey, JSON.stringify(dataToSave));
+  // Save to local storage if the game was played TODO save when dictionary is finished
+  // if (score>0) localStorage.setItem(dateKey, JSON.stringify(dataToSave));
 
   // Save current best as cookie that expires at midnight
   const midnight = new Date(now);

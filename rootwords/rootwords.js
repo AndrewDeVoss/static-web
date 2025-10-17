@@ -169,7 +169,7 @@ function scoreRoots(rootNode = treeRoot) {
   // score = depthList[0] * depthList[depthList.length-1] + wordCount - 1;
   score = numLetters - rootNode.word.length;
 
-  document.getElementById('score-scroll').textContent = score;
+  document.getElementById('current-score').textContent = score;
 
   updateCurrentTree();
   tryUpdateBestTree(score);

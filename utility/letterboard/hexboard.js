@@ -124,7 +124,7 @@ class HexBoard extends LetterBoard {
     }
 
     addEventListeners() {
-        this.letterContainer.addEventListener('click', e => {
+        this.letterContainer.addEventListener('pointerdown', e => {
             const target = e.target.closest('.letter');
             if (!target) return;
             this.selectOrDeselectLetter(target);
@@ -139,19 +139,28 @@ class HexBoard extends LetterBoard {
             return;
         }
 
+        // Prevent double-toggle by enforcing a minimum interval
+        const now = Date.now();
+        const lastClick = parseInt(el.dataset.lastClick || '0');
+        const MIN_INTERVAL = 150; // milliseconds
+
+        if (now - lastClick < MIN_INTERVAL) {
+            return; // Ignore this click as it's too soon after the last one
+        }
+
+        el.dataset.lastClick = now;
+
         let index = this.selectedLetterEls.indexOf(el);
 
         if (index !== -1) {
-            // Was previously selected. Remove
             el.classList.remove('selected');
             this.selectedLetterEls.splice(index, 1);
-            this.updateCenterText();
         } else {
-            // Not in list, add
             el.classList.add('selected');
             this.selectedLetterEls.push(el);
-            this.updateCenterText();
         }
+
+        this.updateCenterText();
     }
 
     commitWord() {

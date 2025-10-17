@@ -11,7 +11,7 @@ export function drawTree(score, treeContainer) {
     svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
 
     // Leaves and branches
-    const numLeaves = Math.min(1 + score, 50);
+    const numLeaves = Math.min(1 + score, 35);
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
     const trunkHeight = 50 + numBranches * 50;

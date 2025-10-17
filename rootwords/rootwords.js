@@ -82,13 +82,19 @@ function addToStack(encodedTree) {
   rootStackIndex = rootStack.length - 1;
 }
 
+// Score
+const currentScore = document.getElementById('current-score');
+const bronzeScore = document.getElementById('bronze-score');
+const silverScore = document.getElementById('silver-score');
+const goldScore = document.getElementById('gold-score');
+const bestScore = document.getElementById('best-score');
+
 // Initialize
-const greedyScore = checkOrComputeGreedyScore(treeRoot.word);
-console.log(greedyScore);
-loadTreeFromStorage();
+checkOrComputeGreedyScore(treeRoot.word);
+loadRootFromStorage();
 drawRoots();
 scoreRoots();
-rootStack.push(encodeTree(treeRoot)); // Initial state
+rootStack.push(encodeRoot(treeRoot)); // Initial state
 
 // Listen for committed words
 document.addEventListener('word-committed', (e) => {
@@ -130,7 +136,7 @@ document.addEventListener('word-committed', (e) => {
   }
 
   rootStack = rootStack.slice(0, rootStackIndex + 1); // Any time we commit a word, discard future states
-  addToStack(encodeTree(treeRoot));
+  addToStack(encodeRoot(treeRoot));
 });
 
 function scoreRoots(rootNode = treeRoot) {
@@ -169,10 +175,10 @@ function scoreRoots(rootNode = treeRoot) {
   // score = depthList[0] * depthList[depthList.length-1] + wordCount - 1;
   score = numLetters - rootNode.word.length;
 
-  document.getElementById('current-score').textContent = score;
+  currentScore.textContent = score;
 
   updateCurrentTree();
-  tryUpdateBestTree(score);
+  tryUpdateBestRoots(score);
 
   const treeContainer = document.getElementById("tree");
   drawTree(score, treeContainer);
@@ -324,7 +330,7 @@ function removeSubtrees(startNode) {
 
   drawRoots();
   scoreRoots();
-  addToStack(encodeTree(treeRoot));
+  addToStack(encodeRoot(treeRoot));
 }
 
 function addLongPressListener(wordWrapper, node, holdTime = 1000) {
@@ -586,7 +592,7 @@ function drawGreenRoot(svg, parentEl, parentInfo, greenLength) {
   svg.appendChild(path);
 }
 
-function encodeTree(root) {
+function encodeRoot(root) {
   function serialize(node) {
     return {
       word: node.word,
@@ -596,7 +602,7 @@ function encodeTree(root) {
   return JSON.stringify(serialize(root));
 }
 
-function decodeTree(jsonStr, getLetterDivsByWord) {
+function decodeRoot(jsonStr, getLetterDivsByWord) {
   const data = JSON.parse(jsonStr);
   const allDivs = Array.from(letterboard.getLetterDivs());
   const root = new TreeNode(allDivs);
@@ -650,8 +656,8 @@ function getLetterDivsByWord(word, letterDivs) {
 }
 
 function updateCurrentTree() {
-  const cookie = 'current-tree';
-  const encoded = encodeTree(treeRoot);
+  const cookie = 'current-root';
+  const encoded = encodeRoot(treeRoot);
 
   // Save as cookie with expiration at midnight
   const now = new Date();
@@ -661,16 +667,16 @@ function updateCurrentTree() {
   document.cookie = `${encodeURIComponent(cookie)}=${encodeURIComponent(encoded)}; expires=${midnight.toUTCString()}; path=/`;
 }
 
-function tryUpdateBestTree(score) {
-  const encoded = encodeTree(treeRoot);
+function tryUpdateBestRoots(score) {
+  const encoded = encodeRoot(treeRoot);
 
   // Format today's date as YYYY-MM-DD
   const now = new Date();
   const day = String(now.getDate()).padStart(2, '0');
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const year = now.getFullYear();
-  const cookie = `best-tree`;
-  const dateKey = `best-tree-${year}-${month}-${day}`;
+  const cookie = `best-root`;
+  const dateKey = `best-root-${year}-${month}-${day}`;
 
   // Check for existing data
   const existingDataJSON = localStorage.getItem(dateKey);
@@ -687,14 +693,19 @@ function tryUpdateBestTree(score) {
     }
   }
 
+  // New best score, update
+  bestScore.textContent = `${score}`;
+  // TODO press and hold high score to restore?
+
+
   // This tree is certified best
   const dataToSave = {
     score: score,
-    tree: encoded
+    root: encoded
   };
 
-  // TODO actually save to local storage when persistent features are available
-  // localStorage.setItem(dateKey, JSON.stringify(dataToSave));
+  // Save to local storage if the game was played
+  if (score>0) localStorage.setItem(dateKey, JSON.stringify(dataToSave));
 
   // Save current best as cookie that expires at midnight
   const midnight = new Date(now);
@@ -704,7 +715,7 @@ function tryUpdateBestTree(score) {
 
 function loadTreeFromEncoded(encoded) {
   try {
-    const newTree = decodeTree(encoded, getLetterDivsByWord);
+    const newTree = decodeRoot(encoded, getLetterDivsByWord);
     if (newTree.word !== treeRoot.word) {
       console.warn("Tree root mismatch; skipping");
       return;
@@ -722,13 +733,13 @@ function loadTreeFromEncoded(encoded) {
 }
 
 
-function loadTreeFromStorage(cookie = 'current-tree') {
+function loadRootFromStorage(cookie = 'current-root') {
   let encoded = getCookie(cookie);
 
   if (!encoded) return; // Nothing to load
 
   try {
-    const newTree = decodeTree(encoded, getLetterDivsByWord);
+    const newTree = decodeRoot(encoded, getLetterDivsByWord);
     if (newTree.word !== treeRoot.word) {
       console.warn('Saved tree root word does not match current letters. Ignoring saved tree.');
       return;
@@ -768,7 +779,11 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
     try {
       const parsed = JSON.parse(cached);
       console.log("Using cached score from cookie:", parsed);
-      return parsed.score;
+      let score = parsed.score;
+      goldScore.textContent = `${score}`;
+      silverScore.textContent = `${Math.floor(score * 2 / 3)}`;
+      bronzeScore.textContent = `${Math.floor(score / 3)}`;
+      return score;
     } catch (err) {
       console.warn("Failed to parse cached score from cookie:", err);
     }
@@ -820,5 +835,10 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
   document.cookie = `${encodeURIComponent(todayKey)}=${encodeURIComponent(JSON.stringify(resultToCache))}; expires=${midnight.toUTCString()}; path=/`;
 
   console.log("Computed and stored in cookie:", resultToCache);
+
+  goldScore.textContent = `${score}`;
+  silverScore.textContent = `${Math.floor(score * 2 / 3)}`;
+  bronzeScore.textContent = `${Math.floor(score / 3)}`;
+
   return score;
 }

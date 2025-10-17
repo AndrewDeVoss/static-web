@@ -1,14 +1,19 @@
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow-y: auto; /* Let body scroll */
-  -ms-overflow-style: none;  /* For Internet Explorer and older Edge */
-  scrollbar-width: none;  /* For Firefox */
+  overflow-y: auto;
+  /* Let body scroll */
+  -ms-overflow-style: none;
+  /* For Internet Explorer and older Edge */
+  scrollbar-width: none;
+  /* For Firefox */
 }
 
 body::-webkit-scrollbar {
-  display: none;  /* For Chrome, Safari, Opera */
+  display: none;
+  /* For Chrome, Safari, Opera */
 }
 
 body.no-flex {
@@ -32,7 +37,8 @@ body.no-flex {
 
 .drawn-wrapper {
   width: 100%;
-  margin-top: 50px; /* Header height */
+  margin-top: 50px;
+  /* Header height */
   box-sizing: border-box;
   overflow-y: auto;
   display: flex;
@@ -57,7 +63,8 @@ body.no-flex {
   align-items: center;
   width: 100%;
   overflow: hidden;
-  background: var(--sky-gradient); /* Will set via JS or class */
+  background: var(--sky-gradient);
+  /* Will set via JS or class */
   z-index: 3;
 }
 
@@ -68,13 +75,14 @@ body.no-flex {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  transform: translateY(100px); 
+  transform: translateY(100px);
 }
 
 #grassery {
   width: 100%;
   height: 60px;
-  position: relative; /* Required for absolute children */
+  position: relative;
+  /* Required for absolute children */
 }
 
 .grass-layer {
@@ -83,7 +91,8 @@ body.no-flex {
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none; /* optional */
+  pointer-events: none;
+  /* optional */
 }
 
 .grass-layer.background {
@@ -96,15 +105,19 @@ body.no-flex {
 
 /* Game area box */
 .root-container {
-  background: linear-gradient(
-    to bottom,
-    #d7bea0 0%,   /* Light brown */
-    #6b4a2f 90%,  /* Richer brown */
-    #412c1c 95%,  /* Mocha */
-    #301d15 100%  /* Dark chocolate */
-  );
+  background: linear-gradient(to bottom,
+      #d7bea0 0%,
+      /* Light brown */
+      #6b4a2f 90%,
+      /* Richer brown */
+      #412c1c 95%,
+      /* Mocha */
+      #301d15 100%
+      /* Dark chocolate */
+    );
 
-  padding-bottom: calc(100vh - (50px + 6rem)); /* Extra scroll room */
+  padding-bottom: calc(100vh - (50px + 6rem));
+  /* Extra scroll room */
   padding-top: 20px;
   padding-left: 20px;
   padding-right: 20px;
@@ -133,7 +146,8 @@ body.no-flex {
   position: relative;
   color: #61311b;
   user-select: none;
-  -webkit-user-select: none;  /* For Safari on iOS */
+  -webkit-user-select: none;
+  /* For Safari on iOS */
 }
 
 .grid-cell.selected {
@@ -168,7 +182,8 @@ body.no-flex {
   padding: 10px 0;
 }
 
-.game-controls, .nav-controls {
+.game-controls,
+.nav-controls {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -204,19 +219,36 @@ body.no-flex {
 /* Score box - centered */
 .score-box {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   min-width: 80px;
-  height: 40px;
-  padding: 0 16px;
-  border: 2px solid #5a321c;
+  padding: 16px;
+  border: 2px solid #532915;
   border-radius: 6px;
   background-color: #fff8f0;
   color: #532915;
-  font-size: 1.6rem;
-  font-weight: bold;
   text-align: center;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  font-weight: bold;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   position: relative;
   overflow: hidden;
+}
+
+.score-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: .7rem;
+}
+
+#current-score {
+  font-size: 2rem;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+#high-score {
+  display: flex;
+  align-items: center;
+  font-size: 1.3rem;
 }

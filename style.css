@@ -41,6 +41,7 @@ p {
 .button:hover {
   background: #357ae8;
 }
+
 .button.disabled,
 .button:disabled {
   background: #bfc7d5;
@@ -52,6 +53,12 @@ p {
 .button.fixed-width {
   display: inline-block;
   width: 200px;
+}
+
+.disabled {
+  opacity: 0.4;
+  pointer-events: none; /* Prevents clicking */
+  cursor: default;      /* Shows default cursor (not a pointer) */
 }
 
 .input-group {

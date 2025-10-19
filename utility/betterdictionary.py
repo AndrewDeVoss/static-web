@@ -89,4 +89,4 @@ if __name__ == "__main__":
     main()
 
     # replace with starting word
-    # python .\utility\betterdictionary.py .\dictionary.txt daddy
+    # python .\utility\betterdictionary.py .\dictionary.txt raaaaaa

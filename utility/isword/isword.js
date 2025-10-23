@@ -103,7 +103,7 @@ export function chooseRandomWordSet(targetLength = 12, dateString = null) {
     w => !forbiddenWords.has(w) && !borderlineWords.has(w)
   );
 
-  const endsWithEdOrEr = (word) => word.endsWith("ed") || word.endsWith("er");
+  const commonEnding = (word) => word.endsWith("ed") || word.endsWith("er") || word.endsWith("y") || word.endsWith("ing");
 
   /**
    * Get a random word of a given length, optionally excluding certain letters.
@@ -127,14 +127,14 @@ export function chooseRandomWordSet(targetLength = 12, dateString = null) {
     });
 
     if (filtered.length === 0) {
-      throw new Error(`No valid words of length ${length} found after exclusions.`);
+      filtered = source; // Nothing valid means everything should be fair game
     }
 
     let chosen;
     do {
       chosen = filtered[Math.floor(rng() * filtered.length)];
-      // With 30% chance, reselect if ends in "ed" or "er"
-      if (endsWithEdOrEr(chosen) && rng() < 0.3) continue;
+      // With 30% chance, reselect if ends in common ending
+      if (commonEnding(chosen) && rng() < 0.9) continue;
       break;
     } while (true);
 
@@ -157,7 +157,7 @@ export function chooseRandomWordSet(targetLength = 12, dateString = null) {
     let word = getRandomWordOfLength(
       Math.min(targetLength - letters.length, 8), // prevent overshoot
     );
-    if (endsWithEdOrEr(word) && rng() < 0.3) continue;
+    if (commonEnding(word) && rng() < 0.3) continue;
     if (letters.length + word.length <= targetLength) {
       letters += word;
     }

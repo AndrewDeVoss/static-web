@@ -6,7 +6,10 @@ export function getColors() {
     // Constant colors
     colors.tree = "#5a3e1b";
     colors.treeStroke = "#271a0aff";
-    colors.grass1 = "#1d661dff";
+    colors.grass1 = "#174717ff";
+    colors.stem1 = "#1a331aff";
+    colors.stem2 = "#095c09ff";
+    colors.stem3 = "#1d661dff";
 
     // Time of day colors
     let timeOfDay = getTimeOfDay(time);
@@ -54,7 +57,7 @@ export function getColors() {
           colors.leaf2 = "#a3bfc5";
           colors.petal1 = "#90c7d4ff";
           colors.petal2 = "#95c6d3ff";
-          colors.flowerCenter = "#ccd6dd";
+          colors.blossomCenter = "#ccd6dd";
           colors.butterflyWing1 = "#ff6666ff";
           colors.butterflyWing2 = "#f70505ff";
           colors.butterflyWingStroke = "#3a3a3aff";
@@ -67,7 +70,7 @@ export function getColors() {
           colors.leaf2 = "#81c784";
           colors.petal1 = "#FF69B4";
           colors.petal2 = "#FFC0CB";
-          colors.flowerCenter = "#FFD700";
+          colors.blossomCenter = "#FFD700";
           colors.butterflyWing1 = "#7fffd4";
           colors.butterflyWing2 = "#00ced1";
           colors.butterflyWingStroke = "#2f4f4f";
@@ -80,7 +83,7 @@ export function getColors() {
           colors.leaf2 = "#66bb6a";
           colors.petal1 = "#ffa500";
           colors.petal2 = "#ffcc80";
-          colors.flowerCenter = "#ffeb3b";
+          colors.blossomCenter = "#ffeb3b";
           colors.butterflyWing1 = "#bc9ad1ff";
           colors.butterflyWing2 = "#7e569eff";
           colors.butterflyWingStroke = "#484886ff";
@@ -93,7 +96,7 @@ export function getColors() {
           colors.leaf2 = "#da6709ff";
           colors.petal1 = "#c10e35ff";
           colors.petal2 = "#e04439ff";
-          colors.flowerCenter = "#d1954bff";
+          colors.blossomCenter = "#d1954bff";
           colors.butterflyWing1 = "#755e59ff";
           colors.butterflyWing2 = "#f1b718ff";
           colors.butterflyWingStroke = "#4e342e";

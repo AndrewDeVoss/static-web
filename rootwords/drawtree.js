@@ -5,7 +5,7 @@ let colors = new Map();
 export function drawTree(score, treeContainer) {
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
-    
+
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
     svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
@@ -13,17 +13,17 @@ export function drawTree(score, treeContainer) {
     // Leaves and branches
     const numLeaves = Math.min(1 + score, 35);
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
-    const numBranches = Math.max(2, Math.round(numLeaves/maxLeavesPerBranch));
+    const numBranches = Math.max(2, Math.round(numLeaves / maxLeavesPerBranch));
     const trunkHeight = 50 + numBranches * 50;
     const branchStartOffset = trunkHeight * .6;
     const controlPoints = [0.5, 1.0, 0.85, 0.5]; // Teardrop
     let weights = [];
     let weightSum = 0;
     for (let i = 0; i < numBranches; i++) {
-      const t = i / (numBranches - 1);
-      const w = cubicBezierLevelDistribution(t, ...controlPoints);
-      weights.push(w);
-      weightSum += w;
+        const t = i / (numBranches - 1);
+        const w = cubicBezierLevelDistribution(t, ...controlPoints);
+        weights.push(w);
+        weightSum += w;
     }
     let leavesPerBranch = weights.map(w => Math.round((w / weightSum) * numLeaves));
     let totalAllocated = leavesPerBranch.reduce((a, b) => a + b, 0);
@@ -41,31 +41,42 @@ export function drawTree(score, treeContainer) {
     let leafIndex = 0;
     const leafSize = 15;
 
-    // Flowers
-    const maxNumFlowers = numBranches;
-    const numPetals = Math.max(0, Math.min(score-numLeaves, maxNumFlowers*5));
-    const numFlowers = (numPetals > 0) ? Math.min(maxNumFlowers, numPetals) : 0;
-    const flowerPetalCounts = [];
-    let flowerIndex = 0;
-    for (let petal=0; petal<numPetals; petal++) {
-        if (flowerPetalCounts.length < flowerIndex+1) {
-            flowerPetalCounts.push(0);
+    // Blossoms
+    const maxNumBlossoms = numBranches;
+    const numPetals = Math.max(0, Math.min(score - numLeaves, maxNumBlossoms * 5));
+    const numBlossoms = (numPetals > 0) ? Math.min(maxNumBlossoms, numPetals) : 0;
+    const blossomPetalCounts = [];
+    let blossomIndex = 0;
+    for (let petal = 0; petal < numPetals; petal++) {
+        if (blossomPetalCounts.length < blossomIndex + 1) {
+            blossomPetalCounts.push(0);
         }
-        flowerPetalCounts[flowerIndex]++;
-        flowerIndex = (flowerIndex + 1) % numFlowers;
+        blossomPetalCounts[blossomIndex]++;
+        blossomIndex = (blossomIndex + 1) % numBlossoms;
     }
-    const flowerSize = leafSize * .4;
+    const blossomSize = leafSize * .5;
 
     // Butterflies
-    const butterflySize = flowerSize * 2.5;
+    const butterflySize = blossomSize * 1.5;
     const spacesPerButterfly = 5;
-    let spacesLeft = Math.max(0, Math.min(numFlowers * spacesPerButterfly, score - numLeaves - numPetals));
+    let spacesLeft = Math.max(0, Math.min(numBlossoms * spacesPerButterfly, score - numLeaves - numPetals));
     let butterflyParameters = [];
-    while (spacesLeft>0) {
+    while (spacesLeft > 0) {
         const parameter = Math.min(1, spacesLeft / spacesPerButterfly);
         butterflyParameters.push(parameter);
         spacesLeft -= spacesPerButterfly;
     }
+
+    // Flowers
+    const pointsPerFlower = 10;
+    let pointsLeft = Math.max(0, score - numLeaves - numBlossoms * 2);
+    let flowerParameters = [];
+    while (pointsLeft > 0) {
+        const flowerParameter = Math.min(pointsPerFlower, pointsLeft);
+        flowerParameters.push(flowerParameter / pointsPerFlower);
+        pointsLeft -= flowerParameter;
+    }
+    const flowerSize = 15;
 
     // Trunk
     const trunkWidthAtBase = 6 + numLeaves * 0.1;
@@ -78,19 +89,19 @@ export function drawTree(score, treeContainer) {
     const baseY = totalHeight;
     drawTrunk(svg, baseX, baseY, trunkHeight, trunkWidthAtBase, trunkWidthAtTop);
 
-    // Draw items by branch
+    // Draw items on tree by branch
     for (let branch = 0; branch < numBranches; branch++) {
         const leavesOnThisBranch = leavesPerBranch[branch];
-        if (leavesOnThisBranch==0) continue;
+        if (leavesOnThisBranch == 0) continue;
         const usableTrunkHeight = trunkHeight - branchStartOffset;
         const y = baseY - branchStartOffset - (usableTrunkHeight / (numBranches - 1)) * branch;
         const heightFromBase = baseY - y;
         let side = branch % 2 === 0 ? 'left' : 'right';
-        const minAngle = -15 + 5*numBranches;
+        const minAngle = -15 + 5 * numBranches;
         const maxAngle = 70;
         const levelParam = Math.pow(branch / (numBranches - 1), 1.75);  // Point more up closer to top
         const branchAngle = minAngle + (maxAngle - minAngle) * levelParam;
-        const branchLength = (1 + leavesOnThisBranch) * leafSize*.7;
+        const branchLength = (1 + leavesOnThisBranch) * leafSize * .7;
         const branchWidth = trunkWidthAtBase - ((trunkWidthAtBase - trunkWidthAtTop) * (heightFromBase / trunkHeight));
 
         const branchX1 = baseX;
@@ -102,7 +113,7 @@ export function drawTree(score, treeContainer) {
 
         const branchMidX = (branchX1 + branchX2) / 2;
         const branchMidY = (branchY1 + branchY2) / 2;
-        const wiggleAmount = 1.5*leavesOnThisBranch;
+        const wiggleAmount = 1.5 * leavesOnThisBranch;
 
         let ctrl1X = branchMidX + (side === 'left' ? -wiggleAmount : wiggleAmount);
         let ctrl1Y = branchMidY + wiggleAmount;
@@ -131,7 +142,7 @@ export function drawTree(score, treeContainer) {
             if (isFirst) {
                 t = 1;
             } else {
-                t = getTAtLength(lut, currentLength);  
+                t = getTAtLength(lut, currentLength);
             }
 
             const { x: bx, y: by, dx, dy } = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, t);
@@ -152,28 +163,29 @@ export function drawTree(score, treeContainer) {
                 cy = by + ny * leafSize * orientation;
             }
 
-            drawLeaf(svg, cx, cy, leafSize, dx, dy, orientation);
+            let leaf = drawLeaf(svg, cx, cy, leafSize, dx, dy, orientation, colors);
+            svg.appendChild(leaf);
 
             currentLength -= leafSize * leafSpacingFactor;
             leafIndex++;
             if (leafIndex >= numLeaves) break;
         }
 
-        // Draw flower on this branch if we have more flowers to place
-        if (flowerPetalCounts.length > 0) {
-            const flowerT = 0.6;
-            const { x: fx, y: fy } = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, flowerT);
-            const petalCount = flowerPetalCounts.shift();
+        // Draw blossom on this branch if we have more blossoms to place
+        if (blossomPetalCounts.length > 0) {
+            const blossomT = 0.6;
+            const { x: fx, y: fy } = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, blossomT);
+            const petalCount = blossomPetalCounts.shift();
             const rotation = 41 * (branch + 1);
-            drawFlower(svg, fx, fy, rotation, petalCount, flowerSize);
+            drawBlossom(svg, fx, fy, rotation, petalCount, blossomSize);
 
-            
-            // Draw butterfly if there is one for this flower
+
+            // Draw butterfly if there is one for this blossom
             if (butterflyParameters.length > 0) {
                 const butterflyParameter = butterflyParameters.shift();
-                const start = {x: 0, y:0};
-                const end = {x: fx, y: fy};
-                const center = {x: (start.x + end.x)*butterflyParameter, y: (start.y + end.y)*butterflyParameter};
+                const start = { x: 0, y: 0 };
+                const end = { x: fx, y: fy };
+                const center = { x: (start.x + end.x) * butterflyParameter, y: (start.y + end.y) * butterflyParameter };
                 const dx = end.x - start.x;
                 const dy = end.y - start.y;
                 let rotation = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
@@ -194,9 +206,9 @@ export function drawTree(score, treeContainer) {
     const sortedItems = items.sort((a, b) => {
         const aType = a.dataset.order;
         const bType = b.dataset.order;
-        
-        if (aType==='trunk') return 1;
-        if (bType==='trunk') return -1;
+
+        if (aType === 'trunk') return 1;
+        if (bType === 'trunk') return -1;
 
         const orderDictionary = {
             'branch': 1,
@@ -208,8 +220,8 @@ export function drawTree(score, treeContainer) {
         const aOrder = orderDictionary[aType];
         const bOrder = orderDictionary[bType];
 
-        if (aOrder<bOrder) return -1;
-        if (bOrder<aOrder) return 1;
+        if (aOrder < bOrder) return -1;
+        if (bOrder < aOrder) return 1;
         return 0;
     });
 
@@ -219,13 +231,33 @@ export function drawTree(score, treeContainer) {
 
     treeContainer.appendChild(svg);
 
-    treeContainer.appendChild(svg);
+    // Use leftover points to draw flowers now that SVG is in the DOM
+    for (let flower = 0; flower < flowerParameters.length; flower++) {
+        const flowerParameter = flowerParameters[flower];
+        const bb = svg.getBBox();
+
+        // Choose a random x position using cushionScale to allow left/right expansion
+        const extraWidth = .6 * bb.width; // amount to expand on both sides
+        const randomX = bb.x - extraWidth / 2 + Math.random() * (bb.width + extraWidth);
+
+        drawFlower(svg, randomX, baseY, flowerParameter);
+    }
 
     const bbox = svg.getBBox();
     const margin = 10;
     svg.setAttribute("viewBox", `${bbox.x - margin} ${bbox.y - margin} ${bbox.width + margin * 2} ${bbox.height + margin * 2}`);
     svg.setAttribute("width", bbox.width + margin * 2);
     svg.setAttribute("height", bbox.height + margin * 2);
+
+
+
+    // Trunk X relative to the bounding box
+    const trunkPercent = ((baseX - (bbox.x - margin)) / (bbox.width + margin * 2)) * 100;
+
+    console.log("Trunk X as % of final SVG width:", trunkPercent);
+
+
+    return trunkPercent;
 }
 
 function buildBezierArcLengthLUT(p0, p1, p2, p3, steps = 100) {
@@ -267,50 +299,50 @@ function getTAtLength(lut, targetLength) {
 
 // Quadratic bezier evaluator for leaf distribution
 function cubicBezierLevelDistribution(t, p0, p1, p2, p3) {
-  const mt = 1 - t;
-  return mt ** 3 * p0 +
-         3 * mt * mt * t * p1 +
-         3 * mt * t * t * p2 +
-         t ** 3 * p3;
+    const mt = 1 - t;
+    return mt ** 3 * p0 +
+        3 * mt * mt * t * p1 +
+        3 * mt * t * t * p2 +
+        t ** 3 * p3;
 }
 
 
 function getPointAndTangentOnQuadraticBezier(start, control, end, t) {
     const x = (1 - t) ** 2 * start.x +
-              2 * (1 - t) * t * control.x +
-              t ** 2 * end.x;
+        2 * (1 - t) * t * control.x +
+        t ** 2 * end.x;
 
     const y = (1 - t) ** 2 * start.y +
-              2 * (1 - t) * t * control.y +
-              t ** 2 * end.y;
+        2 * (1 - t) * t * control.y +
+        t ** 2 * end.y;
 
     const dx = 2 * (1 - t) * (control.x - start.x) +
-               2 * t * (end.x - control.x);
+        2 * t * (end.x - control.x);
 
     const dy = 2 * (1 - t) * (control.y - start.y) +
-               2 * t * (end.y - control.y);
+        2 * t * (end.y - control.y);
 
     return { x, y, dx, dy };
 }
 
 function getPointAndTangentOnCubicBezier(p0, p1, p2, p3, t) {
     const x = (1 - t) ** 3 * p0.x +
-              3 * (1 - t) ** 2 * t * p1.x +
-              3 * (1 - t) * t ** 2 * p2.x +
-              t ** 3 * p3.x;
+        3 * (1 - t) ** 2 * t * p1.x +
+        3 * (1 - t) * t ** 2 * p2.x +
+        t ** 3 * p3.x;
 
     const y = (1 - t) ** 3 * p0.y +
-              3 * (1 - t) ** 2 * t * p1.y +
-              3 * (1 - t) * t ** 2 * p2.y +
-              t ** 3 * p3.y;
+        3 * (1 - t) ** 2 * t * p1.y +
+        3 * (1 - t) * t ** 2 * p2.y +
+        t ** 3 * p3.y;
 
     const dx = 3 * (1 - t) ** 2 * (p1.x - p0.x) +
-               6 * (1 - t) * t * (p2.x - p1.x) +
-               3 * t ** 2 * (p3.x - p2.x);
+        6 * (1 - t) * t * (p2.x - p1.x) +
+        3 * t ** 2 * (p3.x - p2.x);
 
     const dy = 3 * (1 - t) ** 2 * (p1.y - p0.y) +
-               6 * (1 - t) * t * (p2.y - p1.y) +
-               3 * t ** 2 * (p3.y - p2.y);
+        6 * (1 - t) * t * (p2.y - p1.y) +
+        3 * t ** 2 * (p3.y - p2.y);
 
     return { x, y, dx, dy };
 }
@@ -370,7 +402,7 @@ function drawBranch(svg, x1, y1, x2, y2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, startTh
 }
 
 
-function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
+function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1, colors = {}) {
     const leafGroup = document.createElementNS(svg.namespaceURI, "g");
 
     const top = { x: cx, y: cy - size };
@@ -425,11 +457,12 @@ function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1) {
 
     leafGroup.setAttribute("transform", transform);
     leafGroup.dataset.order = "leaf";
-    svg.appendChild(leafGroup);
+
+    return leafGroup;
 }
 
-function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
-    const flowerGroup = document.createElementNS(svg.namespaceURI, "g");
+function drawBlossom(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
+    const blossomGroup = document.createElementNS(svg.namespaceURI, "g");
 
     const strokeColor = "#222";
     const outerColor = colors.petal1;
@@ -445,7 +478,7 @@ function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
         bud.setAttribute("fill", outerColor);
         bud.setAttribute("stroke", strokeColor);
         bud.setAttribute("stroke-width", 0.5);
-        flowerGroup.appendChild(bud);
+        blossomGroup.appendChild(bud);
 
         const budHighlight = document.createElementNS(svg.namespaceURI, "ellipse");
         budHighlight.setAttribute("cx", cx - petalSize * 0.1);
@@ -454,9 +487,9 @@ function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
         budHighlight.setAttribute("ry", petalSize * 0.35);
         budHighlight.setAttribute("fill", innerColor);
         budHighlight.setAttribute("fill-opacity", 0.5);
-        flowerGroup.appendChild(budHighlight);
+        blossomGroup.appendChild(budHighlight);
     } else {
-        // Draw full flower with multiple petals
+        // Draw full blossom with multiple petals
         const petalLength = petalSize * 2;
         const petalWidth = petalSize;
 
@@ -476,7 +509,7 @@ function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
             petal.setAttribute("stroke", strokeColor);
             petal.setAttribute("stroke-width", 0.5);
             petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-            flowerGroup.appendChild(petal);
+            blossomGroup.appendChild(petal);
 
             // Center vein
             const vein = document.createElementNS(svg.namespaceURI, "line");
@@ -488,7 +521,7 @@ function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
             vein.setAttribute("stroke-width", 0.3);
             vein.setAttribute("stroke-opacity", 0.4);
             vein.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-            flowerGroup.appendChild(vein);
+            blossomGroup.appendChild(vein);
 
             // Inner overlay
             const innerPetal = document.createElementNS(svg.namespaceURI, "path");
@@ -504,7 +537,7 @@ function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
             innerPetal.setAttribute("fill", innerColor);
             innerPetal.setAttribute("fill-opacity", 0.7);
             innerPetal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-            flowerGroup.appendChild(innerPetal);
+            blossomGroup.appendChild(innerPetal);
         }
 
         // Center circle
@@ -512,17 +545,17 @@ function drawFlower(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
         center.setAttribute("cx", cx);
         center.setAttribute("cy", cy);
         center.setAttribute("r", petalSize / 2);
-        center.setAttribute("fill", colors.flowerCenter);
+        center.setAttribute("fill", colors.blossomCenter);
         center.setAttribute("stroke", strokeColor);
         center.setAttribute("stroke-width", 0.5);
-        flowerGroup.appendChild(center);
+        blossomGroup.appendChild(center);
     }
 
-    // Apply random rotation to entire flower group
-    flowerGroup.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+    // Apply random rotation to entire blossom group
+    blossomGroup.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
 
-    flowerGroup.dataset.order = "blossom";
-    svg.appendChild(flowerGroup);
+    blossomGroup.dataset.order = "blossom";
+    svg.appendChild(blossomGroup);
 }
 
 function drawButterfly(svg, cx, cy, size = 20, rotation = 0) {
@@ -636,4 +669,215 @@ function drawButterfly(svg, cx, cy, size = 20, rotation = 0) {
 
     butterflyGroup.dataset.order = 'butterfly';
     svg.appendChild(butterflyGroup);
+}
+
+
+export function drawFlower(svg, baseX, baseY, flowerParameter) {
+    const flowerGroup = document.createElementNS(svg.namespaceURI, "g");
+
+    // Draw a stem with possible loops and leaves
+    const minStemHeight = 50;
+    const maxStemHeight = minStemHeight + Math.random() * 60;
+    const currentStemHeight = minStemHeight + flowerParameter * (maxStemHeight - minStemHeight);
+    const stemGroup = drawFlowerStem(flowerGroup, baseX, baseY, currentStemHeight);
+
+    // Draw the flower head at the top
+
+    // Variation
+    const minHeadSize = 8;
+    const maxHeadSize = minHeadSize + Math.random() * 8;
+    const currentHeadSize = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+    const headGroup = drawFlowerHead(flowerGroup, currentHeadSize, stemGroup.x, stemGroup.y, stemGroup.angle);
+
+    flowerGroup.dataset.order = "flower";
+    svg.appendChild(flowerGroup);
+    return flowerGroup;
+}
+
+function drawFlowerStem(svg, baseX, baseY, stemHeight = 40) {
+    const svgNS = svg.namespaceURI;
+
+    // --- Stem tip and bend ---
+    const tipSway = 10;
+    const tipX = baseX + (Math.random() * 2 * tipSway - tipSway);
+    const tipY = baseY - stemHeight;
+
+    const stalkSway = 25;
+    const ctrlX = baseX + (Math.random() * 2 * stalkSway - stalkSway);
+    const ctrlY = baseY - stemHeight * 0.5;
+
+    // --- Draw the stem ---
+    const d = `M ${baseX} ${baseY} Q ${ctrlX} ${ctrlY}, ${tipX} ${tipY}`;
+    const path = document.createElementNS(svgNS, "path");
+    path.setAttribute("d", d);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", colors.stem1);
+    path.setAttribute("stroke-width", 1.2);
+    path.setAttribute("stroke-linecap", "round");
+    svg.appendChild(path);
+
+    // --- Add one leaf ---
+    const leafFraction = 0.6 + Math.random() * .3; // 0.4–0.8
+
+    // Quadratic Bézier formula for point at t:
+    const leafX = Math.pow(1 - leafFraction, 2) * baseX + 2 * (1 - leafFraction) * leafFraction * ctrlX + Math.pow(leafFraction, 2) * tipX;
+    const leafY = Math.pow(1 - leafFraction, 2) * baseY + 2 * (1 - leafFraction) * leafFraction * ctrlY + Math.pow(leafFraction, 2) * tipY;
+
+    // Derivative at t gives slope for leaf orientation
+    const dx = 2 * (1 - leafFraction) * (ctrlX - baseX) + 2 * leafFraction * (tipX - ctrlX);
+    const dy = 2 * (1 - leafFraction) * (ctrlY - baseY) + 2 * leafFraction * (tipY - ctrlY);
+    const leafAngle = Math.atan2(dy, dx);
+
+    // Randomly left (-1) or right (+1)
+    const leafSide = Math.random() < 0.5 ? -1 : 1;
+    const leafSize = 5 + Math.random() * 4;
+
+    let flowerLeafColors = {};
+    flowerLeafColors.leaf1 = colors.stem2;
+    flowerLeafColors.leaf2 = colors.stem3;
+    const leafGroup = drawLeaf(svg, leafX, leafY, leafSize, dx, dy, leafSide, flowerLeafColors);
+    const leafShift = leafSide * leafSize;
+    const existingTransform = leafGroup.getAttribute("transform") || "";
+    leafGroup.setAttribute("transform", `translate(${leafShift}, 0) ` + existingTransform);
+
+    svg.appendChild(leafGroup);
+
+    // --- Compute stem tip angle for flower head ---
+    const tipDx = tipX - ctrlX;
+    const tipDy = tipY - ctrlY;
+    const tipAngle = Math.atan2(tipDy, tipDx) * 180 / Math.PI + 90;
+
+    // Return tip position and angle
+    return { x: tipX, y: tipY, angle: tipAngle };
+}
+
+function drawFlowerHead(flowerGroup, size, cx, cy, rotation = 0) {
+    console.log('flowerheadrotation: ' + rotation);
+    // Decide which flower type to draw
+    // You can store this in colors.flowerType or pick from colors randomly
+    const flowerType = colors.flowerType || "poppy";
+
+    const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
+
+    switch (flowerType) {
+        case "poppy":
+            drawPoppy(headGroup, cx, cy, rotation, size);
+            break;
+
+        case "rose":
+            drawRose(headGroup, cx, cy, rotation, size);
+            break;
+
+        case "daisy":
+            drawDaisy(headGroup, cx, cy, rotation, size);
+            break;
+
+        // Default to generic blossom if no match
+        default:
+            drawPoppy(headGroup, cx, cy, rotation, size);
+            break;
+    }
+
+    // Move everything into the flower group
+    flowerGroup.appendChild(headGroup);
+}
+
+function drawPoppy(flowerHeadGroup, cx, cy, rotation = 0, size = 20) {
+    let petals = 3 + Math.floor(Math.random() * 2);
+    const petalLength = size * 1.5;
+    const petalWidth = size * 0.8;
+    const baseY = cy + size * 0.2; // base of petals slightly below center
+
+    for (let i = 0; i < petals; i++) {
+        const angleOffset = (i - petals / 2) * (petalWidth * 0.6);
+        // Each petal slightly offset left/right horizontally from center
+
+        // Create path for petal - a cupped shape starting at base, curving outward and back
+        const d = `
+            M ${cx} ${baseY} 
+            C ${cx + angleOffset - petalWidth * 0.3} ${baseY - petalLength * 0.3},
+              ${cx + angleOffset - petalWidth * 0.5} ${baseY - petalLength * 0.8},
+              ${cx + angleOffset} ${baseY - petalLength}
+            C ${cx + angleOffset + petalWidth * 0.5} ${baseY - petalLength * 0.8},
+              ${cx + angleOffset + petalWidth * 0.3} ${baseY - petalLength * 0.3},
+              ${cx} ${baseY}
+            Z
+        `;
+
+        const petal = document.createElementNS(flowerHeadGroup.namespaceURI, "path");
+        petal.setAttribute("d", d);
+        petal.setAttribute("fill", "rgba(194, 94, 48, 1)"); // deep red petal color
+        petal.setAttribute("stroke", "rgba(121, 56, 30, 1)"); // dark red outline
+        petal.setAttribute("stroke-width", 0.8);
+        petal.setAttribute("opacity", 0.9);
+        flowerHeadGroup.appendChild(petal);
+    }
+
+    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
+    flowerHeadGroup.setAttribute('transform', transform);
+    console.log(flowerHeadGroup.getAttribute("transform"));
+}
+
+
+function drawRose(svg, cx, cy, rotation = 0, size = 12) {
+    const g = document.createElementNS(svg.namespaceURI, "g");
+    g.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+
+    const layers = 4;
+    for (let i = 0; i < layers; i++) {
+        const angleOffset = (i * 25) + Math.random() * 10;
+        const radius = size * (1 - i / layers);
+        const petal = document.createElementNS(svg.namespaceURI, "path");
+        const spread = radius * 0.6;
+
+        const d = `
+            M ${cx - spread} ${cy}
+            Q ${cx} ${cy - radius}, ${cx + spread} ${cy}
+            Q ${cx} ${cy + radius * 0.5}, ${cx - spread} ${cy}
+            Z
+        `;
+        petal.setAttribute("d", d);
+        petal.setAttribute("fill", colors.rose || "#d36da4");
+        petal.setAttribute("fill-opacity", 0.7 - i * 0.1);
+        petal.setAttribute("stroke", "#8a3e65");
+        petal.setAttribute("stroke-width", 0.5);
+        petal.setAttribute("transform", `rotate(${angleOffset}, ${cx}, ${cy})`);
+        g.appendChild(petal);
+    }
+
+    svg.appendChild(g);
+}
+
+function drawDaisy(svg, cx, cy, rotation = 0, size = 10) {
+    const g = document.createElementNS(svg.namespaceURI, "g");
+    g.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+
+    for (let i = 0; i < petals; i++) {
+        const angle = (i * 360) / petals;
+        const petal = document.createElementNS(svg.namespaceURI, "ellipse");
+        const petalLength = size * 1.5;
+        const petalWidth = size * 0.4;
+
+        petal.setAttribute("cx", cx);
+        petal.setAttribute("cy", cy - size);
+        petal.setAttribute("rx", petalWidth);
+        petal.setAttribute("ry", petalLength);
+        petal.setAttribute("fill", "#fffaf0");
+        petal.setAttribute("stroke", "#cfcfcf");
+        petal.setAttribute("stroke-width", 0.4);
+        petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
+        g.appendChild(petal);
+    }
+
+    // Yellow center
+    const center = document.createElementNS(svg.namespaceURI, "circle");
+    center.setAttribute("cx", cx);
+    center.setAttribute("cy", cy);
+    center.setAttribute("r", size * 0.4);
+    center.setAttribute("fill", "#f5d142");
+    center.setAttribute("stroke", "#c4a025");
+    center.setAttribute("stroke-width", 0.5);
+    g.appendChild(center);
+
+    svg.appendChild(g);
 }

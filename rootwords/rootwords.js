@@ -183,7 +183,10 @@ function scoreRoots(rootNode = treeRoot) {
   tryUpdateBestRoots(score);
 
   const treeContainer = document.getElementById("tree");
-  drawTree(score, treeContainer);
+  let trunkXPercent = drawTree(score, treeContainer);
+
+  // Center the trunk horizontally in the container
+  treeContainer.style.transform = `translateX(${-(trunkXPercent-50)}%) translateY(100px)`;
 }
 
 function drawRoots() {

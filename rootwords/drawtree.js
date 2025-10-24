@@ -64,7 +64,8 @@ export function drawTree(score, treeContainer, dateString) {
 
     // Blossoms
     const maxNumBlossoms = numBranches;
-    const numPetals = Math.max(0, Math.min(score - numLeaves, maxNumBlossoms * 5));
+    const petalsPerBlossom = 5;
+    const numPetals = Math.max(0, Math.min(score - numLeaves, maxNumBlossoms * petalsPerBlossom));
     const numBlossoms = (numPetals > 0) ? Math.min(maxNumBlossoms, numPetals) : 0;
     const blossomPetalCounts = [];
     let blossomIndex = 0;
@@ -80,7 +81,8 @@ export function drawTree(score, treeContainer, dateString) {
     // Butterflies
     const butterflySize = blossomSize * 1.5;
     const spacesPerButterfly = 5;
-    let spacesLeft = Math.max(0, Math.min(numBlossoms * spacesPerButterfly, score - numLeaves - numPetals));
+    const numButterflySpaces = Math.max(0, Math.min(numBlossoms * spacesPerButterfly, score - numLeaves - numPetals));
+    let spacesLeft = numButterflySpaces;
     let butterflyParameters = [];
     while (spacesLeft > 0) {
         const parameter = Math.min(1, spacesLeft / spacesPerButterfly);
@@ -90,7 +92,8 @@ export function drawTree(score, treeContainer, dateString) {
 
     // Flowers
     const pointsPerFlower = 10;
-    let pointsLeft = Math.max(0, score - numLeaves - numBlossoms * 2);
+    const numFlowerSpaces = Math.max(0, score - numLeaves - numPetals - numButterflySpaces);
+    let pointsLeft = numFlowerSpaces;
     let flowerParameters = [];
     while (pointsLeft > 0) {
         const flowerParameter = Math.min(pointsPerFlower, pointsLeft);

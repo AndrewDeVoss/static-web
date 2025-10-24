@@ -183,7 +183,8 @@ function scoreRoots(rootNode = treeRoot) {
   tryUpdateBestRoots(score);
 
   const treeContainer = document.getElementById("tree");
-  let trunkXPercent = drawTree(score, treeContainer);
+  const dateString = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (daily)
+  let trunkXPercent = drawTree(score, treeContainer, dateString);
 
   // Center the trunk horizontally in the container
   treeContainer.style.transform = `translateX(${-(trunkXPercent-50)}%) translateY(100px)`;

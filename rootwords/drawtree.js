@@ -1,10 +1,31 @@
 import { getColors } from '../utility/color/color.js';
 
 let colors = new Map();
+let seed = null; // Global or file-local seed (updated each draw)
+let randomState = 0;
 
-export function drawTree(score, treeContainer) {
+// Basic seeded random number generator
+function seededRandom() {
+    // LCG constants (Numerical Recipes)
+    randomState = (randomState * 1664525 + 1013904223) % 4294967296;
+    return randomState / 4294967296;
+}
+
+// Initialize the RNG from a string (like a date)
+function seedFromString(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+    }
+    randomState = h >>> 0;
+}
+
+
+export function drawTree(score, treeContainer, dateString) {
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
+    seed = dateString;
+    seedFromString(seed);
 
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
@@ -239,7 +260,7 @@ export function drawTree(score, treeContainer) {
         // Choose a random x position using cushionScale to allow left/right expansion
         let extraWidth = .3 * bb.width; // amount to expand on both sides
         extraWidth = 0; // TODO figure out screen width from here
-        const randomX = bb.x - extraWidth / 2 + Math.random() * (bb.width + extraWidth);
+        const randomX = bb.x - extraWidth / 2 + seededRandom() * (bb.width + extraWidth);
 
         drawFlower(svg, randomX, baseY, flowerParameter);
     }
@@ -675,7 +696,7 @@ export function drawFlower(svg, baseX, baseY, flowerParameter) {
 
     // Draw a stem with possible loops and leaves
     const minStemHeight = 50;
-    const maxStemHeight = minStemHeight + Math.random() * 60;
+    const maxStemHeight = minStemHeight + seededRandom() * 60;
     const currentStemHeight = minStemHeight + flowerParameter * (maxStemHeight - minStemHeight);
     const stemGroup = drawFlowerStem(flowerGroup, baseX, baseY, currentStemHeight);
 
@@ -683,7 +704,7 @@ export function drawFlower(svg, baseX, baseY, flowerParameter) {
 
     // Variation
     const minHeadSize = 8;
-    const maxHeadSize = minHeadSize + Math.random() * 8;
+    const maxHeadSize = minHeadSize + seededRandom() * 8;
     const currentHeadSize = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
     const headGroup = drawFlowerHead(flowerGroup, currentHeadSize, stemGroup.x, stemGroup.y, stemGroup.angle);
 
@@ -697,11 +718,11 @@ function drawFlowerStem(svg, baseX, baseY, stemHeight = 40) {
 
     // --- Stem tip and bend ---
     const tipSway = 10;
-    const tipX = baseX + (Math.random() * 2 * tipSway - tipSway);
+    const tipX = baseX + (seededRandom() * 2 * tipSway - tipSway);
     const tipY = baseY - stemHeight;
 
     const stalkSway = 25;
-    const ctrlX = baseX + (Math.random() * 2 * stalkSway - stalkSway);
+    const ctrlX = baseX + (seededRandom() * 2 * stalkSway - stalkSway);
     const ctrlY = baseY - stemHeight * 0.5;
 
     // --- Draw the stem ---
@@ -715,7 +736,7 @@ function drawFlowerStem(svg, baseX, baseY, stemHeight = 40) {
     svg.appendChild(path);
 
     // --- Add one leaf ---
-    const leafFraction = 0.6 + Math.random() * .3; // 0.4–0.8
+    const leafFraction = 0.6 + seededRandom() * .3; // 0.4–0.8
 
     // Quadratic Bézier formula for point at t:
     const leafX = Math.pow(1 - leafFraction, 2) * baseX + 2 * (1 - leafFraction) * leafFraction * ctrlX + Math.pow(leafFraction, 2) * tipX;
@@ -727,8 +748,8 @@ function drawFlowerStem(svg, baseX, baseY, stemHeight = 40) {
     const leafAngle = Math.atan2(dy, dx);
 
     // Randomly left (-1) or right (+1)
-    const leafSide = Math.random() < 0.5 ? -1 : 1;
-    const leafSize = 5 + Math.random() * 4;
+    const leafSide = seededRandom() < 0.5 ? -1 : 1;
+    const leafSize = 5 + seededRandom() * 4;
 
     let flowerLeafColors = {};
     flowerLeafColors.leaf1 = colors.stem2;
@@ -780,7 +801,7 @@ function drawFlowerHead(flowerGroup, size, cx, cy, rotation = 0) {
 }
 
 function drawPoppy(flowerHeadGroup, cx, cy, rotation = 0, size = 20) {
-    let petals = 3 + Math.floor(Math.random() * 2);
+    let petals = 3 + Math.floor(seededRandom() * 2);
     const petalLength = size * 1.5;
     const petalWidth = size * 0.8;
     const baseY = cy + size * 0.2; // base of petals slightly below center
@@ -821,7 +842,7 @@ function drawRose(svg, cx, cy, rotation = 0, size = 12) {
 
     const layers = 4;
     for (let i = 0; i < layers; i++) {
-        const angleOffset = (i * 25) + Math.random() * 10;
+        const angleOffset = (i * 25) + seededRandom() * 10;
         const radius = size * (1 - i / layers);
         const petal = document.createElementNS(svg.namespaceURI, "path");
         const spread = radius * 0.6;

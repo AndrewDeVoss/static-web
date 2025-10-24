@@ -148,7 +148,13 @@ export function chooseRandomWordSet(targetLength = 12, dateString = null) {
   // Step 2: 5-letter word with no overlapping letters
   let word5 = "";
   if (targetLength - letters.length >= 5) {
-    word5 = getRandomWordOfLength(5, new Set(word6));
+    let excludedLetters = new Set();
+    for (let letter of word6) {
+      if (rng() < 0.5) {
+        excludedLetters.add(letter);
+      }
+    }
+    word5 = getRandomWordOfLength(5, excludedLetters);
     letters += word5;
   }
 

@@ -698,10 +698,7 @@ export function drawFlower(svg, baseX, baseY, flowerParameter) {
     const flowerGroup = document.createElementNS(svg.namespaceURI, "g");
 
     // Draw a stem with possible loops and leaves
-    const minStemHeight = 50;
-    const maxStemHeight = minStemHeight + seededRandom() * 60;
-    const currentStemHeight = minStemHeight + flowerParameter * (maxStemHeight - minStemHeight);
-    const stemGroup = drawFlowerStem(flowerGroup, baseX, baseY, currentStemHeight);
+    const stemGroup = drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter);
 
     // Draw the flower head at the top
 
@@ -716,16 +713,22 @@ export function drawFlower(svg, baseX, baseY, flowerParameter) {
     return flowerGroup;
 }
 
-function drawFlowerStem(svg, baseX, baseY, stemHeight = 40) {
+function drawFlowerStem(svg, baseX, baseY, flowerParameter) {
     const svgNS = svg.namespaceURI;
 
+    const minStemHeight = 50;
+    const maxStemHeight = minStemHeight + seededRandom() * 60;
+    const stemHeight = minStemHeight + flowerParameter * (maxStemHeight - minStemHeight);
+
     // --- Stem tip and bend ---
-    const tipSway = 10;
-    const tipX = baseX + (seededRandom() * 2 * tipSway - tipSway);
+    const maxTipSwayFactor = 10;
+    const maxTipX = baseX + (seededRandom() * 2 * maxTipSwayFactor - maxTipSwayFactor);
+    const tipX = baseX + flowerParameter * (maxTipX-baseX);
     const tipY = baseY - stemHeight;
 
-    const stalkSway = 25;
-    const ctrlX = baseX + (seededRandom() * 2 * stalkSway - stalkSway);
+    const maxStalkSwayFactor = 25;
+    const maxCtrlX = baseX + (seededRandom() * 2 * maxStalkSwayFactor - maxStalkSwayFactor);
+    const ctrlX = baseX + flowerParameter * (maxCtrlX - baseX);
     const ctrlY = baseY - stemHeight * 0.5;
 
     // --- Draw the stem ---

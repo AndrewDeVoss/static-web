@@ -697,16 +697,11 @@ function drawButterfly(svg, cx, cy, size = 20, rotation = 0) {
 export function drawFlower(svg, baseX, baseY, flowerParameter) {
     const flowerGroup = document.createElementNS(svg.namespaceURI, "g");
 
-    // Draw a stem with possible loops and leaves
+    // Stem and leaf
     const stemGroup = drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter);
 
-    // Draw the flower head at the top
-
-    // Variation
-    const minHeadSize = 8;
-    const maxHeadSize = minHeadSize + seededRandom() * 8;
-    const currentHeadSize = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
-    const headGroup = drawFlowerHead(flowerGroup, currentHeadSize, stemGroup.x, stemGroup.y, stemGroup.angle);
+    // Head
+    const headGroup = drawFlowerHead(flowerGroup, flowerParameter, stemGroup.x, stemGroup.y, stemGroup.angle);
 
     flowerGroup.dataset.order = "flower";
     svg.appendChild(flowerGroup);
@@ -716,17 +711,19 @@ export function drawFlower(svg, baseX, baseY, flowerParameter) {
 function drawFlowerStem(svg, baseX, baseY, flowerParameter) {
     const svgNS = svg.namespaceURI;
 
+    // Height
     const minStemHeight = 50;
     const maxStemHeight = minStemHeight + seededRandom() * 60;
     const stemHeight = minStemHeight + flowerParameter * (maxStemHeight - minStemHeight);
 
-    // --- Stem tip and bend ---
+    // Tip
     const maxTipSwayFactor = 10;
     const maxTipX = baseX + (seededRandom() * 2 * maxTipSwayFactor - maxTipSwayFactor);
     const tipX = baseX + flowerParameter * (maxTipX-baseX);
     const tipY = baseY - stemHeight;
 
-    const maxStalkSwayFactor = 25;
+    // Bend
+    const maxStalkSwayFactor = 35;
     const maxCtrlX = baseX + (seededRandom() * 2 * maxStalkSwayFactor - maxStalkSwayFactor);
     const ctrlX = baseX + flowerParameter * (maxCtrlX - baseX);
     const ctrlY = baseY - stemHeight * 0.5;
@@ -776,29 +773,32 @@ function drawFlowerStem(svg, baseX, baseY, flowerParameter) {
     return { x: tipX, y: tipY, angle: tipAngle };
 }
 
-function drawFlowerHead(flowerGroup, size, cx, cy, rotation = 0) {
-    // Decide which flower type to draw
-    // You can store this in colors.flowerType or pick from colors randomly
+function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
+    const minHeadSize = 8;
+    const maxHeadSize = minHeadSize + seededRandom() * 8; // TODO just let each flower create its own size
+    const baseHeadSize = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+
+    // Decide which flower type to draw TODO random select
     const flowerType = colors.flowerType || "poppy";
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
     switch (flowerType) {
         case "poppy":
-            drawPoppy(headGroup, cx, cy, rotation, size);
+            drawPoppy(headGroup, cx, cy, rotation, baseHeadSize);
             break;
 
         case "rose":
-            drawRose(headGroup, cx, cy, rotation, size);
+            drawRose(headGroup, cx, cy, rotation, baseHeadSize * 1.5);
             break;
 
         case "daisy":
-            drawDaisy(headGroup, cx, cy, rotation, size);
+            drawDaisy(headGroup, cx, cy, rotation, baseHeadSize * .6);
             break;
 
         // Default to generic blossom if no match
         default:
-            drawPoppy(headGroup, cx, cy, rotation, size);
+            drawPoppy(headGroup, cx, cy, rotation, baseHeadSize);
             break;
     }
 
@@ -806,7 +806,7 @@ function drawFlowerHead(flowerGroup, size, cx, cy, rotation = 0) {
     flowerGroup.appendChild(headGroup);
 }
 
-function drawPoppy(flowerHeadGroup, cx, cy, rotation = 0, size = 20) {
+function drawPoppy(flowerHeadGroup, cx, cy, rotation, size) {
     let petals = 3 + Math.floor(seededRandom() * 2);
     const petalLength = size * 1.5;
     const petalWidth = size * 0.8;
@@ -830,10 +830,9 @@ function drawPoppy(flowerHeadGroup, cx, cy, rotation = 0, size = 20) {
 
         const petal = document.createElementNS(flowerHeadGroup.namespaceURI, "path");
         petal.setAttribute("d", d);
-        petal.setAttribute("fill", "rgba(194, 94, 48, 1)"); // deep red petal color
-        petal.setAttribute("stroke", "rgba(121, 56, 30, 1)"); // dark red outline
+        petal.setAttribute("fill", "rgba(227, 108, 53, 1)"); // deep red petal color
+        petal.setAttribute("stroke", "rgba(114, 65, 33, 1)"); // dark red outline
         petal.setAttribute("stroke-width", 0.8);
-        petal.setAttribute("opacity", 0.9);
         flowerHeadGroup.appendChild(petal);
     }
 
@@ -861,7 +860,7 @@ function drawRose(svg, cx, cy, rotation = 0, size = 12) {
         `;
         petal.setAttribute("d", d);
         petal.setAttribute("fill", colors.rose || "#d36da4");
-        petal.setAttribute("fill-opacity", 0.7 - i * 0.1);
+        petal.setAttribute("fill-opacity", 1 - i * 0.1);
         petal.setAttribute("stroke", "#8a3e65");
         petal.setAttribute("stroke-width", 0.5);
         petal.setAttribute("transform", `rotate(${angleOffset}, ${cx}, ${cy})`);
@@ -874,6 +873,8 @@ function drawRose(svg, cx, cy, rotation = 0, size = 12) {
 function drawDaisy(svg, cx, cy, rotation = 0, size = 10) {
     const g = document.createElementNS(svg.namespaceURI, "g");
     g.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+
+    let petals = 5 + Math.floor(seededRandom() * 2);
 
     for (let i = 0; i < petals; i++) {
         const angle = (i * 360) / petals;

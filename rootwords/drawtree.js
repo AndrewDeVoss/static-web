@@ -255,9 +255,6 @@ export function drawTree(score, treeContainer) {
     // Trunk X relative to the bounding box
     const trunkPercent = ((baseX - (bbox.x - margin)) / (bbox.width + margin * 2)) * 100;
 
-    console.log("Trunk X as % of final SVG width:", trunkPercent);
-
-
     return trunkPercent;
 }
 
@@ -753,7 +750,6 @@ function drawFlowerStem(svg, baseX, baseY, stemHeight = 40) {
 }
 
 function drawFlowerHead(flowerGroup, size, cx, cy, rotation = 0) {
-    console.log('flowerheadrotation: ' + rotation);
     // Decide which flower type to draw
     // You can store this in colors.flowerType or pick from colors randomly
     const flowerType = colors.flowerType || "poppy";
@@ -816,7 +812,6 @@ function drawPoppy(flowerHeadGroup, cx, cy, rotation = 0, size = 20) {
 
     let transform = `rotate(${rotation}, ${cx}, ${cy})`;
     flowerHeadGroup.setAttribute('transform', transform);
-    console.log(flowerHeadGroup.getAttribute("transform"));
 }
 
 

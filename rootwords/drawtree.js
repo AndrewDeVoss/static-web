@@ -237,7 +237,8 @@ export function drawTree(score, treeContainer) {
         const bb = svg.getBBox();
 
         // Choose a random x position using cushionScale to allow left/right expansion
-        const extraWidth = .6 * bb.width; // amount to expand on both sides
+        const extraWidth = .3 * bb.width; // amount to expand on both sides
+        extraWidth = 0; // TODO figure out screen width from here
         const randomX = bb.x - extraWidth / 2 + Math.random() * (bb.width + extraWidth);
 
         drawFlower(svg, randomX, baseY, flowerParameter);

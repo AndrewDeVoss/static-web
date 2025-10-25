@@ -8,6 +8,7 @@
 
 #hex-board {
     touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
 
     margin: 20px auto;
     position: absolute;

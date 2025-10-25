@@ -508,14 +508,17 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation) {
     const maxHeadSize = minHeadSize + seededRandom() * 6;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
-    const layers = 4;
+    const layers = 3 + seededRandom() * 3;
     for (let i = 0; i < layers; i++) {
-        const radius = size * (1 - i / layers * 0.7);
+        const radius = size * (1 - i / layers * 0.9);
         const petal = document.createElementNS(headGroup.namespaceURI, "circle");
         petal.setAttribute("cx", cx);
         petal.setAttribute("cy", cy);
         petal.setAttribute("r", radius);
-        petal.setAttribute("fill", `rgba(255, 140, 0, ${1 - i * 0.15})`);
+        const red = 255;
+        const green = 140;
+        const blue = 200;
+        petal.setAttribute("fill", `rgba(${red - red*i/layers}, ${green - green*i/layers}, ${blue - blue*i/layers}, ${1 - i * 0.15})`);
         petal.setAttribute("stroke", "#16120cff");
         petal.setAttribute("stroke-width", 0.1);
         headGroup.appendChild(petal);

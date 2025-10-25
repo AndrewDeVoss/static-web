@@ -15,11 +15,11 @@ class HexBoard extends LetterBoard {
 
         // Set shadow DOM HTML first — so we don't wipe out styles later
         this.shadowRoot.innerHTML = `
-    <div id="hex-board">
-      <div id="word-display"></div>
-      <div id="hex-container"></div>
-    </div>
-  `;
+            <div id="hex-board">
+            <div id="word-display"></div>
+            <div id="hex-container"></div>
+            </div>
+        `;
 
         // Now add both stylesheets
         const sharedLink = document.createElement('link');
@@ -39,6 +39,15 @@ class HexBoard extends LetterBoard {
 
         this.layoutLetters();
         this.addEventListeners?.();
+
+                // Add global CSS for this shadow root
+        const style = document.createElement('style');
+        style.textContent = `
+            * {
+                touch-action: manipulation;
+            }
+        `;
+        this.shadowRoot.appendChild(style);
     }
 
     layoutLetters(existingLetterDivs = null) {

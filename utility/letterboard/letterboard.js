@@ -3,6 +3,7 @@ export class LetterBoard extends HTMLElement {
         super();
 
         this.attachShadow({ mode: 'open' });
+
         this.letters = 'XOXOXOXOXOXO'
         this.letterDivs = [];
         this._ready = new Promise(resolve => {

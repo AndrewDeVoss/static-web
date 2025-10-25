@@ -140,7 +140,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
             break;
 
         case "daffodil":
-            drawTulip(headGroup, flowerParameter, cx, cy, rotation);
+            drawDaffodil(headGroup, flowerParameter, cx, cy, rotation);
             break;
 
         // Default to generic blossom if no match
@@ -518,7 +518,7 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation) {
         const red = 255;
         const green = 140;
         const blue = 200;
-        petal.setAttribute("fill", `rgba(${red - red*i/layers}, ${green - green*i/layers}, ${blue - blue*i/layers}, ${1 - i * 0.15})`);
+        petal.setAttribute("fill", `rgba(${red - red * i / layers}, ${green - green * i / layers}, ${blue - blue * i / layers}, ${1 - i * 0.15})`);
         petal.setAttribute("stroke", "#16120cff");
         petal.setAttribute("stroke-width", 0.1);
         headGroup.appendChild(petal);
@@ -556,15 +556,44 @@ function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation) {
         headGroup.appendChild(petal);
     }
 
-    // Trumpet (corona)
-    const trumpet = document.createElementNS(headGroup.namespaceURI, "ellipse");
-    trumpet.setAttribute("cx", cx);
-    trumpet.setAttribute("cy", cy - size * 0.3);
-    trumpet.setAttribute("rx", size * 0.5);
-    trumpet.setAttribute("ry", size * 0.7);
-    trumpet.setAttribute("fill", "#f2c84b");
-    trumpet.setAttribute("stroke", "#a8801f");
+    // Trumpet (corona) - replaced ellipse with trumpet-shaped path
+    const trumpet = document.createElementNS(headGroup.namespaceURI, "path");
+
+    const baseRadius = size * 0.03;     // narrow base near center
+    const flareRadius = size * 0.4;    // wider flared rim
+    const height = size * 1.0;          // trumpet length
+
+    // Draw symmetrical flared shape using cubic Beziers
+
+    function sineWavePath(x1, y1, x2, y2, waves = 4, amplitude = 2) {
+        const width = x2 - x1;
+        const step = width / waves;
+        let path = `L ${x1} ${y1}`;
+        for (let i = 0; i < waves; i++) {
+            const xMid = x1 + step * (i + 0.5);
+            const xEnd = x1 + step * (i + 1);
+            const yCtrl = (i % 2 === 0) ? y1 - amplitude : y1 + amplitude;
+            path += ` Q ${xMid} ${yCtrl}, ${xEnd} ${y1}`;
+        }
+        return path;
+    }
+
+    const dTrumpet = `
+        M ${cx - baseRadius} ${cy}
+        C ${cx - baseRadius * 1.2} ${cy - height * 0.6},
+          ${cx - flareRadius * 0.9} ${cy - height * 0.95},
+          ${cx - flareRadius} ${cy - height}
+        ${sineWavePath(cx - flareRadius, cy - height, cx + flareRadius, cy - height, 5, size * 0.1)}
+        C ${cx + flareRadius * 0.9} ${cy - height * 0.95},
+          ${cx + baseRadius * 1.2} ${cy - height * 0.6},
+          ${cx + baseRadius} ${cy}
+        Z
+    `;
+    trumpet.setAttribute("d", dTrumpet);
+    trumpet.setAttribute("fill", "#f29c4b");
+    trumpet.setAttribute("stroke", "#a8561f");
     trumpet.setAttribute("stroke-width", 0.4);
+
     headGroup.appendChild(trumpet);
 
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);

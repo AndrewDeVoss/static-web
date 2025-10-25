@@ -100,9 +100,29 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
 }
 
 export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
-
-    // Decide which flower type to draw TODO random select
-    const flowerType = colors.flowerType || "poppy";
+    const flowers = [
+        { name: "poppy", weight: 100 },
+        { name: "daffodil", weight: 75 },
+        { name: "ranunculus", weight: 50 },
+        { name: "lily", weight: 35 },
+        { name: "daisy", weight: 25 },
+        { name: "tulip", weight: 15 },
+        { name: "rose", weight: 10 },
+        { name: "iris", weight: 5 },
+        { name: "orchid", weight: 1 }
+    ];
+    const totalWeight = flowers.reduce((sum, f) => sum + f.weight, 0);
+    function chooseFlower() {
+        const rand = seededRandom() * totalWeight;
+        let cumulative = 0;
+        for (const flower of flowers) {
+            cumulative += flower.weight;
+            if (rand <= cumulative) {
+                return flower.name;
+            }
+        }
+    }
+    const flowerType = chooseFlower();
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -111,36 +131,36 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
             drawPoppy(headGroup, flowerParameter, cx, cy, rotation);
             break;
 
-        case "rose":
-            drawRose(headGroup, flowerParameter, cx, cy, rotation);
-            break;
-
-        case "daisy":
-            drawDaisy(headGroup, flowerParameter, cx, cy, rotation);
-            break;
-
-        case "iris":
-            drawIris(headGroup, flowerParameter, cx, cy, rotation);
-            break;
-
-        case "lily":
-            drawLily(headGroup, flowerParameter, cx, cy, rotation);
-            break;
-
-        case "tulip":
-            drawTulip(headGroup, flowerParameter, cx, cy, rotation);
-            break;
-
-        case "orchid":
-            drawOrchid(headGroup, flowerParameter, cx, cy, rotation);
+        case "daffodil":
+            drawDaffodil(headGroup, flowerParameter, cx, cy, rotation);
             break;
 
         case "ranunculus":
             drawRanunculus(headGroup, flowerParameter, cx, cy, rotation);
             break;
 
-        case "daffodil":
-            drawDaffodil(headGroup, flowerParameter, cx, cy, rotation);
+        case "lily":
+            drawLily(headGroup, flowerParameter, cx, cy, rotation);
+            break;
+
+        case "daisy":
+            drawDaisy(headGroup, flowerParameter, cx, cy, rotation);
+            break;
+
+        case "tulip":
+            drawTulip(headGroup, flowerParameter, cx, cy, rotation);
+            break;
+
+        case "rose":
+            drawRose(headGroup, flowerParameter, cx, cy, rotation);
+            break;
+
+        case "iris":
+            drawIris(headGroup, flowerParameter, cx, cy, rotation);
+            break;
+
+        case "orchid":
+            drawOrchid(headGroup, flowerParameter, cx, cy, rotation);
             break;
 
         // Default to generic blossom if no match

@@ -6,6 +6,8 @@
 
 
 #hex-board {
+    touch-action: manipulation;
+
     margin: 20px auto;
     position: absolute;
     bottom: 2.5rem;

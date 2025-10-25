@@ -21,6 +21,10 @@
   box-shadow: none;
 }
 
+.letter {
+  touch-action: manipulation;
+}
+
 .letter.selected {
   background-color: #b17645;
   pointer-events: none;

@@ -1,4 +1,5 @@
-#word-swiper { 
+#word-swiper {
+  touch-action: manipulation;
   margin: 20px auto;
   user-select: none;
   position: fixed;

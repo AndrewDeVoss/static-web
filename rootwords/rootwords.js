@@ -130,8 +130,8 @@ document.addEventListener('word-committed', (e) => {
   } else {
     // Determine how many letters are used in children of currentNode
     const totalUsedCols = currentNode.children.reduce((sum, child) => sum + child.word.length, 0);
-    if (totalUsedCols < currentNode.word.length) {
-      selectNode(currentNode); // Still room to grow from current node
+    if (totalUsedCols < currentNode.word.length/2) {
+      selectNode(currentNode); // Most of the room to grow is still here
     } else {
       selectNode(newNode); // Move to the new node
     }

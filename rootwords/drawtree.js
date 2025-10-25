@@ -22,6 +22,8 @@ function seedFromString(str) {
 
 
 export function drawTree(score, treeContainer, dateString) {
+    score += 75;
+
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
     seed = dateString;
@@ -100,7 +102,6 @@ export function drawTree(score, treeContainer, dateString) {
         flowerParameters.push(flowerParameter / pointsPerFlower);
         pointsLeft -= flowerParameter;
     }
-    const flowerSize = 15;
 
     // Trunk
     const trunkWidthAtBase = 6 + numLeaves * 0.1;
@@ -708,8 +709,8 @@ export function drawFlower(svg, baseX, baseY, flowerParameter) {
     return flowerGroup;
 }
 
-function drawFlowerStem(svg, baseX, baseY, flowerParameter) {
-    const svgNS = svg.namespaceURI;
+function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
+    const svgNS = flowerGroup.namespaceURI;
 
     // Height
     const minStemHeight = 50;
@@ -719,7 +720,7 @@ function drawFlowerStem(svg, baseX, baseY, flowerParameter) {
     // Tip
     const maxTipSwayFactor = 10;
     const maxTipX = baseX + (seededRandom() * 2 * maxTipSwayFactor - maxTipSwayFactor);
-    const tipX = baseX + flowerParameter * (maxTipX-baseX);
+    const tipX = baseX + flowerParameter * (maxTipX - baseX);
     const tipY = baseY - stemHeight;
 
     // Bend
@@ -736,7 +737,7 @@ function drawFlowerStem(svg, baseX, baseY, flowerParameter) {
     path.setAttribute("stroke", colors.stem1);
     path.setAttribute("stroke-width", 1.2);
     path.setAttribute("stroke-linecap", "round");
-    svg.appendChild(path);
+    flowerGroup.appendChild(path);
 
     // --- Add one leaf ---
     const leafFraction = 0.6 + seededRandom() * .3; // 0.4–0.8
@@ -757,12 +758,12 @@ function drawFlowerStem(svg, baseX, baseY, flowerParameter) {
     let flowerLeafColors = {};
     flowerLeafColors.leaf1 = colors.stem2;
     flowerLeafColors.leaf2 = colors.stem3;
-    const leafGroup = drawLeaf(svg, leafX, leafY, leafSize, dx, dy, leafSide, flowerLeafColors);
+    const leafGroup = drawLeaf(flowerGroup, leafX, leafY, leafSize, dx, dy, leafSide, flowerLeafColors);
     const leafShift = leafSide * leafSize;
     const existingTransform = leafGroup.getAttribute("transform") || "";
     leafGroup.setAttribute("transform", `translate(${leafShift}, 0) ` + existingTransform);
 
-    svg.appendChild(leafGroup);
+    flowerGroup.appendChild(leafGroup);
 
     // --- Compute stem tip angle for flower head ---
     const tipDx = tipX - ctrlX;
@@ -774,9 +775,6 @@ function drawFlowerStem(svg, baseX, baseY, flowerParameter) {
 }
 
 function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
-    const minHeadSize = 8;
-    const maxHeadSize = minHeadSize + seededRandom() * 8; // TODO just let each flower create its own size
-    const baseHeadSize = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
     // Decide which flower type to draw TODO random select
     const flowerType = colors.flowerType || "poppy";
@@ -785,15 +783,15 @@ function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
 
     switch (flowerType) {
         case "poppy":
-            drawPoppy(headGroup, cx, cy, rotation, baseHeadSize);
+            drawPoppy(headGroup, flowerParameter, cx, cy, rotation);
             break;
 
         case "rose":
-            drawRose(headGroup, cx, cy, rotation, baseHeadSize * 1.5);
+            drawRose(headGroup, flowerParameter, cx, cy, rotation);
             break;
 
         case "daisy":
-            drawDaisy(headGroup, cx, cy, rotation, baseHeadSize * .6);
+            drawDaisy(headGroup, flowerParameter, cx, cy, rotation);
             break;
 
         // Default to generic blossom if no match
@@ -806,7 +804,11 @@ function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
     flowerGroup.appendChild(headGroup);
 }
 
-function drawPoppy(flowerHeadGroup, cx, cy, rotation, size) {
+function drawPoppy(headGroup, flowerParameter, cx, cy, rotation) {
+    const minHeadSize = 8;
+    const maxHeadSize = minHeadSize + seededRandom() * 8;
+    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+
     let petals = 3 + Math.floor(seededRandom() * 2);
     const petalLength = size * 1.5;
     const petalWidth = size * 0.8;
@@ -828,28 +830,29 @@ function drawPoppy(flowerHeadGroup, cx, cy, rotation, size) {
             Z
         `;
 
-        const petal = document.createElementNS(flowerHeadGroup.namespaceURI, "path");
+        const petal = document.createElementNS(headGroup.namespaceURI, "path");
         petal.setAttribute("d", d);
         petal.setAttribute("fill", "rgba(227, 108, 53, 1)"); // deep red petal color
         petal.setAttribute("stroke", "rgba(114, 65, 33, 1)"); // dark red outline
         petal.setAttribute("stroke-width", 0.8);
-        flowerHeadGroup.appendChild(petal);
+        headGroup.appendChild(petal);
     }
 
     let transform = `rotate(${rotation}, ${cx}, ${cy})`;
-    flowerHeadGroup.setAttribute('transform', transform);
+    headGroup.setAttribute('transform', transform);
 }
 
 
-function drawRose(svg, cx, cy, rotation = 0, size = 12) {
-    const g = document.createElementNS(svg.namespaceURI, "g");
-    g.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+function drawRose(headGroup, flowerParameter, cx, cy, rotation) {
+    const minHeadSize = 12;
+    const maxHeadSize = minHeadSize + seededRandom() * 8;
+    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
     const layers = 4;
     for (let i = 0; i < layers; i++) {
         const angleOffset = (i * 25) + seededRandom() * 10;
         const radius = size * (1 - i / layers);
-        const petal = document.createElementNS(svg.namespaceURI, "path");
+        const petal = document.createElementNS(headGroup.namespaceURI, "path");
         const spread = radius * 0.6;
 
         const d = `
@@ -864,21 +867,23 @@ function drawRose(svg, cx, cy, rotation = 0, size = 12) {
         petal.setAttribute("stroke", "#8a3e65");
         petal.setAttribute("stroke-width", 0.5);
         petal.setAttribute("transform", `rotate(${angleOffset}, ${cx}, ${cy})`);
-        g.appendChild(petal);
+        headGroup.appendChild(petal);
     }
 
-    svg.appendChild(g);
+    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
+    headGroup.setAttribute('transform', transform);
 }
 
-function drawDaisy(svg, cx, cy, rotation = 0, size = 10) {
-    const g = document.createElementNS(svg.namespaceURI, "g");
-    g.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+function drawDaisy(headGroup, flowerParameter, cx, cy, rotation) {
+    const minHeadSize = 4;
+    const maxHeadSize = minHeadSize + seededRandom() * 3;
+    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
     let petals = 5 + Math.floor(seededRandom() * 2);
 
     for (let i = 0; i < petals; i++) {
         const angle = (i * 360) / petals;
-        const petal = document.createElementNS(svg.namespaceURI, "ellipse");
+        const petal = document.createElementNS(headGroup.namespaceURI, "ellipse");
         const petalLength = size * 1.5;
         const petalWidth = size * 0.4;
 
@@ -890,18 +895,19 @@ function drawDaisy(svg, cx, cy, rotation = 0, size = 10) {
         petal.setAttribute("stroke", "#cfcfcf");
         petal.setAttribute("stroke-width", 0.4);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        g.appendChild(petal);
+        headGroup.appendChild(petal);
     }
 
     // Yellow center
-    const center = document.createElementNS(svg.namespaceURI, "circle");
+    const center = document.createElementNS(headGroup.namespaceURI, "circle");
     center.setAttribute("cx", cx);
     center.setAttribute("cy", cy);
     center.setAttribute("r", size * 0.4);
     center.setAttribute("fill", "#f5d142");
     center.setAttribute("stroke", "#c4a025");
     center.setAttribute("stroke-width", 0.5);
-    g.appendChild(center);
+    headGroup.appendChild(center);
 
-    svg.appendChild(g);
+    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
+    headGroup.setAttribute('transform', transform);
 }

@@ -102,7 +102,7 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
 export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
 
     // Decide which flower type to draw TODO random select
-    const flowerType = colors.flowerType || "tulip";
+    const flowerType = colors.flowerType || "poppy";
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -438,55 +438,86 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation) {
 }
 
 function drawOrchid(headGroup, flowerParameter, cx, cy, rotation) {
-    const minHeadSize = 9;
-    const maxHeadSize = minHeadSize + seededRandom() * 5;
+    const minHeadSize = 5;
+    const maxHeadSize = minHeadSize + seededRandom() * 4;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
-    const petals = 5;
-    for (let i = 0; i < petals; i++) {
-        const angle = (i * 360) / petals;
+    // ----- Thick petals (down-left, down-right, up) -----
+    const thickAngles = [210, 120, 0]; // up is 0°, down-left/right rotated accordingly
+    thickAngles.forEach(angle => {
         const petal = document.createElementNS(headGroup.namespaceURI, "ellipse");
         petal.setAttribute("cx", cx);
         petal.setAttribute("cy", cy - size);
         petal.setAttribute("rx", size * 0.6);
         petal.setAttribute("ry", size * 1.2);
         petal.setAttribute("fill", "#e0b3e6");
-        petal.setAttribute("stroke", "#9c6da3");
-        petal.setAttribute("stroke-width", 0.5);
+        petal.setAttribute("stroke", "#8b129eff");
+        petal.setAttribute("stroke-width", 0.3);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
-    }
+    });
 
-    // Central lip petal
+    // ----- Thin petals (up-left, up-right) -----
+    const thinAngles = [300, 60]; // corrected angles for “top” direction
+    thinAngles.forEach(angle => {
+        const petal = document.createElementNS(headGroup.namespaceURI, "ellipse");
+        petal.setAttribute("cx", cx);
+        petal.setAttribute("cy", cy - size);
+        petal.setAttribute("rx", size * 0.15); // very thin
+        petal.setAttribute("ry", size * 0.9);  // tall
+        petal.setAttribute("fill", "#eed6f1ff");
+        petal.setAttribute("stroke", "#231f24ff");
+        petal.setAttribute("stroke-width", 0.1);
+        petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
+        headGroup.appendChild(petal);
+    });
+
+    // ----- Central lip/tongue -----
     const lip = document.createElementNS(headGroup.namespaceURI, "path");
+    // Lip size constants
+    const LIP_WIDTH = 0.5;       // half-width of the lip from center
+    const LIP_HEIGHT_TOP = 1.3;  // height of the top point of the curve
+    const LIP_HEIGHT_BASE = -.25; // vertical offset of the base of the lip from cy
+
+    // Compute key points
+    const lipLeftX = cx - size * LIP_WIDTH;
+    const lipLeftY = cy + size * LIP_HEIGHT_BASE;
+    const lipRightX = cx + size * LIP_WIDTH;
+    const lipRightY = cy + size * LIP_HEIGHT_BASE;
+    const lipTopX = cx;
+    const lipTopY = cy + size * LIP_HEIGHT_TOP;
+
+    // Set the path
     lip.setAttribute("d", `
-        M ${cx - size * 0.5} ${cy + size * 0.2}
-        Q ${cx} ${cy + size * 0.9}, ${cx + size * 0.5} ${cy + size * 0.2}
-        Z
-    `);
+    M ${lipLeftX} ${lipLeftY}
+    Q ${lipTopX} ${lipTopY}, ${lipRightX} ${lipRightY}
+    Z
+`);
+
     lip.setAttribute("fill", "#d45dbf");
     lip.setAttribute("stroke", "#7b3271");
     lip.setAttribute("stroke-width", 0.4);
     headGroup.appendChild(lip);
 
+    // ----- Rotate the whole flower -----
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
 function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation) {
-    const minHeadSize = 10;
+    const minHeadSize = 5;
     const maxHeadSize = minHeadSize + seededRandom() * 6;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
-    const layers = 6;
+    const layers = 4;
     for (let i = 0; i < layers; i++) {
         const radius = size * (1 - i / layers * 0.7);
         const petal = document.createElementNS(headGroup.namespaceURI, "circle");
         petal.setAttribute("cx", cx);
         petal.setAttribute("cy", cy);
         petal.setAttribute("r", radius);
-        petal.setAttribute("fill", `rgba(255, 189, 89, ${1 - i * 0.15})`);
-        petal.setAttribute("stroke", "#b0751e");
-        petal.setAttribute("stroke-width", 0.4);
+        petal.setAttribute("fill", `rgba(255, 140, 0, ${1 - i * 0.15})`);
+        petal.setAttribute("stroke", "#16120cff");
+        petal.setAttribute("stroke-width", 0.1);
         headGroup.appendChild(petal);
     }
 

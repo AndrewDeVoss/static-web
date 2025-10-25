@@ -102,7 +102,7 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
 export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
 
     // Decide which flower type to draw TODO random select
-    const flowerType = colors.flowerType || "poppy";
+    const flowerType = colors.flowerType || "tulip";
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -395,8 +395,8 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation) {
     const headSvg = document.createElementNS(headGroup.namespaceURI, "path");
     headSvg.setAttribute("d", head);
     headSvg.setAttribute("fill", "#fdf476ff");
-    headSvg.setAttribute("stroke", "#f5d271ff");
-    headSvg.setAttribute("stroke-width", 0.8);
+    headSvg.setAttribute("stroke", "#070604ff");
+    headSvg.setAttribute("stroke-width", 0.2);
     headGroup.appendChild(headSvg);
 
     const top = `
@@ -428,7 +428,13 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation) {
     petalSvg.setAttribute("stroke-width", 0.3);
     headGroup.appendChild(petalSvg);
 
-    headGroup.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+    const translateY = -size * 1.8;
+
+    headGroup.setAttribute(
+        "transform",
+        `rotate(${rotation}, ${cx}, ${cy}) translate(${0}, ${translateY})`
+    );
+
 }
 
 function drawOrchid(headGroup, flowerParameter, cx, cy, rotation) {

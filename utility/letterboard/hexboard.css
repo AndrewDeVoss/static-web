@@ -2,6 +2,7 @@
     --hex-side-length: calc(min(50px, 100vw / 15.5));
     --hex-bounding-width: calc(1.73205 * var(--hex-side-length));
     --hex-bounding-height: calc(2 * var(--hex-side-length));
+    touch-action: manipulation;
 }
 
 

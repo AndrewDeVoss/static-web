@@ -1,4 +1,5 @@
 import { getColors } from '../utility/color/color.js';
+import { drawFlower, seedFlowerRNG } from './drawflower.js';
 
 let colors = new Map();
 let seed = null; // Global or file-local seed (updated each draw)
@@ -22,10 +23,13 @@ function seedFromString(str) {
 
 
 export function drawTree(score, treeContainer, dateString) {
+    // score += 70;
+
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
     seed = dateString;
     seedFromString(seed);
+    seedFlowerRNG(seed);
 
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
@@ -264,7 +268,7 @@ export function drawTree(score, treeContainer, dateString) {
         extraWidth = 0; // TODO figure out screen width from here
         const randomX = bb.x - extraWidth / 2 + seededRandom() * (bb.width + extraWidth);
 
-        drawFlower(svg, randomX, baseY, flowerParameter);
+        drawFlower(svg, randomX, baseY, flowerParameter, dateString);
     }
 
     const bbox = svg.getBBox();
@@ -423,7 +427,7 @@ function drawBranch(svg, x1, y1, x2, y2, ctrl1X, ctrl1Y, ctrl2X, ctrl2Y, startTh
 }
 
 
-function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1, colors = {}) {
+export function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 1, colors = {}) {
     const leafGroup = document.createElementNS(svg.namespaceURI, "g");
 
     const top = { x: cx, y: cy - size };
@@ -690,222 +694,4 @@ function drawButterfly(svg, cx, cy, size = 20, rotation = 0) {
 
     butterflyGroup.dataset.order = 'butterfly';
     svg.appendChild(butterflyGroup);
-}
-
-
-export function drawFlower(svg, baseX, baseY, flowerParameter) {
-    const flowerGroup = document.createElementNS(svg.namespaceURI, "g");
-
-    // Stem and leaf
-    const stemGroup = drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter);
-
-    // Head
-    const headGroup = drawFlowerHead(flowerGroup, flowerParameter, stemGroup.x, stemGroup.y, stemGroup.angle);
-
-    flowerGroup.dataset.order = "flower";
-    svg.appendChild(flowerGroup);
-    return flowerGroup;
-}
-
-function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
-    const svgNS = flowerGroup.namespaceURI;
-
-    // Height
-    const minStemHeight = 50;
-    const maxStemHeight = minStemHeight + seededRandom() * 60;
-    const stemHeight = minStemHeight + flowerParameter * (maxStemHeight - minStemHeight);
-
-    // Tip
-    const maxTipSwayFactor = 10;
-    const maxTipX = baseX + (seededRandom() * 2 * maxTipSwayFactor - maxTipSwayFactor);
-    const tipX = baseX + flowerParameter * (maxTipX - baseX);
-    const tipY = baseY - stemHeight;
-
-    // Bend
-    const maxStalkSwayFactor = 35;
-    const maxCtrlX = baseX + (seededRandom() * 2 * maxStalkSwayFactor - maxStalkSwayFactor);
-    const ctrlX = baseX + flowerParameter * (maxCtrlX - baseX);
-    const ctrlY = baseY - stemHeight * 0.5;
-
-    // --- Draw the stem ---
-    const d = `M ${baseX} ${baseY} Q ${ctrlX} ${ctrlY}, ${tipX} ${tipY}`;
-    const path = document.createElementNS(svgNS, "path");
-    path.setAttribute("d", d);
-    path.setAttribute("fill", "none");
-    path.setAttribute("stroke", colors.stem1);
-    path.setAttribute("stroke-width", 1.2);
-    path.setAttribute("stroke-linecap", "round");
-    flowerGroup.appendChild(path);
-
-    // --- Add one leaf ---
-    const leafFraction = 0.6 + seededRandom() * .3; // 0.4–0.8
-
-    // Quadratic Bézier formula for point at t:
-    const leafX = Math.pow(1 - leafFraction, 2) * baseX + 2 * (1 - leafFraction) * leafFraction * ctrlX + Math.pow(leafFraction, 2) * tipX;
-    const leafY = Math.pow(1 - leafFraction, 2) * baseY + 2 * (1 - leafFraction) * leafFraction * ctrlY + Math.pow(leafFraction, 2) * tipY;
-
-    // Derivative at t gives slope for leaf orientation
-    const dx = 2 * (1 - leafFraction) * (ctrlX - baseX) + 2 * leafFraction * (tipX - ctrlX);
-    const dy = 2 * (1 - leafFraction) * (ctrlY - baseY) + 2 * leafFraction * (tipY - ctrlY);
-    const leafAngle = Math.atan2(dy, dx);
-
-    // Randomly left (-1) or right (+1)
-    const leafSide = seededRandom() < 0.5 ? -1 : 1;
-    const leafSize = 5 + seededRandom() * 4;
-
-    let flowerLeafColors = {};
-    flowerLeafColors.leaf1 = colors.stem2;
-    flowerLeafColors.leaf2 = colors.stem3;
-    const leafGroup = drawLeaf(flowerGroup, leafX, leafY, leafSize, dx, dy, leafSide, flowerLeafColors);
-    const leafShift = leafSide * leafSize;
-    const existingTransform = leafGroup.getAttribute("transform") || "";
-    leafGroup.setAttribute("transform", `translate(${leafShift}, 0) ` + existingTransform);
-
-    flowerGroup.appendChild(leafGroup);
-
-    // --- Compute stem tip angle for flower head ---
-    const tipDx = tipX - ctrlX;
-    const tipDy = tipY - ctrlY;
-    const tipAngle = Math.atan2(tipDy, tipDx) * 180 / Math.PI + 90;
-
-    // Return tip position and angle
-    return { x: tipX, y: tipY, angle: tipAngle };
-}
-
-function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
-
-    // Decide which flower type to draw TODO random select
-    const flowerType = colors.flowerType || "poppy";
-
-    const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
-
-    switch (flowerType) {
-        case "poppy":
-            drawPoppy(headGroup, flowerParameter, cx, cy, rotation);
-            break;
-
-        case "rose":
-            drawRose(headGroup, flowerParameter, cx, cy, rotation);
-            break;
-
-        case "daisy":
-            drawDaisy(headGroup, flowerParameter, cx, cy, rotation);
-            break;
-
-        // Default to generic blossom if no match
-        default:
-            drawPoppy(headGroup, cx, cy, rotation, baseHeadSize);
-            break;
-    }
-
-    // Move everything into the flower group
-    flowerGroup.appendChild(headGroup);
-}
-
-function drawPoppy(headGroup, flowerParameter, cx, cy, rotation) {
-    const minHeadSize = 8;
-    const maxHeadSize = minHeadSize + seededRandom() * 8;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
-
-    let petals = 3 + Math.floor(seededRandom() * 2);
-    const petalLength = size * 1.5;
-    const petalWidth = size * 0.8;
-    const baseY = cy + size * 0.2; // base of petals slightly below center
-
-    for (let i = 0; i < petals; i++) {
-        const angleOffset = (i - petals / 2) * (petalWidth * 0.6);
-        // Each petal slightly offset left/right horizontally from center
-
-        // Create path for petal - a cupped shape starting at base, curving outward and back
-        const d = `
-            M ${cx} ${baseY} 
-            C ${cx + angleOffset - petalWidth * 0.3} ${baseY - petalLength * 0.3},
-              ${cx + angleOffset - petalWidth * 0.5} ${baseY - petalLength * 0.8},
-              ${cx + angleOffset} ${baseY - petalLength}
-            C ${cx + angleOffset + petalWidth * 0.5} ${baseY - petalLength * 0.8},
-              ${cx + angleOffset + petalWidth * 0.3} ${baseY - petalLength * 0.3},
-              ${cx} ${baseY}
-            Z
-        `;
-
-        const petal = document.createElementNS(headGroup.namespaceURI, "path");
-        petal.setAttribute("d", d);
-        petal.setAttribute("fill", "rgba(227, 108, 53, 1)"); // deep red petal color
-        petal.setAttribute("stroke", "rgba(114, 65, 33, 1)"); // dark red outline
-        petal.setAttribute("stroke-width", 0.8);
-        headGroup.appendChild(petal);
-    }
-
-    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
-    headGroup.setAttribute('transform', transform);
-}
-
-
-function drawRose(headGroup, flowerParameter, cx, cy, rotation) {
-    const minHeadSize = 12;
-    const maxHeadSize = minHeadSize + seededRandom() * 8;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
-
-    const layers = 4;
-    for (let i = 0; i < layers; i++) {
-        const angleOffset = (i * 25) + seededRandom() * 10;
-        const radius = size * (1 - i / layers);
-        const petal = document.createElementNS(headGroup.namespaceURI, "path");
-        const spread = radius * 0.6;
-
-        const d = `
-            M ${cx - spread} ${cy}
-            Q ${cx} ${cy - radius}, ${cx + spread} ${cy}
-            Q ${cx} ${cy + radius * 0.5}, ${cx - spread} ${cy}
-            Z
-        `;
-        petal.setAttribute("d", d);
-        petal.setAttribute("fill", colors.rose || "#d36da4");
-        petal.setAttribute("fill-opacity", 1 - i * 0.1);
-        petal.setAttribute("stroke", "#8a3e65");
-        petal.setAttribute("stroke-width", 0.5);
-        petal.setAttribute("transform", `rotate(${angleOffset}, ${cx}, ${cy})`);
-        headGroup.appendChild(petal);
-    }
-
-    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
-    headGroup.setAttribute('transform', transform);
-}
-
-function drawDaisy(headGroup, flowerParameter, cx, cy, rotation) {
-    const minHeadSize = 4;
-    const maxHeadSize = minHeadSize + seededRandom() * 3;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
-
-    let petals = 5 + Math.floor(seededRandom() * 2);
-
-    for (let i = 0; i < petals; i++) {
-        const angle = (i * 360) / petals;
-        const petal = document.createElementNS(headGroup.namespaceURI, "ellipse");
-        const petalLength = size * 1.5;
-        const petalWidth = size * 0.4;
-
-        petal.setAttribute("cx", cx);
-        petal.setAttribute("cy", cy - size);
-        petal.setAttribute("rx", petalWidth);
-        petal.setAttribute("ry", petalLength);
-        petal.setAttribute("fill", "#fffaf0");
-        petal.setAttribute("stroke", "#cfcfcf");
-        petal.setAttribute("stroke-width", 0.4);
-        petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        headGroup.appendChild(petal);
-    }
-
-    // Yellow center
-    const center = document.createElementNS(headGroup.namespaceURI, "circle");
-    center.setAttribute("cx", cx);
-    center.setAttribute("cy", cy);
-    center.setAttribute("r", size * 0.4);
-    center.setAttribute("fill", "#f5d142");
-    center.setAttribute("stroke", "#c4a025");
-    center.setAttribute("stroke-width", 0.5);
-    headGroup.appendChild(center);
-
-    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
-    headGroup.setAttribute('transform', transform);
 }

@@ -61,7 +61,7 @@ class HexBoard extends LetterBoard {
 
         const sideLengthVar = getComputedStyle(this).getPropertyValue('--hex-side-length');
         let sideLength = sideLengthVar ? parseFloat(sideLengthVar) : 50;
-        sideLength += 2; // small gap between hexes
+        sideLength += 3; // small gap between hexes
 
         const boundingWidth = 2 * (Math.sqrt(3) / 2) * sideLength;
         const vertShift = sideLength * 3 / 2;

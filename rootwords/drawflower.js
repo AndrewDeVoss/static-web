@@ -208,7 +208,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         }
     }
     let flowerType = chooseFlower();
-    flowerType = "iris";
+    flowerType = "poppy";
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -589,7 +589,57 @@ function drawIris(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawLily(headGroup, flowerParameter, cx, cy, rotation) {
+function drawLily(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+    rescopeMetallicColorMap(headGroup);
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const common1 = "#ffffff";
+    const common2 = "#ecba78ff";
+    const uncommon1 = "#f7b6f1ff";
+    const uncommon2 = "#ec9191ff";
+    const rare1 = "#fa5523ff";
+    const rare2 = "#e0d8caff"
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
+    let fill1 = common1;
+    let fill2 = common2;
+    switch (medal) {
+        case "bronze":
+            fill1 = bronzeGradient;
+            fill2 = metallicColorMap.get("bronze3");
+            break;
+        case "silver":
+            fill1 = silverGradient;
+            fill2 = metallicColorMap.get("silver1");
+            break;
+        case "gold":
+            fill1 = goldGradient;
+            fill2 = metallicColorMap.get("gold2");
+            break;
+        case "opal":
+            fill1 = opalGradient;
+            fill2 = metallicColorMap.get("opal2");
+            break;
+        default:
+            let rarity = seededRandom();
+            if (rarity < rareThreshold) {
+                fill1 = rare1;
+                fill2 = rare2;
+            }
+            else if (rarity < uncommonThreshold) {
+                fill1 = uncommon1;
+                fill2 = uncommon2;
+            }
+            else {
+                fill1 = common1;
+                fill2 = common2;
+            }
+            break;
+    }
+    const strokeColor = "#000";
+
     const minHeadSize = 5;
     const maxHeadSize = minHeadSize + seededRandom() * 5;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
@@ -616,9 +666,9 @@ function drawLily(headGroup, flowerParameter, cx, cy, rotation) {
         `;
 
         petal.setAttribute("d", d);
-        petal.setAttribute("fill", "#fff5f5");
-        petal.setAttribute("stroke", "#c5bebeff");
-        petal.setAttribute("stroke-width", 0.5);
+        petal.setAttribute("fill", fill1);
+        petal.setAttribute("stroke", strokeColor);
+        petal.setAttribute("stroke-width", 0.1);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
     }
@@ -628,9 +678,9 @@ function drawLily(headGroup, flowerParameter, cx, cy, rotation) {
     center.setAttribute("cx", cx);
     center.setAttribute("cy", cy);
     center.setAttribute("r", size * 0.3);
-    center.setAttribute("fill", "#f7cc4b");
-    center.setAttribute("stroke", "#c29628");
-    center.setAttribute("stroke-width", 0.4);
+    center.setAttribute("fill", fill2);
+    center.setAttribute("stroke", strokeColor);
+    center.setAttribute("stroke-width", 0.1);
     headGroup.appendChild(center);
 
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);

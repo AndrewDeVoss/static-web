@@ -3,6 +3,91 @@ import { drawLeaf } from './drawtree.js';
 
 // Colors
 let colors = getColors();
+let metallicColorMap = new Map();
+function rescopeMetallicColorMap(svg) {
+    // Clear map from previous svgs
+    metallicColorMap = new Map();
+
+    // Function to make gradient elements that can be used in svg
+    function createLinearGradient(svg, id, colors, direction = { x1: "0%", y1: "0%", x2: "100%", y2: "100%" }) {
+        // Ensure a <defs> exists
+        let defs = svg.querySelector("defs");
+        if (!defs) {
+            defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            svg.insertBefore(defs, svg.firstChild);
+        }
+
+        // Create the gradient element
+        const grad = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+        grad.id = id;
+        grad.setAttribute("x1", direction.x1);
+        grad.setAttribute("y1", direction.y1);
+        grad.setAttribute("x2", direction.x2);
+        grad.setAttribute("y2", direction.y2);
+
+        // Create color stops evenly spaced
+        const step = 100 / (colors.length - 1);
+        colors.forEach((color, i) => {
+            const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+            stop.setAttribute("offset", `${i * step}%`);
+            stop.setAttribute("stop-color", color);
+            grad.appendChild(stop);
+        });
+
+        defs.appendChild(grad);
+        return `url(#${id})`;
+    }
+
+    // Define colors
+    // Bronze colors and gradient
+    const bronze1 = "#c44e20ff";
+    const bronze2 = "#644324ff";
+    const bronze3 = "#fa9d63ff";
+    metallicColorMap.set("bronze1", bronze1);
+    metallicColorMap.set("bronze2", bronze2);
+    metallicColorMap.set("bronze3", bronze3);
+    metallicColorMap.set(
+        "bronzeGradient",
+        createLinearGradient(svg, "bronzeGradient", [bronze1, bronze2, bronze3])
+    );
+
+    // Silver colors and gradient
+    const silver1 = "#abafb4ff";
+    const silver2 = "#5b6268ff";
+    const silver3 = "#a8bac2ff";
+    metallicColorMap.set("silver1", silver1);
+    metallicColorMap.set("silver2", silver2);
+    metallicColorMap.set("silver3", silver3);
+    metallicColorMap.set(
+        "silverGradient",
+        createLinearGradient(svg, "silverGradient", [silver1, silver2, silver3])
+    );
+
+    // Gold colors and gradient
+    const gold1 = "#ecd15bff"; // base
+    const gold2 = "#94771aff"; // lighter
+    const gold3 = "#eed43fff"; // darker
+    metallicColorMap.set("gold1", gold1);
+    metallicColorMap.set("gold2", gold2);
+    metallicColorMap.set("gold3", gold3);
+    metallicColorMap.set(
+        "goldGradient",
+        createLinearGradient(svg, "goldGradient", [gold1, gold2, gold3])
+    );
+
+    // Opal colors
+    const opal1 = "#7752E8";
+    const opal2 = "#E36C35";
+    const opal3 = "#1FC6C2";
+    metallicColorMap.set("opal1", opal1);
+    metallicColorMap.set("opal2", opal2);
+    metallicColorMap.set("opal3", opal3);
+    metallicColorMap.set(
+        "opalGradient",
+        createLinearGradient(svg, "opalGradient", [opal1, opal2, opal3])
+    );
+
+}
 
 // Seeded rng
 let randomState = 0;
@@ -123,6 +208,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         }
     }
     let flowerType = chooseFlower();
+    flowerType = "poppy";
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -173,30 +259,30 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
     flowerGroup.appendChild(headGroup);
 }
 
-function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, medal="none") {
+function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+    rescopeMetallicColorMap(headGroup);
     const uncommonThreshold = .1;
     const rareThreshold = .01;
-    const commonFill = "#E36C35";
-    const uncommonFill = "#E36C35";
-    const rareFill = "#E36C35";
-    const bronzeFill = "#E36C35";
-    const silverFill = "#E36C35";
-    const goldFill = "#E36C35";
-    const opalFill = "#E36C35";
-
+    const commonFill = "#ec5800";
+    const uncommonFill = "#e3c935ff";
+    const rareFill = "#8635e3ff";
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
     let fillColor = commonFill;
-    switch(medal) {
+    switch (medal) {
         case "bronze":
-            fillColor = bronzeFill;
+            fillColor = bronzeGradient;
             break;
         case "silver":
-            fillColor = silverFill;
+            fillColor = silverGradient;
             break;
         case "gold":
-            fillColor = goldFill;
+            fillColor = goldGradient;
             break;
         case "opal":
-            fillColor = opalFill;
+            fillColor = opalGradient;
             break;
         default:
             const rarity = seededRandom();
@@ -234,9 +320,9 @@ function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, medal="none") {
 
         const petal = document.createElementNS(headGroup.namespaceURI, "path");
         petal.setAttribute("d", d);
-        petal.setAttribute("fill", "rgba(227, 108, 53, 1)"); // deep red petal color
-        petal.setAttribute("stroke", `${strokeColor}}`); // dark red outline
-        petal.setAttribute("stroke-width", 0.8);
+        petal.setAttribute("fill", `${fillColor}`);
+        petal.setAttribute("stroke", `${strokeColor}`);
+        petal.setAttribute("stroke-width", 0.2);
         headGroup.appendChild(petal);
     }
 

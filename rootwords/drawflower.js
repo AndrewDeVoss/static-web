@@ -686,7 +686,59 @@ function drawLily(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawTulip(headGroup, flowerParameter, cx, cy, rotation) {
+function drawTulip(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+    rescopeMetallicColorMap(headGroup);
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const common1 = "#f7b3f3ff";
+    const common2 = "#ecba78ff";
+    const uncommon1 = "#e72222ff";
+    const uncommon2 = "#c78484ff";
+    const rare1 = "#31064eff";
+    const rare2 = "#7847a5ff"
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
+    let fill1 = common1;
+    let fill2 = common2;
+    let strokeColor = "#000"
+
+    switch (medal) {
+        case "bronze":
+            fill1 = bronzeGradient;
+            fill2 = metallicColorMap.get("bronze1");
+            break;
+        case "silver":
+            fill1 = silverGradient;
+            fill2 = metallicColorMap.get("silver1");
+            break;
+        case "gold":
+            fill1 = goldGradient;
+            fill2 = metallicColorMap.get("gold3");
+            break;
+        case "opal":
+            fill1 = opalGradient;
+            fill2 = metallicColorMap.get("opal3");
+            break;
+        default:
+            let rarity = seededRandom();
+            if (rarity < rareThreshold) {
+                fill1 = rare1;
+                fill2 = rare2;
+                strokeColor = fill2;
+            }
+            else if (rarity < uncommonThreshold) {
+                fill1 = uncommon1;
+                fill2 = uncommon2;
+            }
+            else {
+                fill1 = common1;
+                fill2 = common2;
+            }
+            break;
+    }
+
     const minHeadSize = 8;
     const maxHeadSize = minHeadSize + seededRandom() * 4;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
@@ -715,9 +767,9 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation) {
 
     const headSvg = document.createElementNS(headGroup.namespaceURI, "path");
     headSvg.setAttribute("d", head);
-    headSvg.setAttribute("fill", "#fdf476ff");
-    headSvg.setAttribute("stroke", "#070604ff");
-    headSvg.setAttribute("stroke-width", 0.2);
+    headSvg.setAttribute("fill", fill1);
+    headSvg.setAttribute("stroke", strokeColor);
+    headSvg.setAttribute("stroke-width", 0.1);
     headGroup.appendChild(headSvg);
 
     const top = `
@@ -731,9 +783,9 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation) {
 
     const topSvg = document.createElementNS(headGroup.namespaceURI, "path");
     topSvg.setAttribute("d", top);
-    topSvg.setAttribute("fill", "#cfae51ff");
-    topSvg.setAttribute("stroke", "#cfae51ff");
-    topSvg.setAttribute("stroke-width", 0.8);
+    topSvg.setAttribute("fill", fill2);
+    topSvg.setAttribute("stroke", strokeColor);
+    topSvg.setAttribute("stroke-width", 0.1);
     headGroup.appendChild(topSvg);
 
     const petal = `
@@ -745,8 +797,8 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation) {
     const petalSvg = document.createElementNS(headGroup.namespaceURI, "path");
     petalSvg.setAttribute("d", petal);
     petalSvg.setAttribute("fill", "none");
-    petalSvg.setAttribute("stroke", "#cfae51ff");
-    petalSvg.setAttribute("stroke-width", 0.3);
+    petalSvg.setAttribute("stroke", strokeColor);
+    petalSvg.setAttribute("stroke-width", 0.1);
     headGroup.appendChild(petalSvg);
 
     const translateY = -size * 1.8;
@@ -758,7 +810,68 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation) {
 
 }
 
-function drawOrchid(headGroup, flowerParameter, cx, cy, rotation) {
+function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+    rescopeMetallicColorMap(headGroup);
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const common1 = "#e0b3e6";
+    const common2 = "#d6f1daff";
+    const common3 = "#d45dbf";
+    const uncommon1 = "#093113ff";
+    const uncommon2 = "#aef3b4ff";
+    const uncommon3 = "#a5f074ff";
+    const rare1 = "#5154faff";
+    const rare2 = "#a8a9fcff"
+    const rare3 = "#31328fff"
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
+    let fill1 = common1;
+    let fill2 = common2;
+    let fill3 = common3;
+    let strokeColor = "#000"
+    switch (medal) {
+        case "bronze":
+            fill1 = bronzeGradient;
+            fill2 = metallicColorMap.get("bronze1");
+            fill3 = metallicColorMap.get("bronze2");
+            break;
+        case "silver":
+            fill1 = silverGradient;
+            fill2 = metallicColorMap.get("silver1");
+            fill3 = metallicColorMap.get("silver2");
+            break;
+        case "gold":
+            fill1 = goldGradient;
+            fill2 = metallicColorMap.get("gold1");
+            fill3 = metallicColorMap.get("gold2");
+            break;
+        case "opal":
+            fill1 = opalGradient;
+            fill2 = metallicColorMap.get("opal1");
+            fill3 = metallicColorMap.get("opal2");
+            break;
+        default:
+            let rarity = seededRandom();
+            if (rarity < rareThreshold) {
+                fill1 = rare1;
+                fill2 = rare2;
+                fill3 = rare3;
+            }
+            else if (rarity < uncommonThreshold) {
+                fill1 = uncommon1;
+                fill2 = uncommon2;
+                fill3 = uncommon3;
+            }
+            else {
+                fill1 = common1;
+                fill2 = common2;
+                fill3 = common3;
+            }
+            break;
+    }
+
     const minHeadSize = 5;
     const maxHeadSize = minHeadSize + seededRandom() * 4;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
@@ -771,9 +884,9 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation) {
         petal.setAttribute("cy", cy - size);
         petal.setAttribute("rx", size * 0.6);
         petal.setAttribute("ry", size * 1.2);
-        petal.setAttribute("fill", "#e0b3e6");
-        petal.setAttribute("stroke", "#8b129eff");
-        petal.setAttribute("stroke-width", 0.3);
+        petal.setAttribute("fill", fill1);
+        petal.setAttribute("stroke", strokeColor);
+        petal.setAttribute("stroke-width", 0.1);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
     });
@@ -786,8 +899,8 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation) {
         petal.setAttribute("cy", cy - size);
         petal.setAttribute("rx", size * 0.15); // very thin
         petal.setAttribute("ry", size * 0.9);  // tall
-        petal.setAttribute("fill", "#eed6f1ff");
-        petal.setAttribute("stroke", "#231f24ff");
+        petal.setAttribute("fill", fill2);
+        petal.setAttribute("stroke", strokeColor);
         petal.setAttribute("stroke-width", 0.1);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
@@ -815,9 +928,9 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation) {
     Z
 `);
 
-    lip.setAttribute("fill", "#d45dbf");
-    lip.setAttribute("stroke", "#7b3271");
-    lip.setAttribute("stroke-width", 0.4);
+    lip.setAttribute("fill", fill3);
+    lip.setAttribute("stroke", strokeColor);
+    lip.setAttribute("stroke-width", 0.1);
     headGroup.appendChild(lip);
 
     // ----- Rotate the whole flower -----

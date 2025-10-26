@@ -208,7 +208,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         }
     }
     let flowerType = chooseFlower();
-    flowerType = "poppy";
+    flowerType = "daisy";
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -330,7 +330,41 @@ function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, medal = "none")
     headGroup.setAttribute('transform', transform);
 }
 
-function drawRose(headGroup, flowerParameter, cx, cy, rotation) {
+function drawRose(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+    rescopeMetallicColorMap(headGroup);
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const commonFill = "#dd2e71ff";
+    const uncommonFill = "#f1b9f3ff";
+    const rareFill = "#8635e3ff";
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
+    let fillColor = commonFill;
+    switch (medal) {
+        case "bronze":
+            fillColor = bronzeGradient;
+            break;
+        case "silver":
+            fillColor = silverGradient;
+            break;
+        case "gold":
+            fillColor = goldGradient;
+            break;
+        case "opal":
+            fillColor = opalGradient;
+            break;
+        default:
+            const rarity = seededRandom();
+            if (rarity < rareThreshold) fillColor = rareFill;
+            else if (rarity < uncommonThreshold) fillColor = uncommonFill;
+            else fillColor = commonFill;
+            break;
+    }
+    fillColor = opalGradient;
+    const strokeColor = "#000";
+
     const minHeadSize = 12;
     const maxHeadSize = minHeadSize + seededRandom() * 8;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
@@ -349,10 +383,10 @@ function drawRose(headGroup, flowerParameter, cx, cy, rotation) {
             Z
         `;
         petal.setAttribute("d", d);
-        petal.setAttribute("fill", colors.rose || "#d36da4");
+        petal.setAttribute("fill", `${fillColor}`);
         petal.setAttribute("fill-opacity", 1 - i * 0.1);
-        petal.setAttribute("stroke", "#8a3e65");
-        petal.setAttribute("stroke-width", 0.5);
+        petal.setAttribute("stroke", `${strokeColor}`);
+        petal.setAttribute("stroke-width", 0.3);
         petal.setAttribute("transform", `rotate(${angleOffset}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
     }
@@ -361,7 +395,59 @@ function drawRose(headGroup, flowerParameter, cx, cy, rotation) {
     headGroup.setAttribute('transform', transform);
 }
 
-function drawDaisy(headGroup, flowerParameter, cx, cy, rotation) {
+function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+    rescopeMetallicColorMap(headGroup);
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const commonFill = "#f3f1e9ff";
+    const commonCenterFill = "#f5d142";
+    const uncommonFill = "#f5d142";
+    const uncommonCenterFill = "#4e3a26ff";
+    const rareFill = "#ad73f0ff";
+    const rareCenterFill = "#502f75ff"
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
+    let fillColor = commonFill;
+    let centerFillColor = commonCenterFill;
+
+    switch (medal) {
+        case "bronze":
+            fillColor = bronzeGradient;
+            centerFillColor = bronzeGradient;
+            break;
+        case "silver":
+            fillColor = silverGradient;
+            centerFillColor = silverGradient;
+            break;
+        case "gold":
+            fillColor = goldGradient;
+            centerFillColor = goldGradient;
+            break;
+        case "opal":
+            fillColor = opalGradient;
+            centerFillColor = opalGradient;
+            break;
+        default:
+            const rarity = seededRandom();
+            if (rarity < rareThreshold) {
+                fillColor = rareFill;
+                centerFillColor = rareCenterFill;
+            }
+            else if (rarity < uncommonThreshold) {
+                fillColor = uncommonFill;
+                centerFillColor = uncommonCenterFill;
+            }
+            else {
+                fillColor = commonFill;
+                centerFillColor = commonCenterFill;
+            }
+            break;
+    }
+
+    const strokeColor = "#000";
+
     const minHeadSize = 3.5;
     const maxHeadSize = minHeadSize + seededRandom() * 2.5;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
@@ -378,21 +464,20 @@ function drawDaisy(headGroup, flowerParameter, cx, cy, rotation) {
         petal.setAttribute("cy", cy - size);
         petal.setAttribute("rx", petalWidth);
         petal.setAttribute("ry", petalLength);
-        petal.setAttribute("fill", "#fffaf0");
-        petal.setAttribute("stroke", "#cfcfcf");
-        petal.setAttribute("stroke-width", 0.4);
+        petal.setAttribute("fill", `${fillColor}`);
+        petal.setAttribute("stroke", `${strokeColor}`);
+        petal.setAttribute("stroke-width", 0.3);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
     }
 
-    // Yellow center
     const center = document.createElementNS(headGroup.namespaceURI, "circle");
     center.setAttribute("cx", cx);
     center.setAttribute("cy", cy);
     center.setAttribute("r", size * 0.4);
-    center.setAttribute("fill", "#f5d142");
-    center.setAttribute("stroke", "#c4a025");
-    center.setAttribute("stroke-width", 0.5);
+    center.setAttribute("fill", `${centerFillColor}`);
+    center.setAttribute("stroke", `${strokeColor}`);
+    center.setAttribute("stroke-width", 0.1);
     headGroup.appendChild(center);
 
     let transform = `rotate(${rotation}, ${cx}, ${cy})`;

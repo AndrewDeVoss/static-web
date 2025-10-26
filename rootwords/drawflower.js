@@ -208,7 +208,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         }
     }
     let flowerType = chooseFlower();
-    flowerType = "daisy";
+    flowerType = "iris";
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -484,16 +484,63 @@ function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, medal = "none")
     headGroup.setAttribute('transform', transform);
 }
 
-function drawIris(headGroup, flowerParameter, cx, cy, rotation) {
+function drawIris(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+    rescopeMetallicColorMap(headGroup);
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const common1 = "#731897ff";
+    const common2 = "#d77ee9ff";
+    const uncommon1 = "#750404ff";
+    const uncommon2 = "#ec9191ff";
+    const rare1 = "#0f051aff";
+    const rare2 = "#553c70ff"
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
+    let fill1 = common1;
+    let fill2 = common2;
+    switch (medal) {
+        case "bronze":
+            fill1 = bronzeGradient;
+            fill2 = metallicColorMap.get("bronze2");
+            break;
+        case "silver":
+            fill1 = silverGradient;
+            fill2 = metallicColorMap.get("silver3");
+            break;
+        case "gold":
+            fill1 = goldGradient;
+            fill2 = metallicColorMap.get("gold1");
+            break;
+        case "opal":
+            fill1 = opalGradient;
+            fill2 = metallicColorMap.get("opal1");
+            break;
+        default:
+            let rarity = seededRandom();
+            if (rarity < rareThreshold) {
+                fill1 = rare1;
+                fill2 = rare2;
+            }
+            else if (rarity < uncommonThreshold) {
+                fill1 = uncommon1;
+                fill2 = uncommon2;
+            }
+            else {
+                fill1 = common1;
+                fill2 = common2;
+            }
+            break;
+    }
+    const strokeColor = "#000";
+
     const minHeadSize = 8;
     const maxHeadSize = minHeadSize + seededRandom() * 5;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
-    const petals = 6;
     const outerLength = size * 1.4;
     const innerLength = size * 0.9;
-    const outerColor = "#6a4ba6"; // purple
-    const innerColor = "#b79fe3";
 
     // Outer petals (curved and drooping)
     for (let i = 0; i < 3; i++) {
@@ -510,9 +557,9 @@ function drawIris(headGroup, flowerParameter, cx, cy, rotation) {
             Z
         `;
         petal.setAttribute("d", d);
-        petal.setAttribute("fill", outerColor);
-        petal.setAttribute("stroke", "#4a2e7f");
-        petal.setAttribute("stroke-width", 0.7);
+        petal.setAttribute("fill", fill1);
+        petal.setAttribute("stroke", strokeColor);
+        petal.setAttribute("stroke-width", 0.1);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
     }
@@ -532,9 +579,9 @@ function drawIris(headGroup, flowerParameter, cx, cy, rotation) {
             Z
         `;
         petal.setAttribute("d", d);
-        petal.setAttribute("fill", innerColor);
-        petal.setAttribute("stroke", "#6a4ba6");
-        petal.setAttribute("stroke-width", 0.6);
+        petal.setAttribute("fill", fill2);
+        petal.setAttribute("stroke", strokeColor);
+        petal.setAttribute("stroke-width", 0.1);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
     }

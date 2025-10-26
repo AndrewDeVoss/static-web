@@ -1,5 +1,5 @@
 :host {
-    --hex-side-length: calc(min(50px, 100vw / 14.5));
+    --hex-side-length: calc(min(50px, 100vw / 12));
     --hex-bounding-width: calc(1.73205 * var(--hex-side-length));
     --hex-bounding-height: calc(2 * var(--hex-side-length));
     touch-action: manipulation;
@@ -69,7 +69,8 @@
     align-items: center;
     justify-content: center;
     font-size: 3em;
-    font-weight: bold;
+    /* font-weight: bold; */
+    font-weight: 550;
     color: #3a2616;
     user-select: none;
     transition: background 0.2s, transform 0.2s;

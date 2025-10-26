@@ -122,7 +122,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
             }
         }
     }
-    const flowerType = chooseFlower();
+    let flowerType = chooseFlower();
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -173,7 +173,40 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
     flowerGroup.appendChild(headGroup);
 }
 
-function drawPoppy(headGroup, flowerParameter, cx, cy, rotation) {
+function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, medal="none") {
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const commonFill = "#E36C35";
+    const uncommonFill = "#E36C35";
+    const rareFill = "#E36C35";
+    const bronzeFill = "#E36C35";
+    const silverFill = "#E36C35";
+    const goldFill = "#E36C35";
+    const opalFill = "#E36C35";
+
+    let fillColor = commonFill;
+    switch(medal) {
+        case "bronze":
+            fillColor = bronzeFill;
+            break;
+        case "silver":
+            fillColor = silverFill;
+            break;
+        case "gold":
+            fillColor = goldFill;
+            break;
+        case "opal":
+            fillColor = opalFill;
+            break;
+        default:
+            const rarity = seededRandom();
+            if (rarity < rareThreshold) fillColor = rareFill;
+            else if (rarity < uncommonThreshold) fillColor = uncommonFill;
+            else fillColor = commonFill;
+            break;
+    }
+    const strokeColor = "#000";
+
     const minHeadSize = 8;
     const maxHeadSize = minHeadSize + seededRandom() * 8;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
@@ -202,7 +235,7 @@ function drawPoppy(headGroup, flowerParameter, cx, cy, rotation) {
         const petal = document.createElementNS(headGroup.namespaceURI, "path");
         petal.setAttribute("d", d);
         petal.setAttribute("fill", "rgba(227, 108, 53, 1)"); // deep red petal color
-        petal.setAttribute("stroke", "rgba(114, 65, 33, 1)"); // dark red outline
+        petal.setAttribute("stroke", `${strokeColor}}`); // dark red outline
         petal.setAttribute("stroke-width", 0.8);
         headGroup.appendChild(petal);
     }

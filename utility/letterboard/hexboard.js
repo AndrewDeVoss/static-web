@@ -40,7 +40,9 @@ class HexBoard extends LetterBoard {
         this.layoutLetters();
         this.addEventListeners?.();
 
-                // Add global CSS for this shadow root
+        this.removeHoverIosSafari();
+
+        // Add global CSS for this shadow root
         const style = document.createElement('style');
         style.textContent = `
             * {
@@ -229,6 +231,59 @@ class HexBoard extends LetterBoard {
                 letterDiv.classList.add('used');
             }
         });
+    }
+
+    // https://stackoverflow.com/a/71779604/3717718 + chatgpt fix?
+    removeHoverIosSafari() {
+        if (!this.isIosSafari()) return;
+
+        const root = this.shadowRoot; // Scope to your component
+
+        // Disable double-tap zoom (the modern way)
+        const style = document.createElement('style');
+        style.textContent = `
+        :host, * {
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+    `;
+        root.appendChild(style);
+
+        // Prevent hover-related glitches
+        const preventHover = (e) => {
+            const target = e.target;
+            if (!target || !(target instanceof HTMLElement)) return;
+            // only apply to your letter buttons or clickable elements
+            if (!target.classList.contains('letter')) return;
+
+            if (e.type === 'mouseover' || e.type === 'mousemove') {
+                e.preventDefault();
+            }
+        };
+
+        // Prevent double-click zooming behavior on iOS
+        let lastTouchEnd = 0;
+        root.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        // Optional: suppress hover emulation
+        root.addEventListener('mouseover', preventHover, true);
+        root.addEventListener('mousemove', preventHover, true);
+    }
+
+    //https://stackoverflow.com/a/42162450/3717718
+    isIosSafari() {
+        var ua = (window.navigator && navigator.userAgent) || '';
+        var iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
+        var webkit = !!ua.match(/WebKit/i);
+        var iOSSafari = iOS && webkit && !ua.match(/CriOS/i);
+        return iOSSafari;
     }
 }
 

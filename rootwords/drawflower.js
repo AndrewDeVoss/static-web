@@ -208,7 +208,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         }
     }
     let flowerType = chooseFlower();
-    flowerType = "poppy";
+    flowerType = "poppy"; // todo ranunculus
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -817,8 +817,8 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, medal = "none"
     const common1 = "#e0b3e6";
     const common2 = "#d6f1daff";
     const common3 = "#d45dbf";
-    const uncommon1 = "#093113ff";
-    const uncommon2 = "#aef3b4ff";
+    const uncommon1 = "#e975f8ff";
+    const uncommon2 = "#e8aef3ff";
     const uncommon3 = "#a5f074ff";
     const rare1 = "#5154faff";
     const rare2 = "#a8a9fcff"
@@ -937,7 +937,68 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, medal = "none"
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation) {
+function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+    rescopeMetallicColorMap(headGroup);
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const common1 = "#e0b3e6";
+    const common2 = "#d6f1daff";
+    const common3 = "#d45dbf";
+    const uncommon1 = "#e975f8ff";
+    const uncommon2 = "#e8aef3ff";
+    const uncommon3 = "#a5f074ff";
+    const rare1 = "#5154faff";
+    const rare2 = "#a8a9fcff"
+    const rare3 = "#31328fff"
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
+    let fill1 = common1;
+    let fill2 = common2;
+    let fill3 = common3;
+    let strokeColor = "#000"
+    switch (medal) {
+        case "bronze":
+            fill1 = bronzeGradient;
+            fill2 = metallicColorMap.get("bronze1");
+            fill3 = metallicColorMap.get("bronze2");
+            break;
+        case "silver":
+            fill1 = silverGradient;
+            fill2 = metallicColorMap.get("silver1");
+            fill3 = metallicColorMap.get("silver2");
+            break;
+        case "gold":
+            fill1 = goldGradient;
+            fill2 = metallicColorMap.get("gold1");
+            fill3 = metallicColorMap.get("gold2");
+            break;
+        case "opal":
+            fill1 = opalGradient;
+            fill2 = metallicColorMap.get("opal1");
+            fill3 = metallicColorMap.get("opal2");
+            break;
+        default:
+            let rarity = seededRandom();
+            if (rarity < rareThreshold) {
+                fill1 = rare1;
+                fill2 = rare2;
+                fill3 = rare3;
+            }
+            else if (rarity < uncommonThreshold) {
+                fill1 = uncommon1;
+                fill2 = uncommon2;
+                fill3 = uncommon3;
+            }
+            else {
+                fill1 = common1;
+                fill2 = common2;
+                fill3 = common3;
+            }
+            break;
+    }
+
     const minHeadSize = 5;
     const maxHeadSize = minHeadSize + seededRandom() * 6;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
@@ -961,7 +1022,58 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation) {
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation) {
+function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+     rescopeMetallicColorMap(headGroup);
+    const uncommonThreshold = .1;
+    const rareThreshold = .01;
+    const common1 = "#f9e65c";
+    const common2 = "#f29c4b";
+    const uncommon1 = "#d9d1daff";
+    const uncommon2 = "#ee8ae1ff";
+    const rare1 = "#fab651ff";
+    const rare2 = "#fde457ff"
+    const bronzeGradient = metallicColorMap.get("bronzeGradient");
+    const silverGradient = metallicColorMap.get("silverGradient");
+    const goldGradient = metallicColorMap.get("goldGradient");
+    const opalGradient = metallicColorMap.get("opalGradient");
+    let fill1 = common1;
+    let fill2 = common2;
+    let strokeColor = "#000"
+
+    switch (medal) {
+        case "bronze":
+            fill1 = bronzeGradient;
+            fill2 = bronzeGradient;
+            break;
+        case "silver":
+            fill1 = silverGradient;
+            fill2 = silverGradient;
+            break;
+        case "gold":
+            fill1 = goldGradient;
+            fill2 = goldGradient;
+            break;
+        case "opal":
+            fill1 = opalGradient;
+            fill2 = opalGradient;
+            break;
+        default:
+            let rarity = seededRandom();
+            if (rarity < rareThreshold) {
+                fill1 = rare1;
+                fill2 = rare2;
+            }
+            else if (rarity < uncommonThreshold) {
+                fill1 = uncommon1;
+                fill2 = uncommon2;
+            }
+            else {
+                fill1 = common1;
+                fill2 = common2;
+            }
+            break;
+    }
+
     const minHeadSize = 8;
     const maxHeadSize = minHeadSize + seededRandom() * 5;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
@@ -983,9 +1095,9 @@ function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation) {
             Z
         `;
         petal.setAttribute("d", d);
-        petal.setAttribute("fill", "#f9e65c");
-        petal.setAttribute("stroke", "#c8b437");
-        petal.setAttribute("stroke-width", 0.5);
+        petal.setAttribute("fill", fill1);
+        petal.setAttribute("stroke", strokeColor);
+        petal.setAttribute("stroke-width", 0.3);
         petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
         headGroup.appendChild(petal);
     }
@@ -1024,9 +1136,9 @@ function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation) {
         Z
     `;
     trumpet.setAttribute("d", dTrumpet);
-    trumpet.setAttribute("fill", "#f29c4b");
-    trumpet.setAttribute("stroke", "#a8561f");
-    trumpet.setAttribute("stroke-width", 0.4);
+    trumpet.setAttribute("fill", fill2);
+    trumpet.setAttribute("stroke", strokeColor);
+    trumpet.setAttribute("stroke-width", 0.3);
 
     headGroup.appendChild(trumpet);
 

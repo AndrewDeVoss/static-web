@@ -23,7 +23,6 @@ function seedFromString(str) {
 
 
 export function drawTree(score, treeContainer, dateString) {
-    // score += 150;
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
     seed = dateString;
@@ -257,29 +256,47 @@ export function drawTree(score, treeContainer, dateString) {
 
     treeContainer.appendChild(svg);
 
+    // Get current trunk percent to help calculate flower positioning
+    let bbox = svg.getBBox();
+    const margin = 10;
+    let bboxWidth = bbox.width;
+    let trunkPercent = ((baseX - (bbox.x - margin)) / (bbox.width + margin * 2)) * 100;
+    const screenWidth = window.innerWidth;
+    const minFlowerX = (trunkPercent - 50) * bboxWidth;
+    const maxFlowerX = minFlowerX + screenWidth;
+
     // Use leftover points to draw flowers now that SVG is in the DOM
+    const flowerXs = [];
     for (let flower = 0; flower < flowerParameters.length; flower++) {
         const flowerParameter = flowerParameters[flower];
-        const bb = svg.getBBox();
 
-        // Choose a random x position using cushionScale to allow left/right expansion
-        let extraWidth = .3 * bb.width; // amount to expand on both sides
-        extraWidth = 0; // TODO figure out screen width from here
-        const randomX = bb.x - extraWidth / 2 + seededRandom() * (bb.width + extraWidth);
+        // Try 10 different positions and choose the one farthest from any other flower
+        let bestFlowerX = baseX;
+        let bestDistance = 0;
+        for (let attempt = 0; attempt < 10; attempt++) {
+            const sideShift = seededRandom() < 0.5 ? -1 : 1;
+            let flowerX = baseX + sideShift * seededRandom() * (maxFlowerX - minFlowerX - 2 * margin) / 2;
+            const minDist = flowerXs.length
+                ? Math.min(...flowerXs.map(x => Math.abs(x - flowerX)))
+                : 0;
+            if (minDist > bestDistance) {
+                bestFlowerX = flowerX;
+                bestDistance = minDist;
+            }
+        }
+        flowerXs.push(bestFlowerX);
 
-        drawFlower(svg, randomX, baseY, flowerParameter, dateString);
+        drawFlower(svg, bestFlowerX, baseY, flowerParameter, dateString);
     }
 
-    const bbox = svg.getBBox();
-    const margin = 10;
+    // Re-retrieve bbox with flowers
+    bbox = svg.getBBox();
     svg.setAttribute("viewBox", `${bbox.x - margin} ${bbox.y - margin} ${bbox.width + margin * 2} ${bbox.height + margin * 2}`);
     svg.setAttribute("width", bbox.width + margin * 2);
     svg.setAttribute("height", bbox.height + margin * 2);
 
-
-
     // Trunk X relative to the bounding box
-    const trunkPercent = ((baseX - (bbox.x - margin)) / (bbox.width + margin * 2)) * 100;
+    trunkPercent = ((baseX - (bbox.x - margin)) / (bbox.width + margin * 2)) * 100;
 
     return trunkPercent;
 }

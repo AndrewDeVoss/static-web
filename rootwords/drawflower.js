@@ -184,7 +184,7 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
     return { x: tipX, y: tipY, angle: tipAngle };
 }
 
-export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0) {
+export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0, medal = "none") {
     const flowers = [
         { name: "poppy", weight: 100 },
         { name: "daffodil", weight: 75 },
@@ -207,51 +207,58 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
             }
         }
     }
-    let flowerType = chooseFlower();
-    flowerType = "poppy";
+    let flowerName = chooseFlower();
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
+    let rarity = "common";
 
-    switch (flowerType) {
+    if (medal==="none") {
+        let rarityRoll = seededRandom();
+        if (rarityRoll < 3/15) rarity = "uncommon";
+        if (rarityRoll < 1/15) rarity = "rare";
+    } else {
+        rarity = medal;
+    }
+
+    switch (flowerName) {
         case "poppy":
-            drawPoppy(headGroup, flowerParameter, cx, cy, rotation);
+            drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "daffodil":
-            drawDaffodil(headGroup, flowerParameter, cx, cy, rotation);
+            drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "ranunculus":
-            drawRanunculus(headGroup, flowerParameter, cx, cy, rotation);
+            drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "lily":
-            drawLily(headGroup, flowerParameter, cx, cy, rotation);
+            drawLily(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "daisy":
-            drawDaisy(headGroup, flowerParameter, cx, cy, rotation);
+            drawDaisy(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "tulip":
-            drawTulip(headGroup, flowerParameter, cx, cy, rotation);
+            drawTulip(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "rose":
-            drawRose(headGroup, flowerParameter, cx, cy, rotation);
+            drawRose(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "iris":
-            drawIris(headGroup, flowerParameter, cx, cy, rotation);
+            drawIris(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "orchid":
-            drawOrchid(headGroup, flowerParameter, cx, cy, rotation);
+            drawOrchid(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
-        // Default to generic blossom if no match
         default:
-            drawPoppy(headGroup, cx, cy, rotation, baseHeadSize);
+            drawPoppy(headGroup, cx, cy, rotation, baseHeadSize, rarity);
             break;
     }
 
@@ -259,81 +266,120 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
     flowerGroup.appendChild(headGroup);
 }
 
-function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
-    const commonFill = "#ec5800";
-    const uncommonFill = "#e3c935ff";
-    const rareFill = "#8635e3ff";
+    const common1 = "#ec5800";
+    const common2 = "#ff701dff";
+    const uncommon1 = "#b62815ff";
+    const uncommon2 = "#e34935ff";
+    const rare1 = "#8635e3ff";
+    const rare2 = "rgba(176, 126, 223, 1)"
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
     const opalGradient = metallicColorMap.get("opalGradient");
-    let fillColor = commonFill;
-    switch (medal) {
+    let fill1 = common1;
+    let fill2 = common2;
+    let strokeColor = "#000"
+
+    switch (rarity) {
         case "bronze":
-            fillColor = bronzeGradient;
+            fill1 = bronzeGradient;
+            fill2 = metallicColorMap.get("bronze1");
             break;
         case "silver":
-            fillColor = silverGradient;
+            fill1 = silverGradient;
+            fill2 = metallicColorMap.get("silver1");
             break;
         case "gold":
-            fillColor = goldGradient;
+            fill1 = goldGradient;
+            fill2 = metallicColorMap.get("gold3");
             break;
         case "opal":
-            fillColor = opalGradient;
+            fill1 = opalGradient;
+            fill2 = metallicColorMap.get("opal3");
             break;
-        default:
-            const rarity = seededRandom();
-            if (rarity < rareThreshold) fillColor = rareFill;
-            else if (rarity < uncommonThreshold) fillColor = uncommonFill;
-            else fillColor = commonFill;
+        case "common":
+            fill1 = common1;
+            fill2 = common2;
+            break;
+        case "uncommon":
+             fill1 = uncommon1;
+            fill2 = uncommon2;
+            break;
+        case "rare":
+            fill1 = rare1;
+            fill2 = rare2;
             break;
     }
-    const strokeColor = "#000";
 
-    const minHeadSize = 8;
-    const maxHeadSize = minHeadSize + seededRandom() * 8;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+    const size = 7 + flowerParameter * 4;
+    const petalLength = size * 1.2;
+    const petalWidth = size * 1.0;
 
-    let petals = 3 + Math.floor(seededRandom() * 2);
-    const petalLength = size * 1.5;
-    const petalWidth = size * 0.8;
-    const baseY = cy + size * 0.2; // base of petals slightly below center
+    const numPetals = 4;
 
-    for (let i = 0; i < petals; i++) {
-        const angleOffset = (i - petals / 2) * (petalWidth * 0.6);
-        // Each petal slightly offset left/right horizontally from center
+    // Draw 4 heart-shaped petals
+    for (let i = 0; i < numPetals; i++) {
+        const angle = 360 * (i / numPetals);
 
-        // Create path for petal - a cupped shape starting at base, curving outward and back
         const d = `
-            M ${cx} ${baseY} 
-            C ${cx + angleOffset - petalWidth * 0.3} ${baseY - petalLength * 0.3},
-              ${cx + angleOffset - petalWidth * 0.5} ${baseY - petalLength * 0.8},
-              ${cx + angleOffset} ${baseY - petalLength}
-            C ${cx + angleOffset + petalWidth * 0.5} ${baseY - petalLength * 0.8},
-              ${cx + angleOffset + petalWidth * 0.3} ${baseY - petalLength * 0.3},
-              ${cx} ${baseY}
+                M ${cx} ${cy}
+                C ${cx + petalWidth} ${cy - petalLength / 3}, ${cx + petalWidth} ${cy - petalLength}, ${cx} ${cy - petalLength*.9}
+                C ${cx - petalWidth} ${cy - petalLength}, ${cx - petalWidth} ${cy - petalLength / 3}, ${cx} ${cy}
+                Z
+            `;
+
+        // Outer petal (fill1)
+        const outerPetal = document.createElementNS(headGroup.namespaceURI, "path");
+        outerPetal.setAttribute("d", d);
+        outerPetal.setAttribute("fill", fill1);
+        outerPetal.setAttribute("stroke", strokeColor);
+        outerPetal.setAttribute("stroke-width", 0.2);
+        outerPetal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
+        headGroup.appendChild(outerPetal);
+
+        // Inner petal (slightly smaller, fill2)
+        const innerPetal = document.createElementNS(headGroup.namespaceURI, "path");
+        const innerWidth = petalWidth * 0.6;
+        const innerLength = petalLength * 0.8;
+        const innerD = `
+            M ${cx} ${cy}
+            C ${cx + innerWidth} ${cy - innerLength / 3}, ${cx + innerWidth} ${cy - innerLength}, ${cx} ${cy - innerLength * 0.9}
+            C ${cx - innerWidth} ${cy - innerLength}, ${cx - innerWidth} ${cy - innerLength / 3}, ${cx} ${cy}
             Z
         `;
-
-        const petal = document.createElementNS(headGroup.namespaceURI, "path");
-        petal.setAttribute("d", d);
-        petal.setAttribute("fill", `${fillColor}`);
-        petal.setAttribute("stroke", `${strokeColor}`);
-        petal.setAttribute("stroke-width", 0.2);
-        headGroup.appendChild(petal);
+        innerPetal.setAttribute("d", innerD);
+        innerPetal.setAttribute("fill", fill2);
+        innerPetal.setAttribute("stroke", strokeColor);
+        innerPetal.setAttribute("stroke-width", 0.1);
+        innerPetal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
+        headGroup.appendChild(innerPetal);
     }
 
-    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
-    headGroup.setAttribute('transform', transform);
+    // Draw flower center with dots (dense in the middle)
+    const centerRadius = size * 0.3;
+    const numDots = 80;
+    for (let i = 0; i < numDots; i++) {
+        const r = centerRadius * Math.sqrt(Math.random()); // denser near center
+        const theta = Math.random() * 2 * Math.PI;
+        const x = cx + r * Math.cos(theta);
+        const y = cy + r * Math.sin(theta);
+
+        const dot = document.createElementNS(headGroup.namespaceURI, "circle");
+        dot.setAttribute("cx", x);
+        dot.setAttribute("cy", y);
+        dot.setAttribute("r", 0.2);
+        dot.setAttribute("fill", strokeColor);
+        headGroup.appendChild(dot);
+    }
+
+    headGroup.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawRose(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+
+function drawRose(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
     const commonFill = "#dd2e71ff";
     const uncommonFill = "#f1b9f3ff";
     const rareFill = "#8635e3ff";
@@ -342,7 +388,7 @@ function drawRose(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
     const goldGradient = metallicColorMap.get("goldGradient");
     const opalGradient = metallicColorMap.get("opalGradient");
     let fillColor = commonFill;
-    switch (medal) {
+    switch (rarity) {
         case "bronze":
             fillColor = bronzeGradient;
             break;
@@ -355,14 +401,16 @@ function drawRose(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
         case "opal":
             fillColor = opalGradient;
             break;
-        default:
-            const rarity = seededRandom();
-            if (rarity < rareThreshold) fillColor = rareFill;
-            else if (rarity < uncommonThreshold) fillColor = uncommonFill;
-            else fillColor = commonFill;
+        case "common":
+            fillColor = commonFill;
+            break;
+        case "uncommon":
+            fillColor = uncommonFill;
+            break;
+        case "rare":
+            fillColor = rareFill;
             break;
     }
-    fillColor = opalGradient;
     const strokeColor = "#000";
 
     const minHeadSize = 12;
@@ -395,10 +443,8 @@ function drawRose(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
     headGroup.setAttribute('transform', transform);
 }
 
-function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
     const commonFill = "#f3f1e9ff";
     const commonCenterFill = "#f5d142";
     const uncommonFill = "#f5d142";
@@ -412,7 +458,7 @@ function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, medal = "none")
     let fillColor = commonFill;
     let centerFillColor = commonCenterFill;
 
-    switch (medal) {
+    switch (rarity) {
         case "bronze":
             fillColor = bronzeGradient;
             centerFillColor = bronzeGradient;
@@ -429,20 +475,17 @@ function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, medal = "none")
             fillColor = opalGradient;
             centerFillColor = opalGradient;
             break;
-        default:
-            const rarity = seededRandom();
-            if (rarity < rareThreshold) {
-                fillColor = rareFill;
-                centerFillColor = rareCenterFill;
-            }
-            else if (rarity < uncommonThreshold) {
-                fillColor = uncommonFill;
-                centerFillColor = uncommonCenterFill;
-            }
-            else {
-                fillColor = commonFill;
-                centerFillColor = commonCenterFill;
-            }
+        case "common":
+            fillColor = commonFill;
+            centerFillColor = commonCenterFill;
+            break;
+        case "uncommon":
+            fillColor = uncommonFill;
+            centerFillColor = uncommonCenterFill;
+            break;
+        case "rare":
+            fillColor = rareFill;
+            centerFillColor = rareCenterFill;
             break;
     }
 
@@ -484,10 +527,8 @@ function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, medal = "none")
     headGroup.setAttribute('transform', transform);
 }
 
-function drawIris(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+function drawIris(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
     const common1 = "#731897ff";
     const common2 = "#d77ee9ff";
     const uncommon1 = "#750404ff";
@@ -500,7 +541,7 @@ function drawIris(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
     const opalGradient = metallicColorMap.get("opalGradient");
     let fill1 = common1;
     let fill2 = common2;
-    switch (medal) {
+    switch (rarity) {
         case "bronze":
             fill1 = bronzeGradient;
             fill2 = metallicColorMap.get("bronze2");
@@ -517,20 +558,17 @@ function drawIris(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
             fill1 = opalGradient;
             fill2 = metallicColorMap.get("opal1");
             break;
-        default:
-            let rarity = seededRandom();
-            if (rarity < rareThreshold) {
-                fill1 = rare1;
-                fill2 = rare2;
-            }
-            else if (rarity < uncommonThreshold) {
-                fill1 = uncommon1;
-                fill2 = uncommon2;
-            }
-            else {
-                fill1 = common1;
-                fill2 = common2;
-            }
+        case "common":
+            fill1 = common1;
+            fill2 = common2;
+            break;
+        case "uncommon":
+            fill1 = uncommon1;
+            fill2 = uncommon2;
+            break;
+        case "rare":
+            fill1 = rare1;
+            fill2 = rare2;
             break;
     }
     const strokeColor = "#000";
@@ -589,23 +627,21 @@ function drawIris(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawLily(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+function drawLily(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
     const common1 = "#ffffff";
     const common2 = "#ecba78ff";
     const uncommon1 = "#f7b6f1ff";
     const uncommon2 = "#ec9191ff";
     const rare1 = "#fa5523ff";
-    const rare2 = "#e0d8caff"
+    const rare2 = "#f3c067ff"
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
     const opalGradient = metallicColorMap.get("opalGradient");
     let fill1 = common1;
     let fill2 = common2;
-    switch (medal) {
+    switch (rarity) {
         case "bronze":
             fill1 = bronzeGradient;
             fill2 = metallicColorMap.get("bronze3");
@@ -622,20 +658,17 @@ function drawLily(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
             fill1 = opalGradient;
             fill2 = metallicColorMap.get("opal2");
             break;
-        default:
-            let rarity = seededRandom();
-            if (rarity < rareThreshold) {
-                fill1 = rare1;
-                fill2 = rare2;
-            }
-            else if (rarity < uncommonThreshold) {
-                fill1 = uncommon1;
-                fill2 = uncommon2;
-            }
-            else {
-                fill1 = common1;
-                fill2 = common2;
-            }
+        case "common":
+            fill1 = common1;
+            fill2 = common2;
+            break;
+        case "uncommon":
+            fill1 = uncommon1;
+            fill2 = uncommon2;
+            break;
+        case "rare":
+            fill1 = rare1;
+            fill2 = rare2;
             break;
     }
     const strokeColor = "#000";
@@ -686,16 +719,14 @@ function drawLily(headGroup, flowerParameter, cx, cy, rotation, medal = "none") 
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawTulip(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+function drawTulip(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
     const common1 = "#f7b3f3ff";
     const common2 = "#ecba78ff";
     const uncommon1 = "#e72222ff";
     const uncommon2 = "#c78484ff";
     const rare1 = "#31064eff";
-    const rare2 = "#7847a5ff"
+    const rare2 = "#7847a5ff";
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
@@ -704,7 +735,7 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation, medal = "none")
     let fill2 = common2;
     let strokeColor = "#000"
 
-    switch (medal) {
+    switch (rarity) {
         case "bronze":
             fill1 = bronzeGradient;
             fill2 = metallicColorMap.get("bronze1");
@@ -721,21 +752,18 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation, medal = "none")
             fill1 = opalGradient;
             fill2 = metallicColorMap.get("opal3");
             break;
-        default:
-            let rarity = seededRandom();
-            if (rarity < rareThreshold) {
-                fill1 = rare1;
-                fill2 = rare2;
-                strokeColor = fill2;
-            }
-            else if (rarity < uncommonThreshold) {
-                fill1 = uncommon1;
-                fill2 = uncommon2;
-            }
-            else {
-                fill1 = common1;
-                fill2 = common2;
-            }
+        case "common":
+            fill1 = common1;
+            fill2 = common2;
+            break;
+        case "uncommon":
+            fill1 = uncommon1;
+            fill2 = uncommon2;
+            break;
+        case "rare":
+            fill1 = rare1;
+            fill2 = rare2;
+            strokeColor = fill2;
             break;
     }
 
@@ -810,10 +838,8 @@ function drawTulip(headGroup, flowerParameter, cx, cy, rotation, medal = "none")
 
 }
 
-function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
     const common1 = "#e0b3e6";
     const common2 = "#d6f1daff";
     const common3 = "#d45dbf";
@@ -831,7 +857,7 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, medal = "none"
     let fill2 = common2;
     let fill3 = common3;
     let strokeColor = "#000"
-    switch (medal) {
+    switch (rarity) {
         case "bronze":
             fill1 = bronzeGradient;
             fill2 = metallicColorMap.get("bronze1");
@@ -852,23 +878,20 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, medal = "none"
             fill2 = metallicColorMap.get("opal1");
             fill3 = metallicColorMap.get("opal2");
             break;
-        default:
-            let rarity = seededRandom();
-            if (rarity < rareThreshold) {
-                fill1 = rare1;
-                fill2 = rare2;
-                fill3 = rare3;
-            }
-            else if (rarity < uncommonThreshold) {
-                fill1 = uncommon1;
-                fill2 = uncommon2;
-                fill3 = uncommon3;
-            }
-            else {
-                fill1 = common1;
-                fill2 = common2;
-                fill3 = common3;
-            }
+        case "common":
+            fill1 = common1;
+            fill2 = common2;
+            fill3 = common3;
+            break;
+        case "uncommon":
+            fill1 = uncommon1;
+            fill2 = uncommon2;
+            fill3 = uncommon3;
+            break;
+        case "rare":
+            fill1 = rare1;
+            fill2 = rare2;
+            fill3 = rare3;
             break;
     }
 
@@ -937,10 +960,8 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, medal = "none"
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
     const common1 = "#ea89f7ff";
     const uncommon1 = "#ffb96aff";
     const rare1 = "#499ee4ff";
@@ -950,7 +971,7 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, medal = "n
     const opalGradient = metallicColorMap.get("opalGradient");
     let fill1 = common1;
 
-    switch (medal) {
+    switch (rarity) {
         case "bronze":
             fill1 = bronzeGradient;
             break;
@@ -963,17 +984,14 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, medal = "n
         case "opal":
             fill1 = opalGradient;
             break;
-        default:
-            let rarity = seededRandom();
-            if (rarity < rareThreshold) {
-                fill1 = rare1;
-            }
-            else if (rarity < uncommonThreshold) {
-                fill1 = uncommon1;
-            }
-            else {
-                fill1 = common1;
-            }
+        case "common":
+            fill1 = common1;
+            break;
+        case "uncommon":
+            fill1 = uncommon1;
+            break;
+        case "rare":
+            fill1 = rare1;
             break;
     }
 
@@ -1016,10 +1034,8 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, medal = "n
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
+function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const uncommonThreshold = .1;
-    const rareThreshold = .01;
     const common1 = "#f9e65c";
     const common2 = "#f29c4b";
     const uncommon1 = "#d9d1daff";
@@ -1034,7 +1050,7 @@ function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, medal = "non
     let fill2 = common2;
     let strokeColor = "#000"
 
-    switch (medal) {
+    switch (rarity) {
         case "bronze":
             fill1 = bronzeGradient;
             fill2 = bronzeGradient;
@@ -1051,24 +1067,21 @@ function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, medal = "non
             fill1 = opalGradient;
             fill2 = opalGradient;
             break;
-        default:
-            let rarity = seededRandom();
-            if (rarity < rareThreshold) {
-                fill1 = rare1;
-                fill2 = rare2;
-            }
-            else if (rarity < uncommonThreshold) {
-                fill1 = uncommon1;
-                fill2 = uncommon2;
-            }
-            else {
-                fill1 = common1;
-                fill2 = common2;
-            }
+        case "common":
+            fill1 = common1;
+            fill2 = common2;
+            break;
+        case "uncommon":
+            fill1 = uncommon1;
+            fill2 = uncommon2;
+            break;
+        case "rare":
+            fill1 = rare1;
+            fill2 = rare2;
             break;
     }
 
-    const minHeadSize = 8;
+    const minHeadSize = 12;
     const maxHeadSize = minHeadSize + seededRandom() * 5;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 

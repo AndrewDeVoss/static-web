@@ -10,62 +10,73 @@
 </head>
 
 <body>
-  <a href="../index.html" class="home-button" title="Home">🏠</a>
-  <div class="container">
-    <div class="input-group">
-      <input id="letters-input" type="text" placeholder="Enter letters" class="input" />
-      <button id="enter-btn" class="button">Enter</button>
-    </div>
-    <div class="settings-panel">
-      <button id="toggle-settings" class="button">⚙️ Filters</button>
-      <div id="settings-content" class="settings-content hidden">
+  <div>
+
+
+    <div class="root container">
+      <div id="settings-panel">
         <!-- Letter Usage -->
         <div class="filter-group">
           <strong>Letter Usage:</strong><br>
-          <label>
-            <input type="radio" name="letter-usage" value="limited" checked />
-            Use letters only as many times as they appear
-          </label><br>
-          <label>
-            <input type="radio" name="letter-usage" value="unlimited" />
-            Letters can be reused
-          </label>
+          <div>
+            <label>
+              <input type="radio" name="letter-usage" value="limited" checked />
+              Letters can only be reused if they are relisted
+            </label>
+          </div>
+
+          <div>
+            <label>
+              <input type="radio" name="letter-usage" value="unlimited" />
+              Letters can be reused
+            </label>
+          </div>
         </div>
 
         <!-- Word Length -->
         <div class="filter-group">
           <strong>Word Length:</strong><br>
-          <label>
-            Min: <input type="number" id="min-length" value="4" min="1" class="length-input" />
-          </label>
-          <label>
-            Max: <input type="number" id="max-length" value="20" min="1" class="length-input" />
-          </label>
+          <div>
+            <label>
+              Min: <input type="number" id="min-length" value="4" min="1" class="length-input" />
+            </label>
+          </div>
+
+          <div>
+            <label>
+              Max: <input type="number" id="max-length" value="20" min="1" class="length-input" />
+            </label>
+          </div>
         </div>
 
         <!-- Optional Advanced Filters -->
         <div class="filter-group">
           <strong>Advanced Filters:</strong><br>
-          <label>
-            <input type="checkbox" id="must-start-with" />
-            Word must start with:
-            <input type="text" id="start-with-input" maxlength="1" size="1" disabled />
-          </label><br>
-          <label>
-            <input type="checkbox" id="must-contain" />
-            Word must contain:
-            <input type="text" id="contain-input" maxlength="1" size="1" disabled />
-          </label><br>
-          <label>
-            <input type="checkbox" id="no-vowels" />
-            Exclude vowels (a, e, i, o, u)
-          </label>
+          <div>
+            <label>
+              <input type="checkbox" id="must-start-with" />
+              Word must start with:
+              <input type="text" id="start-with-input" maxlength="1" size="1" disabled />
+            </label>
+          </div>
+          <div>
+            <label>
+              <input type="checkbox" id="must-contain" />
+              Word must contain:
+              <input type="text" id="contain-input" maxlength="1" size="1" disabled />
+            </label>
+          </div>
         </div>
-
       </div>
-    </div>
 
-    <div id="word-list" class="word-list"></div> <!-- Add this line -->
+      <div class="input-group">
+        <button id="settings-button">⚙️</button>
+        <input id="letters-input" type="text" placeholder="Enter letters" class="input" />
+        <button id="enter-btn" class="button">Enter</button>
+      </div>
+
+      <div id="word-list"></div>
+    </div>
   </div>
 
   <!-- Bottom Navigation Banner -->

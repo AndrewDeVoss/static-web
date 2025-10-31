@@ -61,10 +61,8 @@ enterBtn.addEventListener('click', function () {
   wordList.innerHTML = results.length > 0 ? results.join('<br>') : "No words found.";
 });
 
-const toggleSettings = document.getElementById('toggle-settings');
-const settingsContent = document.getElementById('settings-content');
-
-toggleSettings.addEventListener('click', () => {
-  settingsContent.classList.toggle('hidden');
+const settingsButton = document.getElementById('settings-button');
+const settingsPanel = document.getElementById('settings-panel');
+settingsButton.addEventListener('click', function () {
+  settingsPanel.classList.toggle('hidden');
 });
-

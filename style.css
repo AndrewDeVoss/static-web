@@ -102,16 +102,7 @@ p {
   line-height: 1;           /* Ensures icon is vertically centered */
   vertical-align: middle;   /* Helps with vertical alignment */
 }
-.word-list {
-  max-height: 250px;
-  overflow-y: auto;
-  margin-top: 1rem;
-  padding: 0.5rem;
-  background: #f9f9f9;
-  border-radius: 0.5rem;
-  border: 1px solid #eee;
-  font-size: 1rem;
-}
+
 .input {
   font-size: 16px;
 }

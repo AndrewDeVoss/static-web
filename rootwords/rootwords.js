@@ -48,7 +48,7 @@ toggleNav.addEventListener('click', function () {
   navControls.classList.toggle('hidden');
   const isOpen = !navControls.classList.contains('hidden');
 
-  toggleNav.innerText = isOpen ? '▴' : '▾';
+  toggleNav.innerText = isOpen ? '▾' : '▴';
 });
 
 // Shuffle

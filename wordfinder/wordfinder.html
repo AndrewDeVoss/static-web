@@ -1,20 +1,31 @@
 <!doctype html>
 <html lang="en-US">
-  <head>
-    <meta charset="utf-8" />
-    <title>Word Finder</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="../style.css" />
-  </head>
-  <body>
-    <a href="../index.html" class="home-button" title="Home">🏠</a>
-    <div class="container">
-      <div class="input-group">
-        <input id="letters-input" type="text" placeholder="Enter letters" class="input" />
-        <button id="enter-btn" class="button">Enter</button>
-      </div>
-      <div id="word-list" class="word-list"></div> <!-- Add this line -->
+
+<head>
+  <meta charset="utf-8" />
+  <title>Word Finder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./wordfinder.css" />
+</head>
+
+<body>
+  <a href="../index.html" class="home-button" title="Home">🏠</a>
+  <div class="container">
+    <div class="input-group">
+      <input id="letters-input" type="text" placeholder="Enter letters" class="input" />
+      <button id="enter-btn" class="button">Enter</button>
     </div>
-    <script type="module" src="./wordfinder.js"></script>
-  </body>
+    <div id="word-list" class="word-list"></div> <!-- Add this line -->
+  </div>
+
+  <!-- Bottom Navigation Banner -->
+  <div class="bottom-banner">
+    <a href="../index.html" id="home-button" title="Home">🏠</a>
+    <div class="disabled" id="help-button" title="Help">❓</div>
+  </div>
+
+  <script type="module" src="./wordfinder.js"></script>
+</body>
+
 </html>

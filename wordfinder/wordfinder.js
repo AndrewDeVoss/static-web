@@ -28,8 +28,6 @@ enterBtn.addEventListener('click', function () {
   const userLetters = input.value.trim().toLowerCase();
   wordList.innerHTML = ""; // Clear previous results
 
-  console.log('calling click' + userLetters);
-
   if (userLetters.length === 0 || DICTIONARY.length === 0) {
     return;
   }

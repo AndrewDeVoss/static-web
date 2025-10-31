@@ -1,0 +1,25 @@
+
+/* Bottom Banner styles */
+.bottom-banner {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: #222;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  padding: 10px 0;
+}
+
+/* Home & Help buttons */
+#home-button,
+#help-button {
+  text-decoration: none;
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+}

@@ -208,7 +208,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         }
     }
     let flowerType = chooseFlower();
-    flowerType = "poppy"; // todo ranunculus
+    flowerType = "poppy";
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -941,60 +941,38 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, medal = "n
     rescopeMetallicColorMap(headGroup);
     const uncommonThreshold = .1;
     const rareThreshold = .01;
-    const common1 = "#e0b3e6";
-    const common2 = "#d6f1daff";
-    const common3 = "#d45dbf";
-    const uncommon1 = "#e975f8ff";
-    const uncommon2 = "#e8aef3ff";
-    const uncommon3 = "#a5f074ff";
-    const rare1 = "#5154faff";
-    const rare2 = "#a8a9fcff"
-    const rare3 = "#31328fff"
+    const common1 = "#ea89f7ff";
+    const uncommon1 = "#ffb96aff";
+    const rare1 = "#499ee4ff";
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
     const opalGradient = metallicColorMap.get("opalGradient");
     let fill1 = common1;
-    let fill2 = common2;
-    let fill3 = common3;
-    let strokeColor = "#000"
+
     switch (medal) {
         case "bronze":
             fill1 = bronzeGradient;
-            fill2 = metallicColorMap.get("bronze1");
-            fill3 = metallicColorMap.get("bronze2");
             break;
         case "silver":
             fill1 = silverGradient;
-            fill2 = metallicColorMap.get("silver1");
-            fill3 = metallicColorMap.get("silver2");
             break;
         case "gold":
             fill1 = goldGradient;
-            fill2 = metallicColorMap.get("gold1");
-            fill3 = metallicColorMap.get("gold2");
             break;
         case "opal":
             fill1 = opalGradient;
-            fill2 = metallicColorMap.get("opal1");
-            fill3 = metallicColorMap.get("opal2");
             break;
         default:
             let rarity = seededRandom();
             if (rarity < rareThreshold) {
                 fill1 = rare1;
-                fill2 = rare2;
-                fill3 = rare3;
             }
             else if (rarity < uncommonThreshold) {
                 fill1 = uncommon1;
-                fill2 = uncommon2;
-                fill3 = uncommon3;
             }
             else {
                 fill1 = common1;
-                fill2 = common2;
-                fill3 = common3;
             }
             break;
     }
@@ -1003,17 +981,33 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, medal = "n
     const maxHeadSize = minHeadSize + seededRandom() * 6;
     const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
-    const layers = 3 + seededRandom() * 3;
+    const layers = 4 + seededRandom() * 3;
     for (let i = 0; i < layers; i++) {
         const radius = size * (1 - i / layers * 0.9);
         const petal = document.createElementNS(headGroup.namespaceURI, "circle");
         petal.setAttribute("cx", cx);
         petal.setAttribute("cy", cy);
         petal.setAttribute("r", radius);
-        const red = 255;
-        const green = 140;
-        const blue = 200;
-        petal.setAttribute("fill", `rgba(${red - red * i / layers}, ${green - green * i / layers}, ${blue - blue * i / layers}, ${1 - i * 0.15})`);
+
+        if (fill1.charAt(0) === '#') {
+            let poundlessHex = fill1.slice(1);
+
+            if (poundlessHex.length === 3) {
+                poundlessHex = poundlessHex.split("").map(char => char + char).join("");
+            }
+
+            // Extract the red, green, and blue components
+            let red = parseInt(poundlessHex.slice(0, 2), 16);
+            let green = parseInt(poundlessHex.slice(2, 4), 16);
+            let blue = parseInt(poundlessHex.slice(4, 6), 16);
+
+            console.log(`RGB(${red}, ${green}, ${blue})`);
+
+            petal.setAttribute("fill", `rgba(${red - red * i / layers}, ${green - green * i / layers}, ${blue - blue * i / layers}, ${1 - i * 0.15})`);
+        } else {
+            petal.setAttribute("fill", `${fill1}`);
+        }
+
         petal.setAttribute("stroke", "#16120cff");
         petal.setAttribute("stroke-width", 0.1);
         headGroup.appendChild(petal);
@@ -1023,7 +1017,7 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, medal = "n
 }
 
 function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, medal = "none") {
-     rescopeMetallicColorMap(headGroup);
+    rescopeMetallicColorMap(headGroup);
     const uncommonThreshold = .1;
     const rareThreshold = .01;
     const common1 = "#f9e65c";

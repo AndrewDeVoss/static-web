@@ -1,5 +1,5 @@
 // rootwords.js
-import { loadDictionary, isWord, chooseRandomWordSet, loadBorderlineWords, loadForbiddenWords, getValidWordsFromLetters, loadSuitable5And6 } from '../utility/isword/isword.js';
+import { loadDictionary, isWord, chooseRandomWordSet, loadForbiddenWords, getValidWordsFromLetters, loadSuitable5And6 } from '../utility/isword/isword.js';
 import { TreeNode } from './word-tree.js';
 import { drawTree } from './drawtree.js'
 import { drawGrass } from './drawgrass.js';
@@ -21,7 +21,6 @@ async function createLetterBoardComponent(tagName, letters) {
 
 await loadSuitable5And6();
 await loadDictionary();
-await loadBorderlineWords();
 await loadForbiddenWords();
 const letters = chooseRandomWordSet(11);
 const board1 = 'word-swiper';

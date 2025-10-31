@@ -1,7 +1,6 @@
 let suitable5And6Words = new Set();
-let comprehensiveWords = new Set();
+let bigDictionary = new Set();
 let forbiddenWords = new Set();
-let borderlineWords = new Set();
 
 export async function loadSuitable5And6() {
   const url = new URL('../../suitable.txt', import.meta.url).href;
@@ -11,10 +10,42 @@ export async function loadSuitable5And6() {
 }
 
 export async function loadDictionary() {
-  const url = new URL('../../dictionary.txt', import.meta.url).href;
+  // Adjust the path relative to your script
+  const url = new URL('../../dictionary.csv', import.meta.url).href;
   const response = await fetch(url);
-  const text = await response.text();
-  comprehensiveWords = new Set(text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean));
+
+  if (!response.ok) {
+    throw new Error(`Failed to load dictionary: ${response.status} ${response.statusText}`);
+  }
+
+  const csvText = await response.text();
+
+  // Parse CSV lines (simple manual parser assuming no embedded newlines in quoted fields)
+  const lines = csvText.trim().split('\n').slice(1); // skip header
+
+  // Store data in a Map for fast lookups
+  // word -> { category, reason, definition }
+  bigDictionary = new Map();
+
+  for (const line of lines) {
+    // Split on commas, handling quotes
+    // This regex safely splits CSV respecting quoted fields
+    const match = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+    if (!match || match.length < 4) continue;
+
+    const [word, category, reason, definition] = match.map(v =>
+      v.replace(/^"|"$/g, '').trim()
+    );
+
+    bigDictionary.set(word.toLowerCase(), {
+      word,
+      category,
+      reason,
+      definition,
+    });
+  }
+
+  return bigDictionary;
 }
 
 export async function loadForbiddenWords() {
@@ -24,16 +55,25 @@ export async function loadForbiddenWords() {
   forbiddenWords = new Set(text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean));
 }
 
-export async function loadBorderlineWords() {
-  const url = new URL('../../borderline.txt', import.meta.url).href;
-  const response = await fetch(url);
-  const text = await response.text();
-  borderlineWords = new Set(text.split('\n').map(w => w.trim().toLowerCase()).filter(Boolean));
-}
-
 export function isWord(word) {
   const lower = word.toLowerCase();
-  return (comprehensiveWords.has(lower) || borderlineWords.has(lower)) && !forbiddenWords.has(lower);
+
+  // If it is not in the big dictionary, definitely not a word
+  if (!bigDictionary.has(lower)) return false;
+
+  // If it is a forbidden word, exclude
+  if (forbiddenWords.has(lower)) return false;
+
+  // Exclude anything that has a forbidden word in its definition
+  let definition = bigDictionary.get(lower).definition;
+  for (let explWord of definition.split(/\W+/)) {
+    if (forbiddenWords.has(explWord.toLowerCase())) {
+      return false;
+    }
+  }
+
+  // Ok, it passed the test
+  return true;
 }
 
 export function getValidWordsFromLetters(charString, dictionarySet = null) {
@@ -56,7 +96,7 @@ export function getValidWordsFromLetters(charString, dictionarySet = null) {
   const result = new Set();
   const sourceWords = dictionarySet
     ? dictionarySet
-    : new Set([...comprehensiveWords, ...borderlineWords]);
+    : new Set([...bigDictionary.keys()]);
 
   for (const word of sourceWords) {
     const lowerWord = word.toLowerCase();
@@ -92,15 +132,15 @@ function mulberry32(seed) {
 // Random word picker
 // ----------------------------
 export function chooseRandomWordSet(targetLength = 12, dateString = null) {
-  if (comprehensiveWords.size === 0) {
+  if (bigDictionary.size === 0) {
     throw new Error("Dictionary not loaded. Call loadDictionary() first.");
   }
 
   const seed = daysSinceJune15(dateString);
   const rng = mulberry32(seed);
 
-  const words = Array.from(comprehensiveWords).filter(
-    w => !forbiddenWords.has(w) && !borderlineWords.has(w)
+  const words = Array.from(bigDictionary.keys()).filter(
+    w => isWord(w)
   );
 
   const commonEnding = (word) => word.endsWith("ed") || word.endsWith("er") || word.endsWith("y") || word.endsWith("ing");
@@ -133,8 +173,8 @@ export function chooseRandomWordSet(targetLength = 12, dateString = null) {
     let chosen;
     do {
       chosen = filtered[Math.floor(rng() * filtered.length)];
-      // With 30% chance, reselect if ends in common ending
-      if (commonEnding(chosen) && rng() < 0.9) continue;
+
+      if (commonEnding(chosen) && rng() < 0.8) continue;
       break;
     } while (true);
 

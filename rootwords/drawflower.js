@@ -184,41 +184,35 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
     return { x: tipX, y: tipY, angle: tipAngle };
 }
 
-export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0, medal = "none") {
+export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0, flowerName = "random", rarity = "common") {
     const flowers = [
-        { name: "poppy", weight: 100 },
-        { name: "daffodil", weight: 75 },
-        { name: "ranunculus", weight: 50 },
-        { name: "lily", weight: 35 },
-        { name: "daisy", weight: 25 },
-        { name: "tulip", weight: 15 },
-        { name: "rose", weight: 10 },
-        { name: "iris", weight: 5 },
+        { name: "poppy", weight: 25 },
+        { name: "daffodil", weight: 20 },
+        { name: "ranunculus", weight: 15 },
+        { name: "lily", weight: 13 },
+        { name: "daisy", weight: 10 },
+        { name: "tulip", weight: 8 },
+        { name: "rose", weight: 6 },
+        { name: "iris", weight: 2 },
         { name: "orchid", weight: 1 }
     ];
-    const totalWeight = flowers.reduce((sum, f) => sum + f.weight, 0);
-    function chooseFlower() {
-        const rand = seededRandom() * totalWeight;
-        let cumulative = 0;
-        for (const flower of flowers) {
-            cumulative += flower.weight;
-            if (rand <= cumulative) {
-                return flower.name;
+
+    if (flowerName === "random") {
+        const totalWeight = flowers.reduce((sum, f) => sum + f.weight, 0);
+        function chooseFlower() {
+            const rand = seededRandom() * totalWeight;
+            let cumulative = 0;
+            for (const flower of flowers) {
+                cumulative += flower.weight;
+                if (rand <= cumulative) {
+                    return flower.name;
+                }
             }
         }
+        flowerName = chooseFlower();
     }
-    let flowerName = chooseFlower();
 
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
-    let rarity = "common";
-
-    if (medal==="none") {
-        let rarityRoll = seededRandom();
-        if (rarityRoll < 3/15) rarity = "uncommon";
-        if (rarityRoll < 1/15) rarity = "rare";
-    } else {
-        rarity = medal;
-    }
 
     switch (flowerName) {
         case "poppy":
@@ -304,7 +298,7 @@ function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
             fill2 = common2;
             break;
         case "uncommon":
-             fill1 = uncommon1;
+            fill1 = uncommon1;
             fill2 = uncommon2;
             break;
         case "rare":
@@ -325,7 +319,7 @@ function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
 
         const d = `
                 M ${cx} ${cy}
-                C ${cx + petalWidth} ${cy - petalLength / 3}, ${cx + petalWidth} ${cy - petalLength}, ${cx} ${cy - petalLength*.9}
+                C ${cx + petalWidth} ${cy - petalLength / 3}, ${cx + petalWidth} ${cy - petalLength}, ${cx} ${cy - petalLength * .9}
                 C ${cx - petalWidth} ${cy - petalLength}, ${cx - petalWidth} ${cy - petalLength / 3}, ${cx} ${cy}
                 Z
             `;

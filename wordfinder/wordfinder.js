@@ -1,10 +1,10 @@
-let DICTIONARY = [];
+import { loadDictionary, loadForbiddenWords } from "../utility/isword/isword";
 
-fetch(new URL('../dictionary.txt', import.meta.url).href)
-  .then(response => response.text())
-  .then(text => {
-    DICTIONARY = text.split('\n').map(word => word.trim().toLowerCase()).filter(Boolean);
-  });
+await loadForbiddenWords();
+let bigDictionary = await loadDictionary();
+const DICTIONARY = new Map(
+  Array.from(bigDictionary.entries()).filter(([key, value]) => isWord(key))
+);
 
 document.addEventListener('DOMContentLoaded', function () {
   const input = document.getElementById('letters-input');

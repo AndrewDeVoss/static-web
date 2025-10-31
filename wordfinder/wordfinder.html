@@ -16,6 +16,55 @@
       <input id="letters-input" type="text" placeholder="Enter letters" class="input" />
       <button id="enter-btn" class="button">Enter</button>
     </div>
+    <div class="settings-panel">
+      <button id="toggle-settings" class="button">⚙️ Filters</button>
+      <div id="settings-content" class="settings-content hidden">
+        <!-- Letter Usage -->
+        <div class="filter-group">
+          <strong>Letter Usage:</strong><br>
+          <label>
+            <input type="radio" name="letter-usage" value="limited" checked />
+            Use letters only as many times as they appear
+          </label><br>
+          <label>
+            <input type="radio" name="letter-usage" value="unlimited" />
+            Letters can be reused
+          </label>
+        </div>
+
+        <!-- Word Length -->
+        <div class="filter-group">
+          <strong>Word Length:</strong><br>
+          <label>
+            Min: <input type="number" id="min-length" value="4" min="1" class="length-input" />
+          </label>
+          <label>
+            Max: <input type="number" id="max-length" value="20" min="1" class="length-input" />
+          </label>
+        </div>
+
+        <!-- Optional Advanced Filters -->
+        <div class="filter-group">
+          <strong>Advanced Filters:</strong><br>
+          <label>
+            <input type="checkbox" id="must-start-with" />
+            Word must start with:
+            <input type="text" id="start-with-input" maxlength="1" size="1" disabled />
+          </label><br>
+          <label>
+            <input type="checkbox" id="must-contain" />
+            Word must contain:
+            <input type="text" id="contain-input" maxlength="1" size="1" disabled />
+          </label><br>
+          <label>
+            <input type="checkbox" id="no-vowels" />
+            Exclude vowels (a, e, i, o, u)
+          </label>
+        </div>
+
+      </div>
+    </div>
+
     <div id="word-list" class="word-list"></div> <!-- Add this line -->
   </div>
 

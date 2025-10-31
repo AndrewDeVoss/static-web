@@ -1,3 +1,17 @@
+.settings-content.hidden {
+  display: none;
+}
+
+.settings-panel {
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 5px;
+}
+
+.filter-group {
+  margin: 0.5rem 0;
+}
 
 /* Bottom Banner styles */
 .bottom-banner {

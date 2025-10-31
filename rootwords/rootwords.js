@@ -129,7 +129,7 @@ document.addEventListener('word-committed', (e) => {
   } else {
     // Determine how many letters are used in children of currentNode
     const totalUsedCols = currentNode.children.reduce((sum, child) => sum + child.word.length, 0);
-    if (totalUsedCols < currentNode.word.length/2) {
+    if (totalUsedCols < currentNode.word.length / 2) {
       selectNode(currentNode); // Most of the room to grow is still here
     } else {
       selectNode(newNode); // Move to the new node
@@ -186,7 +186,7 @@ function scoreRoots(rootNode = treeRoot) {
   let trunkXPercent = drawTree(score, treeContainer, dateString);
 
   // Center the trunk horizontally in the container
-  treeContainer.style.transform = `translateX(${-(trunkXPercent-50)}%) translateY(100px)`;
+  treeContainer.style.transform = `translateX(${-(trunkXPercent - 50)}%) translateY(100px)`;
 }
 
 function drawRoots() {
@@ -784,7 +784,12 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
-      console.log("Using cached score from cookie:", parsed);
+      if (!parsed.letters) {
+        throw new Error("No letters in cached score");
+      }
+      if (parsed.letters !== letters) {
+        throw new Error("Letter mismatch");
+      }
       let score = parsed.score;
       goldScore.textContent = `${score}`;
       silverScore.textContent = `${Math.floor(score * 2 / 3)}`;
@@ -807,7 +812,15 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
 
     if (validWords.size === 0) return;
 
-    const sortedWords = [...validWords].sort((a, b) => b.length - a.length);
+    const sortedWords = [...validWords].sort((a, b) => {
+      // Primary sort: descending length
+      const lengthDiff = b.length - a.length;
+      if (lengthDiff !== 0) return lengthDiff;
+
+      // Tie-break: alphabetical order
+      return a.localeCompare(b);
+    });
+
     const bestWord = sortedWords[0];
     if (!bestWord) return;
 
@@ -831,6 +844,7 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
 
   const resultToCache = {
     score,
+    letters,
     words: [...usedGreedyWords],
   };
 

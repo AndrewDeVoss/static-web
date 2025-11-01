@@ -103,7 +103,7 @@ export function seedFlowerRNG(str) {
     randomState = h >>> 0;
 }
 
-export function drawFlower(svg, baseX, baseY, flowerParameter, dateString) {
+export function drawFlower(svg, baseX, baseY, flowerParameter, dateString, rarity = "common") {
     colors = getColors();
 
     const flowerGroup = document.createElementNS(svg.namespaceURI, "g");
@@ -112,7 +112,7 @@ export function drawFlower(svg, baseX, baseY, flowerParameter, dateString) {
     const stemGroup = drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter);
 
     // Head
-    const headGroup = drawFlowerHead(flowerGroup, flowerParameter, stemGroup.x, stemGroup.y, stemGroup.angle);
+    const headGroup = drawFlowerHead(flowerGroup, flowerParameter, stemGroup.x, stemGroup.y, stemGroup.angle, rarity);
 
     flowerGroup.dataset.order = "flower";
     svg.appendChild(flowerGroup);
@@ -184,7 +184,7 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
     return { x: tipX, y: tipY, angle: tipAngle };
 }
 
-export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0, flowerName = "random", rarity = "common") {
+export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 0, rarity = "common", flowerName = "random") {
     const flowers = [
         { name: "poppy", weight: 25 },
         { name: "daffodil", weight: 20 },

@@ -22,7 +22,7 @@ function seedFromString(str) {
 }
 
 
-export function drawTree(score, treeContainer, dateString) {
+export function drawTree(score, treeContainer, dateString, medals) {
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
     seed = dateString;
@@ -265,8 +265,32 @@ export function drawTree(score, treeContainer, dateString) {
     const minFlowerX = (trunkPercent - 50) * bboxWidth;
     const maxFlowerX = minFlowerX + screenWidth;
 
-    // Use leftover points to draw flowers now that SVG is in the DOM
+    // Check for and draw medal flowers
     const flowerXs = [];
+    for (let medal of medals.keys()) {
+        const count = medals.get(medal);
+        for (let i = 0; i < count; i++) {
+            // Try 10 different positions and choose the one farthest from any other flower
+            let bestFlowerX = baseX;
+            let bestDistance = 0;
+            for (let attempt = 0; attempt < 10; attempt++) {
+                const sideShift = seededRandom() < 0.5 ? -1 : 1;
+                let flowerX = baseX + sideShift * seededRandom() * (maxFlowerX - minFlowerX - 2 * margin) / 2;
+                const minDist = flowerXs.length
+                    ? Math.min(...flowerXs.map(x => Math.abs(x - flowerX)))
+                    : 0;
+                if (minDist > bestDistance) {
+                    bestFlowerX = flowerX;
+                    bestDistance = minDist;
+                }
+            }
+            flowerXs.push(bestFlowerX);
+
+            drawFlower(svg, bestFlowerX, baseY, 1, dateString, medal);
+        }
+    }
+
+    // Use leftover points to draw flowers now that SVG is in the DOM
     for (let flower = 0; flower < flowerParameters.length; flower++) {
         const flowerParameter = flowerParameters[flower];
 

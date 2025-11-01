@@ -178,12 +178,27 @@ function scoreRoots(rootNode = treeRoot) {
 
   currentScore.textContent = score;
 
+  // Check if score surpasses greedy scores
+  let medals = new Map();
+  if (bronzeScore && parseInt(bronzeScore.textContent) > 0) {
+    let bronze = parseInt(bronzeScore.textContent);
+    medals.set('bronze', Math.min(1, Math.floor(score / bronze)));
+  }
+  if (silverScore && parseInt(silverScore.textContent) > 0) {
+    let silver = parseInt(silverScore.textContent);
+    medals.set('silver', Math.min(1, Math.floor(score / silver)));
+  }
+  if (goldScore && parseInt(goldScore.textContent) > 0) {
+    let gold = parseInt(goldScore.textContent);
+    medals.set('gold', Math.min(1, Math.floor(score / gold)));
+  }
+
   updateCurrentTree();
   tryUpdateBestRoots(score);
 
   const treeContainer = document.getElementById("tree");
   const dateString = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (daily)
-  let trunkXPercent = drawTree(score, treeContainer, dateString);
+  let trunkXPercent = drawTree(score, treeContainer, dateString, medals);
 
   // Center the trunk horizontally in the container
   treeContainer.style.transform = `translateX(${-(trunkXPercent - 50)}%) translateY(100px)`;

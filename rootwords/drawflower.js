@@ -212,7 +212,8 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         flowerName = chooseFlower();
     }
 
-    // flowerName = "tulip"; // Temporary override for testing
+    // flowerName = "iris"; // Temporary override for testing
+    // rarity = "gold";
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
     switch (flowerName) {
@@ -522,104 +523,111 @@ function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     headGroup.setAttribute('transform', transform);
 }
 
-function drawIris(headGroup, flowerParameter, cx, cy, rotation, rarity) {
+async function drawIris(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const common1 = "#731897ff";
-    const common2 = "#d77ee9ff";
+    const common1 = "#5e3792ff";
+    const common2 = "#9767d6ff";
+    const common3 = "#6c2bc0ff";
     const uncommon1 = "#750404ff";
-    const uncommon2 = "#ec9191ff";
-    const rare1 = "#0f051aff";
-    const rare2 = "#553c70ff"
+    const uncommon2 = "#e96969ff";
+    const uncommon3 = "#885f5fff";
+    const rare1 = "#080668ff";
+    const rare2 = "#7f90f1ff";
+    const rare3 = "#5154faff";
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
     const opalGradient = metallicColorMap.get("opalGradient");
     let fill1 = common1;
     let fill2 = common2;
+    let fill3 = common3;
     switch (rarity) {
         case "bronze":
             fill1 = bronzeGradient;
-            fill2 = metallicColorMap.get("bronze2");
+            fill2 = bronzeGradient;
+            fill3 = bronzeGradient;
             break;
         case "silver":
             fill1 = silverGradient;
-            fill2 = metallicColorMap.get("silver3");
+            fill2 = silverGradient;
+            fill3 = silverGradient;
             break;
         case "gold":
             fill1 = goldGradient;
-            fill2 = metallicColorMap.get("gold1");
+            fill2 = goldGradient;
+            fill3 = goldGradient;
             break;
         case "opal":
             fill1 = opalGradient;
-            fill2 = metallicColorMap.get("opal1");
+            fill2 = opalGradient;
+            fill3 = opalGradient;
             break;
         case "common":
             fill1 = common1;
             fill2 = common2;
+            fill3 = common3;
             break;
         case "uncommon":
             fill1 = uncommon1;
             fill2 = uncommon2;
+            fill3 = uncommon3;
             break;
         case "rare":
             fill1 = rare1;
             fill2 = rare2;
+            fill3 = rare3;
             break;
     }
     const strokeColor = "#000";
 
-    const minHeadSize = 8;
-    const maxHeadSize = minHeadSize + seededRandom() * 5;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+    const response = await fetch(".\\svg\\iris.svg");
+    const svgText = await response.text();
 
-    const outerLength = size * 1.4;
-    const innerLength = size * 0.9;
+    // Parse the SVG string into an XML document
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
 
-    // Outer petals (curved and drooping)
-    for (let i = 0; i < 3; i++) {
-        const angle = i * 120;
-        const petal = document.createElementNS(headGroup.namespaceURI, "path");
-        const d = `
-            M ${cx} ${cy}
-            C ${cx - size * 0.4} ${cy - outerLength * 0.3},
-              ${cx - size * 0.3} ${cy - outerLength},
-              ${cx} ${cy - outerLength}
-            C ${cx + size * 0.3} ${cy - outerLength},
-              ${cx + size * 0.4} ${cy - outerLength * 0.3},
-              ${cx} ${cy}
-            Z
-        `;
-        petal.setAttribute("d", d);
-        petal.setAttribute("fill", fill1);
-        petal.setAttribute("stroke", strokeColor);
-        petal.setAttribute("stroke-width", 0.1);
-        petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        headGroup.appendChild(petal);
-    }
+    // Define which groups you want to extract
+    const prename = "iris-u-";
+    const group1 = ["up"];
+    const group2 = ["center-up", "center-down"];
+    const group3 = ["down"];
+    const group4 = ["tongue"];
 
-    // Inner petals (upright and smaller)
-    for (let i = 0; i < 3; i++) {
-        const angle = i * 120 + 60;
-        const petal = document.createElementNS(headGroup.namespaceURI, "path");
-        const d = `
-            M ${cx} ${cy}
-            C ${cx - size * 0.25} ${cy - innerLength * 0.4},
-              ${cx - size * 0.2} ${cy - innerLength},
-              ${cx} ${cy - innerLength}
-            C ${cx + size * 0.2} ${cy - innerLength},
-              ${cx + size * 0.25} ${cy - innerLength * 0.4},
-              ${cx} ${cy}
-            Z
-        `;
-        petal.setAttribute("d", d);
-        petal.setAttribute("fill", fill2);
-        petal.setAttribute("stroke", strokeColor);
-        petal.setAttribute("stroke-width", 0.1);
-        petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        headGroup.appendChild(petal);
-    }
+    const order = ["down", "center-up", "up", "center-down", "tongue"];
 
-    headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
+    order.forEach((pathName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${pathName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+
+        let color;
+        if (group1.includes(pathName)) {
+            color = fill1;
+        } else if (group2.includes(pathName)) {
+            color = fill2;
+        } else if (group3.includes(pathName)) {
+            color = fill3;
+        } else {
+            color = "#faf893ff";
+        }
+
+        clone.setAttribute("fill", color);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
+
+    const bbox = headGroup.getBBox();
+    headGroup.setAttribute(
+        "transform",
+        `
+            translate(${cx}, ${cy})
+            rotate(${rotation})
+            scale(${0.17})
+            translate(${-bbox.x - bbox.width / 2}, ${-bbox.y - bbox.height/2})
+        `
+    );
 }
 
 function drawLily(headGroup, flowerParameter, cx, cy, rotation, rarity) {
@@ -720,8 +728,8 @@ async function drawTulip(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     const common2 = "#ecba78ff";
     const uncommon1 = "#e72222ff";
     const uncommon2 = "#c78484ff";
-    const rare1 = "#31064eff";
-    const rare2 = "#7847a5ff";
+    const rare1 = "#7e47a3ff";
+    const rare2 = "#c994faff";
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
@@ -758,73 +766,8 @@ async function drawTulip(headGroup, flowerParameter, cx, cy, rotation, rarity) {
         case "rare":
             fill1 = rare1;
             fill2 = rare2;
-            strokeColor = fill2;
             break;
     }
-
-    const minHeadSize = 8;
-    const maxHeadSize = minHeadSize + seededRandom() * 4;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
-
-    // Shape parameters (easy to tweak)
-    // const width = size * 1.0;        // lower-body width
-    // const topWidth = size * 0.3;     // narrower top width
-    // const topHeight = cy - size * 0.4; // Y position of top curve
-    // const bowlDepth = cy + size * 1.8; // Y position of bottom
-    // const bellyCurve = size * 2;     // how much sides bulge out
-    // const sideLift = size * 0.3;       // how much sides lift before top
-    // const topFlatness = size * 0.1;    // vertical depth of top arch
-
-    // const head = `
-    //     M ${cx} ${bowlDepth}
-    //     C ${cx - width} ${cy + bellyCurve},
-    //       ${cx - width * 1.1} ${cy - sideLift},
-    //       ${cx - topWidth} ${topHeight}
-    //     Q ${cx} ${topHeight - topFlatness},
-    //       ${cx + topWidth} ${topHeight}
-    //     C ${cx + width * 1.1} ${cy - sideLift},
-    //       ${cx + width} ${cy + bellyCurve},
-    //       ${cx} ${bowlDepth}
-    //     Z
-    // `;
-
-    // const headSvg = document.createElementNS(headGroup.namespaceURI, "path");
-    // headSvg.setAttribute("d", head);
-    // headSvg.setAttribute("fill", fill1);
-    // headSvg.setAttribute("stroke", strokeColor);
-    // headSvg.setAttribute("stroke-width", 0.1);
-    // headGroup.appendChild(headSvg);
-
-    // const top = `
-    //     M ${cx - topWidth} ${topHeight}
-    //     Q ${cx} ${topHeight - topFlatness},
-    //       ${cx + topWidth} ${topHeight}
-    //     Q ${cx} ${topHeight + topFlatness},
-    //       ${cx - topWidth} ${topHeight}
-    //     Z
-    // `;
-
-    // const topSvg = document.createElementNS(headGroup.namespaceURI, "path");
-    // topSvg.setAttribute("d", top);
-    // topSvg.setAttribute("fill", fill2);
-    // topSvg.setAttribute("stroke", strokeColor);
-    // topSvg.setAttribute("stroke-width", 0.1);
-    // headGroup.appendChild(topSvg);
-
-    // const petal = `
-    //     M ${cx - topWidth} ${topHeight}               
-    //     Q ${cx + width} ${cy + size * 0.7},           
-    //         ${cx + topWidth} ${bowlDepth}             
-    // `;
-
-    // const petalSvg = document.createElementNS(headGroup.namespaceURI, "path");
-    // petalSvg.setAttribute("d", petal);
-    // petalSvg.setAttribute("fill", "none");
-    // petalSvg.setAttribute("stroke", strokeColor);
-    // petalSvg.setAttribute("stroke-width", 0.1);
-    // headGroup.appendChild(petalSvg);
-
-    // const translateY = -size * 1.8;
 
     const response = await fetch(".\\svg\\tulip.svg");
     const svgText = await response.text();
@@ -835,8 +778,18 @@ async function drawTulip(headGroup, flowerParameter, cx, cy, rotation, rarity) {
 
     // Define which groups you want to extract
     const prename = "tulip-u-";
-    const petal1Group = ["center", "left-2", "right-2"];
+    const petal1Group = ["left-2", "right-2", "center"];
     const petal2Group = ["left-3", "right-3"];
+
+    petal2Group.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fill2);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
 
     petal1Group.forEach((groupName) => {
         const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
@@ -844,25 +797,30 @@ async function drawTulip(headGroup, flowerParameter, cx, cy, rotation, rarity) {
         const clone = path.cloneNode(true);
         clone.setAttribute("fill", fill1);
         clone.setAttribute("stroke", strokeColor);
-        clone.setAttribute("stroke-width", 0.1);
-        headGroup.appendChild(clone);
-    });
-    
-    petal2Group.forEach((groupName) => {
-        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
-        if (!path) return; // skip if missing
-        const clone = path.cloneNode(true);
-        clone.setAttribute("fill", fill2);
-        clone.setAttribute("stroke", strokeColor);
-        clone.setAttribute("stroke-width", 0.1);
+        clone.setAttribute("stroke-width", 2);
         headGroup.appendChild(clone);
     });
 
+    // After appending all the cloned paths:
+    const bbox = headGroup.getBBox();
+
+    // Calculate bottom offset so bottom sits at cy
+    const bottomY = bbox.y + bbox.height;
+
+    // Apply transform so that:
+    //  - you shift upward by bottomY before scaling
+    //  - scale
+    //  - rotate
+    //  - then place at cx, cy
     headGroup.setAttribute(
         "transform",
-        `rotate(${rotation}, ${cx}, ${cy})`
+        `
+            translate(${cx}, ${cy})
+            rotate(${rotation})
+            scale(${0.1})
+            translate(${-bbox.x - bbox.width / 2}, ${-bottomY})
+        `
     );
-
 }
 
 function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, rarity) {

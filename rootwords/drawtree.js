@@ -23,7 +23,7 @@ function seedFromString(str) {
 
 
 export function drawTree(score, treeContainer, dateString, medals) {
-    // score += 100;
+    // score += 200;
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
     seed = dateString;

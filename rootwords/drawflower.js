@@ -212,8 +212,8 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         flowerName = chooseFlower();
     }
 
-    // flowerName = "poppy"; // Temporary override for testing
-    // rarity = "bronze";
+    // flowerName = "daisy"; // Temporary override for testing
+    // rarity = "opal";
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
     switch (flowerName) {
@@ -267,9 +267,9 @@ async function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     const common1 = "#ec5800";
     const common2 = "#ff701dff";
     const uncommon1 = "#b62815ff";
-    const uncommon2 = "#e34935ff";
+    const uncommon2 = "rgba(224, 71, 51, 1)";
     const rare1 = "#8635e3ff";
-    const rare2 = "rgba(176, 126, 223, 1)"
+    const rare2 = "#9247e9ff"
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
@@ -281,19 +281,19 @@ async function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     switch (rarity) {
         case "bronze":
             fill1 = bronzeGradient;
-            fill2 = metallicColorMap.get("bronze1");
+            fill2 = bronzeGradient;
             break;
         case "silver":
             fill1 = silverGradient;
-            fill2 = metallicColorMap.get("silver1");
+            fill2 = silverGradient;
             break;
         case "gold":
             fill1 = goldGradient;
-            fill2 = metallicColorMap.get("gold3");
+            fill2 = goldGradient;
             break;
         case "opal":
             fill1 = opalGradient;
-            fill2 = metallicColorMap.get("opal3");
+            fill2 = opalGradient;
             break;
         case "common":
             fill1 = common1;
@@ -333,7 +333,7 @@ async function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
         headGroup.appendChild(clone);
     });
 
-     petal2Group.forEach((groupName) => {
+    petal2Group.forEach((groupName) => {
         const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
         if (!path) return; // skip if missing
         const clone = path.cloneNode(true);
@@ -343,7 +343,7 @@ async function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
         headGroup.appendChild(clone);
     });
 
-     petal3Group.forEach((groupName) => {
+    petal3Group.forEach((groupName) => {
         const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
         if (!path) return; // skip if missing
         const clone = path.cloneNode(true);
@@ -443,7 +443,7 @@ function drawRose(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     headGroup.setAttribute('transform', transform);
 }
 
-function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
+async function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
     const commonFill = "#f3f1e9ff";
     const commonCenterFill = "#f5d142";
@@ -461,19 +461,19 @@ function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     switch (rarity) {
         case "bronze":
             fillColor = bronzeGradient;
-            centerFillColor = bronzeGradient;
+            centerFillColor = metallicColorMap.get("bronze2");
             break;
         case "silver":
             fillColor = silverGradient;
-            centerFillColor = silverGradient;
+            centerFillColor = metallicColorMap.get("silver2");
             break;
         case "gold":
             fillColor = goldGradient;
-            centerFillColor = goldGradient;
+            centerFillColor = metallicColorMap.get("gold2");
             break;
         case "opal":
             fillColor = opalGradient;
-            centerFillColor = opalGradient;
+            centerFillColor = metallicColorMap.get("opal2");
             break;
         case "common":
             fillColor = commonFill;
@@ -491,40 +491,58 @@ function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
 
     const strokeColor = "#000";
 
-    const minHeadSize = 3.5;
-    const maxHeadSize = minHeadSize + seededRandom() * 2.5;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+    const response = await fetch(".\\svg\\daisy.svg");
+    const svgText = await response.text();
 
-    let petals = 5 + Math.floor(seededRandom() * 2);
+    // Parse the SVG string into an XML document
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
 
-    for (let i = 0; i < petals; i++) {
-        const angle = (i * 360) / petals;
-        const petal = document.createElementNS(headGroup.namespaceURI, "ellipse");
-        const petalLength = size * 1.5;
-        const petalWidth = size * 0.4;
-
-        petal.setAttribute("cx", cx);
-        petal.setAttribute("cy", cy - size);
-        petal.setAttribute("rx", petalWidth);
-        petal.setAttribute("ry", petalLength);
-        petal.setAttribute("fill", `${fillColor}`);
-        petal.setAttribute("stroke", `${strokeColor}`);
-        petal.setAttribute("stroke-width", 0.3);
-        petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        headGroup.appendChild(petal);
+    // Define which groups you want to extract
+    const prename = "daisy-u-";
+    let petalGroup = [];
+    for (let i = 1; i <= 25; i++) {
+        petalGroup.push(`petal-${i}`);
     }
+    const centerGroup = ["center"];
 
-    const center = document.createElementNS(headGroup.namespaceURI, "circle");
-    center.setAttribute("cx", cx);
-    center.setAttribute("cy", cy);
-    center.setAttribute("r", size * 0.4);
-    center.setAttribute("fill", `${centerFillColor}`);
-    center.setAttribute("stroke", `${strokeColor}`);
-    center.setAttribute("stroke-width", 0.1);
-    headGroup.appendChild(center);
+    petalGroup.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        if (rarity === "bronze" || rarity === "silver" || rarity === "gold" || rarity === "opal") {
+            clone.setAttribute("fill", fillColor);
+        } else {
+            clone.setAttribute("fill", randomizeColor(fillColor, 15));
+        }
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
 
-    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
-    headGroup.setAttribute('transform', transform);
+    centerGroup.forEach((groupName) => {
+        let path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) path = svgDoc.querySelector(`ellipse[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", centerFillColor);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 1);
+        headGroup.appendChild(clone);
+    });
+
+    // After appending all the cloned paths:
+    const bbox = headGroup.getBBox();
+
+    headGroup.setAttribute(
+        "transform",
+        `
+            translate(${cx}, ${cy})
+            rotate(${rotation})
+            scale(${0.17})
+            translate(${-bbox.x - bbox.width / 2}, ${-bbox.y - bbox.height / 2})
+        `
+    );
 }
 
 async function drawIris(headGroup, flowerParameter, cx, cy, rotation, rarity) {
@@ -1144,4 +1162,40 @@ function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     headGroup.appendChild(trumpet);
 
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
+}
+
+/**
+ * Slightly randomizes a hex color by a given amount.
+ * @param {string} hex - The original hex color (e.g., "#ffffff" or "#fff").
+ * @param {number} variance - How much to vary each RGB component (0–255). Typical range: 0–50.
+ * @returns {string} - A new hex color string.
+ */
+function randomizeColor(hex, variance = 20) {
+    // Normalize 3-digit hex to 6-digit
+    let cleanHex = hex.replace("#", "");
+    if (cleanHex.length === 3) {
+        cleanHex = cleanHex.split("").map(ch => ch + ch).join("");
+    }
+
+    // Parse RGB components
+    let r = parseInt(cleanHex.substring(0, 2), 16);
+    let g = parseInt(cleanHex.substring(2, 4), 16);
+    let b = parseInt(cleanHex.substring(4, 6), 16);
+
+    // Helper to clamp values between 0 and 255
+    const clamp = (value) => Math.max(0, Math.min(255, value));
+
+    // Apply random variance to each color channel
+    const randomizeChannel = (value) => {
+        const offset = Math.floor(Math.random() * (2 * variance + 1)) - variance;
+        return clamp(value + offset);
+    };
+
+    r = randomizeChannel(r);
+    g = randomizeChannel(g);
+    b = randomizeChannel(b);
+
+    // Convert back to hex
+    const toHex = (value) => value.toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }

@@ -212,8 +212,8 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         flowerName = chooseFlower();
     }
 
-    // flowerName = "iris"; // Temporary override for testing
-    // rarity = "gold";
+    // flowerName = "poppy"; // Temporary override for testing
+    // rarity = "bronze";
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
     switch (flowerName) {
@@ -262,7 +262,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
     flowerGroup.appendChild(headGroup);
 }
 
-function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
+async function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
     const common1 = "#ec5800";
     const common2 = "#ff701dff";
@@ -309,70 +309,74 @@ function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
             break;
     }
 
-    const size = 7 + flowerParameter * 4;
-    const petalLength = size * 1.2;
-    const petalWidth = size * 1.0;
+    const response = await fetch(".\\svg\\poppy.svg");
+    const svgText = await response.text();
 
-    const numPetals = 4;
+    // Parse the SVG string into an XML document
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
 
-    // Draw 4 heart-shaped petals
-    for (let i = 0; i < numPetals; i++) {
-        const angle = 360 * (i / numPetals);
+    // Define which groups you want to extract
+    const prename = "poppy-u-";
+    const petal1Group = ["petal-4"];
+    const petal2Group = ["petal-3", "petal-2"];
+    const petal3Group = ["petal-1"];
+    const centerGroup = ["dots", "center", "center-2"];
 
-        const d = `
-                M ${cx} ${cy}
-                C ${cx + petalWidth} ${cy - petalLength / 3}, ${cx + petalWidth} ${cy - petalLength}, ${cx} ${cy - petalLength * .9}
-                C ${cx - petalWidth} ${cy - petalLength}, ${cx - petalWidth} ${cy - petalLength / 3}, ${cx} ${cy}
-                Z
-            `;
+    petal1Group.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fill1);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
 
-        // Outer petal (fill1)
-        const outerPetal = document.createElementNS(headGroup.namespaceURI, "path");
-        outerPetal.setAttribute("d", d);
-        outerPetal.setAttribute("fill", fill1);
-        outerPetal.setAttribute("stroke", strokeColor);
-        outerPetal.setAttribute("stroke-width", 0.2);
-        outerPetal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        headGroup.appendChild(outerPetal);
+     petal2Group.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fill2);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
 
-        // Inner petal (slightly smaller, fill2)
-        const innerPetal = document.createElementNS(headGroup.namespaceURI, "path");
-        const innerWidth = petalWidth * 0.6;
-        const innerLength = petalLength * 0.8;
-        const innerD = `
-            M ${cx} ${cy}
-            C ${cx + innerWidth} ${cy - innerLength / 3}, ${cx + innerWidth} ${cy - innerLength}, ${cx} ${cy - innerLength * 0.9}
-            C ${cx - innerWidth} ${cy - innerLength}, ${cx - innerWidth} ${cy - innerLength / 3}, ${cx} ${cy}
-            Z
-        `;
-        innerPetal.setAttribute("d", innerD);
-        innerPetal.setAttribute("fill", fill2);
-        innerPetal.setAttribute("stroke", strokeColor);
-        innerPetal.setAttribute("stroke-width", 0.1);
-        innerPetal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        headGroup.appendChild(innerPetal);
-    }
+     petal3Group.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fill1);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
 
-    // Draw flower center with dots (dense in the middle)
-    const centerRadius = size * 0.3;
-    const numDots = 80;
-    for (let i = 0; i < numDots; i++) {
-        const r = centerRadius * Math.sqrt(Math.random()); // denser near center
-        const theta = Math.random() * 2 * Math.PI;
-        const x = cx + r * Math.cos(theta);
-        const y = cy + r * Math.sin(theta);
+    centerGroup.forEach((groupName) => {
+        let path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) path = svgDoc.querySelector(`ellipse[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", "#000");
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 1);
+        headGroup.appendChild(clone);
+    });
 
-        const dot = document.createElementNS(headGroup.namespaceURI, "circle");
-        dot.setAttribute("cx", x);
-        dot.setAttribute("cy", y);
-        dot.setAttribute("r", 0.2);
-        dot.setAttribute("fill", strokeColor);
-        headGroup.appendChild(dot);
-    }
+    // After appending all the cloned paths:
+    const bbox = headGroup.getBBox();
 
-    headGroup.setAttribute("transform", `rotate(${rotation}, ${cx}, ${cy})`);
+    headGroup.setAttribute(
+        "transform",
+        `
+            translate(${cx}, ${cy})
+            rotate(${rotation})
+            scale(${0.1})
+            translate(${-bbox.x - bbox.width / 2}, ${-bbox.y - bbox.height / 2})
+        `
+    );
 }
-
 
 function drawRose(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
@@ -625,12 +629,12 @@ async function drawIris(headGroup, flowerParameter, cx, cy, rotation, rarity) {
             translate(${cx}, ${cy})
             rotate(${rotation})
             scale(${0.17})
-            translate(${-bbox.x - bbox.width / 2}, ${-bbox.y - bbox.height/2})
+            translate(${-bbox.x - bbox.width / 2}, ${-bbox.y - bbox.height / 2})
         `
     );
 }
 
-function drawLily(headGroup, flowerParameter, cx, cy, rotation, rarity) {
+async function drawLily(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
     const common1 = "#ffffff";
     const common2 = "#ecba78ff";
@@ -676,50 +680,55 @@ function drawLily(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     }
     const strokeColor = "#000";
 
-    const minHeadSize = 5;
-    const maxHeadSize = minHeadSize + seededRandom() * 5;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+    const response = await fetch(".\\svg\\lily.svg");
+    const svgText = await response.text();
 
-    const petals = 5;
-    for (let i = 0; i < petals; i++) {
-        const angle = (i * 360) / petals;
-        const petalLength = size * 2.1;
-        const petalWidth = size * 1.0; // wider at base for a star-like shape
+    // Parse the SVG string into an XML document
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
 
-        const petal = document.createElementNS(headGroup.namespaceURI, "path");
+    // Define which groups you want to extract
+    const prename = "lily-u-";
+    const petalGroup = ["petal-6", "petal-5", "petal-4", "petal-3", "petal-2", "petal-1"];
+    const centerGroup = [
+        "center",
+        "stamen-1", "stamen-2", "stamen-3", "stamen-4", "stamen-5", "stamen-6", "stamen-7",
+        "pistal-1", "pistal-2", "pistal-3", "pistal-4", "pistal-5", "pistal-6", "pistal-7"
+    ]
 
-        // The petal shape: rounded triangular — wide base, pointed tip.
-        const d = `
-            M ${cx - petalWidth * 0.4} ${cy}                      
-            C ${cx - petalWidth * 0.8} ${cy - petalLength * 0.3},
-              ${cx - petalWidth * 0.3} ${cy - petalLength * 0.9},
-              ${cx} ${cy - petalLength}                              
-            C ${cx + petalWidth * 0.3} ${cy - petalLength * 0.9},    
-              ${cx + petalWidth * 0.8} ${cy - petalLength * 0.3},
-              ${cx + petalWidth * 0.4} ${cy}                       
-            Q ${cx} ${cy + petalLength * 0.1}, ${cx - petalWidth * 0.4} ${cy} 
-            Z
-        `;
+    petalGroup.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fill1);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
 
-        petal.setAttribute("d", d);
-        petal.setAttribute("fill", fill1);
-        petal.setAttribute("stroke", strokeColor);
-        petal.setAttribute("stroke-width", 0.1);
-        petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        headGroup.appendChild(petal);
-    }
+    centerGroup.forEach((groupName) => {
+        let path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) path = svgDoc.querySelector(`ellipse[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", "#000");
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 1);
+        headGroup.appendChild(clone);
+    });
 
-    // Center detail (optional — gives that lily star center)
-    const center = document.createElementNS(headGroup.namespaceURI, "circle");
-    center.setAttribute("cx", cx);
-    center.setAttribute("cy", cy);
-    center.setAttribute("r", size * 0.3);
-    center.setAttribute("fill", fill2);
-    center.setAttribute("stroke", strokeColor);
-    center.setAttribute("stroke-width", 0.1);
-    headGroup.appendChild(center);
+    // After appending all the cloned paths:
+    const bbox = headGroup.getBBox();
 
-    headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
+    headGroup.setAttribute(
+        "transform",
+        `
+            translate(${cx}, ${cy})
+            rotate(${rotation})
+            scale(${0.1})
+            translate(${-bbox.x - bbox.width / 2}, ${-bbox.y - bbox.height / 2})
+        `
+    );
 }
 
 async function drawTulip(headGroup, flowerParameter, cx, cy, rotation, rarity) {

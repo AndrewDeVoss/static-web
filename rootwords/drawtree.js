@@ -23,7 +23,7 @@ function seedFromString(str) {
 
 
 export function drawTree(score, treeContainer, dateString, medals) {
-    // score += 200;
+    // score += 130;
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
     seed = dateString;
@@ -268,13 +268,14 @@ export function drawTree(score, treeContainer, dateString, medals) {
 
     // Check for and draw medal flowers
     const flowerXs = [];
+    flowerXs.push(baseX); // Consider tree a place not to go
     for (let medal of medals.keys()) {
         const count = medals.get(medal);
         for (let i = 0; i < count; i++) {
             // Try 10 different positions and choose the one farthest from any other flower
             let bestFlowerX = baseX;
             let bestDistance = 0;
-            for (let attempt = 0; attempt < 10; attempt++) {
+            for (let attempt = 0; attempt < 3; attempt++) {
                 const sideShift = seededRandom() < 0.5 ? -1 : 1;
                 let flowerX = baseX + sideShift * seededRandom() * (maxFlowerX - minFlowerX - 2 * margin) / 2;
                 const minDist = flowerXs.length
@@ -298,7 +299,7 @@ export function drawTree(score, treeContainer, dateString, medals) {
         // Try 10 different positions and choose the one farthest from any other flower
         let bestFlowerX = baseX;
         let bestDistance = 0;
-        for (let attempt = 0; attempt < 10; attempt++) {
+        for (let attempt = 0; attempt < 3; attempt++) {
             const sideShift = seededRandom() < 0.5 ? -1 : 1;
             let flowerX = baseX + sideShift * seededRandom() * (maxFlowerX - minFlowerX - 2 * margin) / 2;
             const minDist = flowerXs.length

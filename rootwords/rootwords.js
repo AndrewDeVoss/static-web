@@ -92,6 +92,7 @@ const bestScore = document.getElementById('best-score');
 
 // Initialize
 checkOrComputeGreedyScore(treeRoot.word);
+console.log(computeOptimalScoreAndTree("shimmyskirt"));
 loadRootFromStorage();
 drawRoots();
 scoreRoots();
@@ -877,3 +878,170 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
 
   return score;
 }
+
+
+
+function normalizeLetters(s) {
+  return s.split("").sort().join("");
+}
+
+function subtractLetters(L, w) {
+  const arr = L.split("");
+  for (const c of w) {
+    const idx = arr.indexOf(c);
+    if (idx >= 0) arr.splice(idx, 1);
+  }
+  return arr.sort().join("");
+}
+
+function wordIsSubset(word, letters) {
+  const freq = Object.create(null);
+  for (const c of letters) freq[c] = (freq[c] || 0) + 1;
+  for (const c of word) {
+    if (!freq[c]) return false;
+    freq[c]--;
+  }
+  return true;
+}
+
+function wordIsStrictSubset(word, letters) {
+  return word.length < letters.length && wordIsSubset(word, letters);
+}
+
+
+export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
+  const todayKey = `${cookie}-${getTodayString()}`;
+  const cached = getCookie(todayKey);
+
+  // Try to return cached result
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed.letters === letters && parsed.tree) {
+        updateDOMScores(parsed.score);
+        console.log("[Optimal] Loaded from cache.");
+        return parsed;
+      }
+    } catch (err) { }
+  }
+
+  const rootLetters = normalizeLetters(letters.toLowerCase());
+
+  // ---------------------------
+  // Build dictionary structures
+  // ---------------------------
+  const allValidWords = [...getValidWordsFromLetters(rootLetters)].filter(w => /^[A-Za-z0-9]+$/.test(w));   // only alphanumeric words
+
+  const anagramKeyToWords = new Map();
+  const allAnagramKeys = [];
+  
+  for (const word of allValidWords) {
+    const anagramKey = normalizeLetters(word);
+
+    // First time seeing this key
+    if (!anagramKeyToWords.has(anagramKey)) {
+      anagramKeyToWords.set(anagramKey, []);
+      allAnagramKeys.push(anagramKey);
+    }
+
+    anagramKeyToWords.get(anagramKey).push(word);
+  }
+
+  // ---------------------------
+  // Memo + Diagnostics
+  // ---------------------------
+  const memo = new Map();         // key: BigInt, val: {score, bestKey}
+  let memoHits = 0;
+  let memoMisses = 0;
+
+  // ---------------------------
+  // Optimal DP
+  // ---------------------------
+  function OPT(letters) {
+    let normalizedLetters = normalizeLetters(letters);
+
+    // Base case for recursion is this group of letters is a leaf node, no words can be made below
+    let possibleNextAnagramKeys  = [];
+    for (const anagramKey of allAnagramKeys) {
+      if (wordIsStrictSubset(anagramKey, letters)) {
+        possibleNextAnagramKeys.push(anagramKey);
+      }
+    }
+
+    // Leaf node or giberish
+    if (possibleNextAnagramKeys.length === 0 || letters === "") {
+      let leafScore = 0;
+      if (anagramKeyToWords.has(normalizedLetters)) {
+        leafScore += anagramKeyToWords.get(normalizedLetters).length * normalizedLetters.length;
+      }
+      const result = { score: leafScore, bestKey: null };
+      return result;
+    }
+
+    // Alread processed node
+    const memoKey = normalizedLetters;
+    if (memo.has(memoKey)) {
+      memoHits++;
+      let cache = memo.get(memoKey);
+      return cache;
+    }
+    memoMisses++;
+
+    let bestScore = 0;
+    let bestKey = null;
+    for (const anagramKey of possibleNextAnagramKeys) {
+      const leftLetters = anagramKey;
+      const rightLetters = subtractLetters(letters, anagramKey);
+
+      const left = OPT(leftLetters);
+      const right = OPT(rightLetters);
+
+      let scoreForCurrentWord = 0;
+      if (anagramKeyToWords.has(normalizedLetters)) {
+        scoreForCurrentWord += normalizedLetters.length * anagramKeyToWords.get(normalizedLetters).length;
+      }
+
+      const score = scoreForCurrentWord + left.score + right.score;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestKey = anagramKey;
+      }
+    }
+
+    const result = { score: bestScore, bestKey };
+    memo.set(memoKey, result);
+    return result;
+  }
+
+  // ---------------------------
+  // Tree Reconstruction
+  // ---------------------------
+  function buildTree(L) {
+    const entry = memo.get(L);
+
+    if (!entry || entry.bestKey === null) return null;
+
+    const k = entry.bestKey;
+    const anagrams = anagramKeyToWords.get(k);
+
+    const leftLetters = k;
+    const rightLetters = subtractLetters(L, k);
+
+    return {
+      words: anagrams,
+      left: buildTree(leftLetters),
+      right: buildTree(rightLetters)
+    };
+  }
+
+  // ---------------------------
+  // Compute final score + tree
+  // ---------------------------
+  const { score, bestKey } = OPT(rootLetters);
+  const tree = buildTree(bestKey); // todo use best key to find best
+
+
+  return { score };
+}
+

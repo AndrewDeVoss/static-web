@@ -97,7 +97,6 @@ export function drawTree(score, treeContainer, dateString, medals) {
     // Flowers
     const pointsPerFlower = 10;
     const numFlowerSpaces = Math.max(0, score - leafPoints - numPetalsIncrements - numButterflySpaces);
-    console.log(`flower spaces ${numFlowerSpaces} butters ${numButterflySpaces}, leave points ${leafPoints}, petals ${numPetalsIncrements}`)
     let pointsLeft = numFlowerSpaces;
     let flowerParameters = [];
     while (pointsLeft > 0) {

@@ -23,7 +23,7 @@ function seedFromString(str) {
 
 
 export function drawTree(score, treeContainer, dateString, medals) {
-    // score += 130;
+    // score += 190;
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
     seed = dateString;
@@ -259,7 +259,7 @@ export function drawTree(score, treeContainer, dateString, medals) {
 
     // Get current trunk percent to help calculate flower positioning
     let bbox = svg.getBBox();
-    const margin = 10;
+    const margin = 20;
     let bboxWidth = bbox.width;
     let trunkPercent = ((baseX - (bbox.x - margin)) / (bbox.width + margin * 2)) * 100;
     const screenWidth = window.innerWidth;
@@ -268,7 +268,9 @@ export function drawTree(score, treeContainer, dateString, medals) {
 
     // Check for and draw medal flowers
     const flowerXs = [];
-    flowerXs.push(baseX); // Consider tree a place not to go
+    flowerXs.push(baseX); // Don't overlap tree
+    flowerXs.push(minFlowerX);
+    flowerXs.push(maxFlowerX);
     for (let medal of medals.keys()) {
         const count = medals.get(medal);
         for (let i = 0; i < count; i++) {

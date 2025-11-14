@@ -212,7 +212,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         flowerName = chooseFlower();
     }
 
-    // flowerName = "daisy"; // Temporary override for testing
+    // flowerName = "daffodil"; // Temporary override for testing
     // rarity = "opal";
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
@@ -1046,122 +1046,139 @@ function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, rarity) {
+async function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
     const common1 = "#f9e65c";
-    const common2 = "#f29c4b";
-    const uncommon1 = "#d9d1daff";
-    const uncommon2 = "#ee8ae1ff";
-    const rare1 = "#fab651ff";
-    const rare2 = "#fde457ff"
+    const common2 = "#f7ad67ff";
+    const common3 = "#fff6eeff";
+    const uncommon1 = "#fab651ff";
+    const uncommon2 = "#f3d09cff";
+    const uncommon3 = "#f8f1c7ff";
+    const rare1 = "#ee8ae1ff";
+    const rare2 = "#fac7f3ff";
+    const rare3 = "#ddc9daff";
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
     const opalGradient = metallicColorMap.get("opalGradient");
     let fill1 = common1;
     let fill2 = common2;
-    let strokeColor = "#000"
+    let fill3 = common3;
+    let strokeColor = "#000";
 
     switch (rarity) {
         case "bronze":
-            fill1 = bronzeGradient;
-            fill2 = bronzeGradient;
+            fill1 = metallicColorMap.get("bronze2");
+            fill2 = metallicColorMap.get("bronze1");
+            fill3 = bronzeGradient;
             break;
         case "silver":
-            fill1 = silverGradient;
-            fill2 = silverGradient;
+            fill1 = metallicColorMap.get("silver2");
+            fill2 = metallicColorMap.get("silver1");
+            fill3 = silverGradient;
             break;
         case "gold":
-            fill1 = goldGradient;
-            fill2 = goldGradient;
+            fill1 = metallicColorMap.get("gold2");
+            fill2 = metallicColorMap.get("gold1");
+            fill3 = goldGradient;
             break;
         case "opal":
-            fill1 = opalGradient;
-            fill2 = opalGradient;
+            fill1 = metallicColorMap.get("opal2");
+            fill2 = metallicColorMap.get("opal3");
+            fill3 = opalGradient;
             break;
         case "common":
             fill1 = common1;
             fill2 = common2;
+            fill3 = common3;
             break;
         case "uncommon":
             fill1 = uncommon1;
             fill2 = uncommon2;
+            fill3 = uncommon3;
             break;
         case "rare":
             fill1 = rare1;
             fill2 = rare2;
+            fill3 = rare3;
             break;
     }
 
-    const minHeadSize = 12;
-    const maxHeadSize = minHeadSize + seededRandom() * 5;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
 
-    const petals = 6;
-    const petalLength = size * 1.4;
-    const petalWidth = size * 0.6;
-    for (let i = 0; i < petals; i++) {
-        const angle = (i * 360) / petals;
-        const petal = document.createElementNS(headGroup.namespaceURI, "path");
-        const d = `
-            M ${cx} ${cy}
-            C ${cx - petalWidth / 2} ${cy - petalLength * 0.4},
-              ${cx} ${cy - petalLength},
-              ${cx + petalWidth / 2} ${cy - petalLength * 0.4}
-            C ${cx + petalWidth / 3} ${cy - petalLength * 0.2},
-              ${cx + petalWidth / 4} ${cy - petalLength * 0.1},
-              ${cx} ${cy}
-            Z
-        `;
-        petal.setAttribute("d", d);
-        petal.setAttribute("fill", fill1);
-        petal.setAttribute("stroke", strokeColor);
-        petal.setAttribute("stroke-width", 0.3);
-        petal.setAttribute("transform", `rotate(${angle}, ${cx}, ${cy})`);
-        headGroup.appendChild(petal);
-    }
+    const response = await fetch(".\\svg\\daffodil.svg");
+    const svgText = await response.text();
 
-    // Trumpet (corona) - replaced ellipse with trumpet-shaped path
-    const trumpet = document.createElementNS(headGroup.namespaceURI, "path");
+    // Parse the SVG string into an XML document
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
+    svgDoc.querySelectorAll("[id]").forEach(el => {
+        // Remove BOM and control characters
+        el.id = el.id.replace(/[\u0000-\u001F\uFEFF]/g, "");
+    });
 
-    const baseRadius = size * 0.03;     // narrow base near center
-    const flareRadius = size * 0.4;    // wider flared rim
-    const height = size * 1.0;          // trumpet length
 
-    // Draw symmetrical flared shape using cubic Beziers
+    const prename = "daffodil-u-";
+    let petalGroup = [];
+    for (let i = 6; i >= 1; i--) petalGroup.push(`petal-${i}`);
 
-    function sineWavePath(x1, y1, x2, y2, waves = 4, amplitude = 2) {
-        const width = x2 - x1;
-        const step = width / waves;
-        let path = `L ${x1} ${y1}`;
-        for (let i = 0; i < waves; i++) {
-            const xMid = x1 + step * (i + 0.5);
-            const xEnd = x1 + step * (i + 1);
-            const yCtrl = (i % 2 === 0) ? y1 - amplitude : y1 + amplitude;
-            path += ` Q ${xMid} ${yCtrl}, ${xEnd} ${y1}`;
+    const trumpetGroup = ["trumpet", "inner-trumpet"];
+
+    let stamenGroup = [];
+    for (let i = 1; i <= 4; i++) stamenGroup.push(`stamen-${i}`);
+
+    petalGroup.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fill3);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
+
+    trumpetGroup.forEach((groupName) => {
+        let path = svgDoc.querySelector(`path[id^='${prename}${groupName}']`);
+        if (!path) path = svgDoc.querySelector(`ellipse[id^='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        if (groupName.includes("inner")) {
+            clone.setAttribute("fill", fill2);
+        } else {
+            clone.setAttribute("fill", fill1);
         }
-        return path;
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 1);
+        headGroup.appendChild(clone);
+    });
+
+    stamenGroup.forEach((groupName) => {
+        let path = [...svgDoc.querySelectorAll("path, ellipse")]
+            .find(el => el.id.includes(prename + groupName));
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", strokeColor);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 1);
+        headGroup.appendChild(clone);
+    });
+
+    let path = [...svgDoc.querySelectorAll("path, ellipse")];
+    for (let el of path) {
+        console.log(el.id);
     }
 
-    const dTrumpet = `
-        M ${cx - baseRadius} ${cy}
-        C ${cx - baseRadius * 1.2} ${cy - height * 0.6},
-          ${cx - flareRadius * 0.9} ${cy - height * 0.95},
-          ${cx - flareRadius} ${cy - height}
-        ${sineWavePath(cx - flareRadius, cy - height, cx + flareRadius, cy - height, 5, size * 0.1)}
-        C ${cx + flareRadius * 0.9} ${cy - height * 0.95},
-          ${cx + baseRadius * 1.2} ${cy - height * 0.6},
-          ${cx + baseRadius} ${cy}
-        Z
-    `;
-    trumpet.setAttribute("d", dTrumpet);
-    trumpet.setAttribute("fill", fill2);
-    trumpet.setAttribute("stroke", strokeColor);
-    trumpet.setAttribute("stroke-width", 0.3);
+    // After appending all the cloned paths:
+    const bbox = headGroup.getBBox();
 
-    headGroup.appendChild(trumpet);
-
-    headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
+    headGroup.setAttribute(
+        "transform",
+        `
+            translate(${cx}, ${cy})
+            rotate(${rotation})
+            scale(${0.17})
+            translate(${-bbox.x - bbox.width / 2}, ${-bbox.y - bbox.height / 2})
+        `
+    );
 }
 
 /**

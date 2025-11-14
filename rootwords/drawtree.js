@@ -34,7 +34,9 @@ export function drawTree(score, treeContainer, dateString, medals) {
     svg.setAttribute("preserveAspectRatio", "xMidYMax meet");
 
     // Leaves and branches
-    const numLeaves = Math.min(1 + score, 35);
+    const leavesPerPoint = 2;
+    const numLeaves = Math.min(1 + score*leavesPerPoint, 50);
+    const leafPoints = Math.ceil((numLeaves-1) / leavesPerPoint);
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves / maxLeavesPerBranch));
     const trunkHeight = 50 + numBranches * 50;
@@ -66,24 +68,24 @@ export function drawTree(score, treeContainer, dateString, medals) {
 
     // Blossoms
     const maxNumBlossoms = numBranches;
-    const petalsPerBlossom = 5;
-    const numPetals = Math.max(0, Math.min(score - numLeaves, maxNumBlossoms * petalsPerBlossom));
-    const numBlossoms = (numPetals > 0) ? Math.min(maxNumBlossoms, numPetals) : 0;
-    const blossomPetalCounts = [];
+    const petalStepsPerBlossom = 4; // Steps are bud, 3, 4, 5 petals
+    const numPetalsIncrements = Math.max(0, Math.min(score - leafPoints, maxNumBlossoms * petalStepsPerBlossom));
+    const numBlossoms = (numPetalsIncrements > 0) ? Math.min(maxNumBlossoms, numPetalsIncrements) : 0;
+    const blossomPetalSteps = [];
     let blossomIndex = 0;
-    for (let petal = 0; petal < numPetals; petal++) {
-        if (blossomPetalCounts.length < blossomIndex + 1) {
-            blossomPetalCounts.push(0);
+    for (let petal = 0; petal < numPetalsIncrements; petal++) {
+        if (blossomPetalSteps.length < blossomIndex + 1) {
+            blossomPetalSteps.push(0);
         }
-        blossomPetalCounts[blossomIndex]++;
+        blossomPetalSteps[blossomIndex]++;
         blossomIndex = (blossomIndex + 1) % numBlossoms;
     }
     const blossomSize = leafSize * .5;
 
     // Butterflies
     const butterflySize = blossomSize * 1.5;
-    const spacesPerButterfly = 5;
-    const numButterflySpaces = Math.max(0, Math.min(numBlossoms * spacesPerButterfly, score - numLeaves - numPetals));
+    const spacesPerButterfly = 3;
+    const numButterflySpaces = Math.max(0, Math.min(numBlossoms * spacesPerButterfly, score - leafPoints - numPetalsIncrements));
     let spacesLeft = numButterflySpaces;
     let butterflyParameters = [];
     while (spacesLeft > 0) {
@@ -94,7 +96,8 @@ export function drawTree(score, treeContainer, dateString, medals) {
 
     // Flowers
     const pointsPerFlower = 10;
-    const numFlowerSpaces = Math.max(0, score - numLeaves - numPetals - numButterflySpaces);
+    const numFlowerSpaces = Math.max(0, score - leafPoints - numPetalsIncrements - numButterflySpaces);
+    console.log(`flower spaces ${numFlowerSpaces} butters ${numButterflySpaces}, leave points ${leafPoints}, petals ${numPetalsIncrements}`)
     let pointsLeft = numFlowerSpaces;
     let flowerParameters = [];
     while (pointsLeft > 0) {
@@ -197,10 +200,10 @@ export function drawTree(score, treeContainer, dateString, medals) {
         }
 
         // Draw blossom on this branch if we have more blossoms to place
-        if (blossomPetalCounts.length > 0) {
+        if (blossomPetalSteps.length > 0) {
             const blossomT = 0.6;
             const { x: fx, y: fy } = getPointAndTangentOnCubicBezier(p0, p1, p2, p3, blossomT);
-            const petalCount = blossomPetalCounts.shift();
+            const petalCount = blossomPetalSteps.shift();
             const rotation = 41 * (branch + 1);
             drawBlossom(svg, fx, fy, rotation, petalCount, blossomSize);
 
@@ -529,14 +532,14 @@ export function drawLeaf(svg, cx, cy, size = 10, dx = 0, dy = -1, orientation = 
     return leafGroup;
 }
 
-function drawBlossom(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
+function drawBlossom(svg, cx, cy, rotation, petalStep = 5, petalSize = 30) {
     const blossomGroup = document.createElementNS(svg.namespaceURI, "g");
 
     const strokeColor = "#222";
     const outerColor = colors.petal1;
     const innerColor = colors.petal2;
 
-    if (petals === 1) {
+    if (petalStep === 1) {
         // Draw a small, simple bud
         const bud = document.createElementNS(svg.namespaceURI, "ellipse");
         bud.setAttribute("cx", cx);
@@ -556,13 +559,14 @@ function drawBlossom(svg, cx, cy, rotation, petals = 5, petalSize = 30) {
         budHighlight.setAttribute("fill", innerColor);
         budHighlight.setAttribute("fill-opacity", 0.5);
         blossomGroup.appendChild(budHighlight);
-    } else {
+    } else {        
         // Draw full blossom with multiple petals
         const petalLength = petalSize * 2;
         const petalWidth = petalSize;
 
-        for (let i = 0; i < petals; i++) {
-            const angle = (360 / petals) * i;
+        petalStep += 1;
+        for (let i = 0; i < petalStep; i++) {
+            const angle = (360 / petalStep) * i;
 
             // Outer petal
             const petal = document.createElementNS(svg.namespaceURI, "path");

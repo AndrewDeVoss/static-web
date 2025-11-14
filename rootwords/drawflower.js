@@ -188,7 +188,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
     const flowers = [
         { name: "poppy", weight: 25 },
         { name: "daffodil", weight: 20 },
-        { name: "ranunculus", weight: 15 },
+        { name: "coneflower", weight: 15 },
         { name: "lily", weight: 13 },
         { name: "daisy", weight: 10 },
         { name: "tulip", weight: 8 },
@@ -212,8 +212,8 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
         flowerName = chooseFlower();
     }
 
-    // flowerName = "daffodil"; // Temporary override for testing
-    // rarity = "opal";
+    // flowerName = "coneflower"; // Temporary override for testing
+    // rarity = "bronze";
     const headGroup = document.createElementNS(flowerGroup.namespaceURI, "g");
 
     switch (flowerName) {
@@ -225,8 +225,8 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
             drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
-        case "ranunculus":
-            drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, rarity);
+        case "coneflower":
+            drawConeflower(headGroup, flowerParameter, cx, cy, rotation, rarity);
             break;
 
         case "lily":
@@ -378,7 +378,7 @@ async function drawPoppy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     );
 }
 
-function drawRose(headGroup, flowerParameter, cx, cy, rotation, rarity) {
+async function drawRose(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
     const commonFill = "#dd2e71ff";
     const uncommonFill = "#f1b9f3ff";
@@ -413,34 +413,65 @@ function drawRose(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     }
     const strokeColor = "#000";
 
-    const minHeadSize = 12;
-    const maxHeadSize = minHeadSize + seededRandom() * 8;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+    const response = await fetch(".\\svg\\rose.svg");
+    const svgText = await response.text();
 
-    const layers = 4;
-    for (let i = 0; i < layers; i++) {
-        const angleOffset = (i * 25) + seededRandom() * 10;
-        const radius = size * (1 - i / layers);
-        const petal = document.createElementNS(headGroup.namespaceURI, "path");
-        const spread = radius * 0.6;
+    // Parse the SVG string into an XML document
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
+    svgDoc.querySelectorAll("[id]").forEach(el => {
+        // Remove BOM and control characters
+        el.id = el.id.replace(/[\u0000-\u001F\uFEFF]/g, "");
+    });
 
-        const d = `
-            M ${cx - spread} ${cy}
-            Q ${cx} ${cy - radius}, ${cx + spread} ${cy}
-            Q ${cx} ${cy + radius * 0.5}, ${cx - spread} ${cy}
-            Z
-        `;
-        petal.setAttribute("d", d);
-        petal.setAttribute("fill", `${fillColor}`);
-        petal.setAttribute("fill-opacity", 1 - i * 0.1);
-        petal.setAttribute("stroke", `${strokeColor}`);
-        petal.setAttribute("stroke-width", 0.3);
-        petal.setAttribute("transform", `rotate(${angleOffset}, ${cx}, ${cy})`);
-        headGroup.appendChild(petal);
-    }
 
-    let transform = `rotate(${rotation}, ${cx}, ${cy})`;
-    headGroup.setAttribute('transform', transform);
+    const prename = "rose-u-";
+    let petalGroup = [];
+    for (let i = 4; i >= 1; i--) petalGroup.push(`petal-${i}`);
+
+    let centerGroup = [];
+    for (let i = 3; i >= 1; i--) centerGroup.push(`center-${i}`);
+
+    centerGroup.forEach((groupName) => {
+        let path = svgDoc.querySelector(`path[id^='${prename}${groupName}']`);
+        if (!path) path = svgDoc.querySelector(`ellipse[id^='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fillColor);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("shape-rendering", "geometricPrecision");
+        clone.setAttribute("stroke-width", .7);
+        headGroup.appendChild(clone);
+    });
+
+    petalGroup.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) path = svgDoc.querySelector(`ellipse[id^='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fillColor);
+        clone.setAttribute("stroke", strokeColor);
+        if (groupName.includes("-1") || groupName.includes("-3")) {
+            clone.setAttribute("shape-rendering", "crispEdges");
+        } else {
+            clone.setAttribute("shape-rendering", "geometricPrecision");
+        }
+        clone.setAttribute("stroke-width", .7);
+        headGroup.appendChild(clone);
+    });
+
+    // After appending all the cloned paths:
+    const bbox = headGroup.getBBox();
+
+    headGroup.setAttribute(
+        "transform",
+        `
+            translate(${cx}, ${cy})
+            rotate(${rotation})
+            scale(${0.3})
+            translate(${-bbox.x - bbox.width / 2}, ${-bbox.height})
+        `
+    );
 }
 
 async function drawDaisy(headGroup, flowerParameter, cx, cy, rotation, rarity) {
@@ -972,78 +1003,112 @@ function drawOrchid(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
 }
 
-function drawRanunculus(headGroup, flowerParameter, cx, cy, rotation, rarity) {
+async function drawConeflower(headGroup, flowerParameter, cx, cy, rotation, rarity) {
     rescopeMetallicColorMap(headGroup);
-    const common1 = "#ea89f7ff";
-    const uncommon1 = "#ffb96aff";
-    const rare1 = "#499ee4ff";
+    const common1 = "#f7f2e6ff";
+    const common2 = "#746245ff";
+    const uncommon1 = "#e28a57ff";
+    const uncommon2 = "#a76344ff";
+    const rare1 = "#cb85d4ff";
+    const rare2 = "#a13f91ff";
     const bronzeGradient = metallicColorMap.get("bronzeGradient");
     const silverGradient = metallicColorMap.get("silverGradient");
     const goldGradient = metallicColorMap.get("goldGradient");
     const opalGradient = metallicColorMap.get("opalGradient");
     let fill1 = common1;
+    let fill2 = common2;
+    let strokeColor = "#000"
+    let fill3 = "#a3a3a3";
 
     switch (rarity) {
         case "bronze":
-            fill1 = bronzeGradient;
+            fill1 = metallicColorMap.get("bronze2");
+            fill2 = bronzeGradient;
             break;
         case "silver":
-            fill1 = silverGradient;
+            fill1 = metallicColorMap.get("silver1");
+            fill2 = silverGradient;
             break;
         case "gold":
-            fill1 = goldGradient;
+            fill1 = metallicColorMap.get("gold1");
+            fill2 = goldGradient;
             break;
         case "opal":
-            fill1 = opalGradient;
+            fill1 = metallicColorMap.get("opal1");
+            fill2 = opalGradient;
             break;
         case "common":
             fill1 = common1;
+            fill2 = common2;
             break;
         case "uncommon":
             fill1 = uncommon1;
+            fill2 = uncommon2;
             break;
         case "rare":
             fill1 = rare1;
+            fill2 = rare2;
             break;
     }
 
-    const minHeadSize = 5;
-    const maxHeadSize = minHeadSize + seededRandom() * 6;
-    const size = minHeadSize + flowerParameter * (maxHeadSize - minHeadSize);
+    const response = await fetch(".\\svg\\coneflower.svg");
+    const svgText = await response.text();
 
-    const layers = 4 + seededRandom() * 3;
-    for (let i = 0; i < layers; i++) {
-        const radius = size * (1 - i / layers * 0.9);
-        const petal = document.createElementNS(headGroup.namespaceURI, "circle");
-        petal.setAttribute("cx", cx);
-        petal.setAttribute("cy", cy);
-        petal.setAttribute("r", radius);
+    // Parse the SVG string into an XML document
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
 
-        if (fill1.charAt(0) === '#') {
-            let poundlessHex = fill1.slice(1);
+    // Define which groups you want to extract
+    const prename = "coneflower-u-";
+    let petalGroup = [];
+    for (let i = 12; i >= 1; i--) petalGroup.push(`petal-${i}`);
 
-            if (poundlessHex.length === 3) {
-                poundlessHex = poundlessHex.split("").map(char => char + char).join("");
-            }
+    let coneGroup = ["cone"];
+    let seedsGroup = ["seeds"];
+    
+    petalGroup.forEach((groupName) => {
+        const path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", randomizeColor(fill1, 15));
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 2);
+        headGroup.appendChild(clone);
+    });
 
-            // Extract the red, green, and blue components
-            let red = parseInt(poundlessHex.slice(0, 2), 16);
-            let green = parseInt(poundlessHex.slice(2, 4), 16);
-            let blue = parseInt(poundlessHex.slice(4, 6), 16);
+    coneGroup.forEach((groupName) => {
+        let path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) path = svgDoc.querySelector(`ellipse[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fill2);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", 1);
+        headGroup.appendChild(clone);
+    });
 
-            console.log(`RGB(${red}, ${green}, ${blue})`);
+    seedsGroup.forEach((groupName) => {
+        let path = svgDoc.querySelector(`path[id='${prename}${groupName}']`);
+        if (!path) path = svgDoc.querySelector(`ellipse[id='${prename}${groupName}']`);
+        if (!path) return; // skip if missing
+        const clone = path.cloneNode(true);
+        clone.setAttribute("fill", fill3);
+        clone.setAttribute("stroke", strokeColor);
+        clone.setAttribute("stroke-width", .2);
+        headGroup.appendChild(clone);
+    });
 
-            petal.setAttribute("fill", `rgba(${red - red * i / layers}, ${green - green * i / layers}, ${blue - blue * i / layers}, ${1 - i * 0.15})`);
-        } else {
-            petal.setAttribute("fill", `${fill1}`);
-        }
+    const bbox = headGroup.getBBox();
 
-        petal.setAttribute("stroke", "#16120cff");
-        petal.setAttribute("stroke-width", 0.1);
-        headGroup.appendChild(petal);
-    }
-
-    headGroup.setAttribute('transform', `rotate(${rotation}, ${cx}, ${cy})`);
+    headGroup.setAttribute(
+        "transform",
+        `
+            translate(${cx}, ${cy})
+            rotate(${rotation})
+            scale(${0.2})
+            translate(${-bbox.x - bbox.width / 2}, ${- bbox.height / 3})
+        `
+    );
 }
 
 async function drawDaffodil(headGroup, flowerParameter, cx, cy, rotation, rarity) {

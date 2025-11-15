@@ -92,7 +92,7 @@ const bestScore = document.getElementById('best-score');
 
 // Initialize
 checkOrComputeGreedyScore(treeRoot.word);
-console.log(computeOptimalScoreAndTree("shimmyskirt"));
+console.log(computeOptimalScoreAndTree("acre")); // Sanity check letters of hiimrst=? acre=26
 loadRootFromStorage();
 drawRoots();
 scoreRoots();
@@ -754,7 +754,6 @@ function loadRootFromEncoded(encoded) {
   }
 }
 
-
 function loadRootFromStorage(cookie = 'current-root') {
   let encoded = getCookie(cookie);
 
@@ -786,7 +785,6 @@ function getCookie(name) {
 
   return cookieString ? decodeURIComponent(cookieString.split('=')[1]) : null;
 }
-
 
 function getTodayString() {
   const today = new Date();
@@ -879,8 +877,6 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
   return score;
 }
 
-
-
 function normalizeLetters(s) {
   return s.split("").sort().join("");
 }
@@ -925,16 +921,19 @@ export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
     } catch (err) { }
   }
 
-  const rootLetters = normalizeLetters(letters.toLowerCase());
+  const normalizedRootLetters = normalizeLetters(letters.toLowerCase());
 
   // ---------------------------
   // Build dictionary structures
   // ---------------------------
-  const allValidWords = [...getValidWordsFromLetters(rootLetters)].filter(w => /^[A-Za-z0-9]+$/.test(w));   // only alphanumeric words
+  const allValidWords = [...getValidWordsFromLetters(normalizedRootLetters)].filter(w => /^[A-Za-z0-9]+$/.test(w));   // only alphanumeric words
 
   const anagramKeyToWords = new Map();
+  const anagramKeyToIntID = new Map();
+  const intIDtoAnagramKey = new Map(); // Used for reconstruction
+  let ID = 0;
   const allAnagramKeys = [];
-  
+
   for (const word of allValidWords) {
     const anagramKey = normalizeLetters(word);
 
@@ -942,74 +941,116 @@ export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
     if (!anagramKeyToWords.has(anagramKey)) {
       anagramKeyToWords.set(anagramKey, []);
       allAnagramKeys.push(anagramKey);
+      anagramKeyToIntID.set(anagramKey, ID);
+      intIDtoAnagramKey.set(ID, anagramKey);
+      ID++;
     }
 
+    // Associate word with others of the same letters
     anagramKeyToWords.get(anagramKey).push(word);
   }
 
   // ---------------------------
   // Memo + Diagnostics
   // ---------------------------
-  const memo = new Map();         // key: BigInt, val: {score, bestKey}
+  const memo = new Map();
   let memoHits = 0;
   let memoMisses = 0;
 
   // ---------------------------
+  // Utility to convert distinct integers into a binary representation.
+  // It does not matter if nums are sorted.
+  // ---------------------------
+  function setToBitmask(nums) {
+    let mask = 0;
+    for (const n of nums) mask |= 1 << n;
+    return mask;
+  }
+
+  // ---------------------------
   // Optimal DP
   // ---------------------------
-  function OPT(letters) {
-    let normalizedLetters = normalizeLetters(letters);
-
-    // Base case for recursion is this group of letters is a leaf node, no words can be made below
-    let possibleNextAnagramKeys  = [];
-    for (const anagramKey of allAnagramKeys) {
-      if (wordIsStrictSubset(anagramKey, letters)) {
-        possibleNextAnagramKeys.push(anagramKey);
-      }
+  function OPT(normalizedLetters, usedAnagramKeys, anagramKeysAvailableFromParent) {
+    // First recursion stopping condition: we have processed this state before (unlikely?)
+    const usedAnagramKeyIDs = new Set();
+    for (const anagramKey of usedAnagramKeyIDs) {
+      usedAnagramKeyIDs.add(anagramKeyToIntID.get(anagramKey));
     }
-
-    // Leaf node or giberish
-    if (possibleNextAnagramKeys.length === 0 || letters === "") {
-      let leafScore = 0;
-      if (anagramKeyToWords.has(normalizedLetters)) {
-        leafScore += anagramKeyToWords.get(normalizedLetters).length * normalizedLetters.length;
-      }
-      const result = { score: leafScore, bestKey: null };
-      return result;
-    }
-
-    // Alread processed node
-    const memoKey = normalizedLetters;
+    const memoKey = `${normalizedLetters}${setToBitmask(usedAnagramKeyIDs)}`;
     if (memo.has(memoKey)) {
       memoHits++;
-      let cache = memo.get(memoKey);
-      return cache;
+      let cachedResult = memo.get(memoKey);
+      return cachedResult;
     }
     memoMisses++;
 
+    // Second recursion stopping condition: there is no possible subtree from this state
+    let possibleLeftAnagramKeys = [];
+    for (const possibleLeftAnagramKey of anagramKeysAvailableFromParent) {
+      if (!usedAnagramKeys.has(possibleLeftAnagramKey) && wordIsSubset(possibleLeftAnagramKey, normalizedLetters)) {
+        possibleLeftAnagramKeys.push(possibleLeftAnagramKey);
+      }
+    }
+    if (possibleLeftAnagramKeys.length === 0 || normalizedLetters === "") {
+      let leafScore = 0;
+      if (anagramKeyToWords.has(normalizedLetters)) {
+        leafScore += anagramKeyToWords.get(normalizedLetters).length * normalizedLetters.length;
+        usedAnagramKeys.add(normalizedLetters);
+      }
+      const leafResult = {
+        score: leafScore,
+        key: null,
+        anagramKeys: usedAnagramKeys
+      };
+
+      memo.set(memoKey, leafResult);
+      return leafResult;
+    }
+
+    // If here, this is a brand new state and there are possible subtrees
     let bestScore = 0;
     let bestKey = null;
-    for (const anagramKey of possibleNextAnagramKeys) {
-      const leftLetters = anagramKey;
-      const rightLetters = subtractLetters(letters, anagramKey);
+    let bestAnagramKeys = null;
+    for (const leftAnagramKey of possibleLeftAnagramKeys) {
+      const leftNormalizedLetters = leftAnagramKey;
+      const usedAnagramKeysCOPY = new Set(usedAnagramKeys);
+      usedAnagramKeysCOPY.add(leftNormalizedLetters);
+      const leftResult = OPT(leftNormalizedLetters, usedAnagramKeysCOPY, possibleLeftAnagramKeys);
 
-      const left = OPT(leftLetters);
-      const right = OPT(rightLetters);
+      const rightNormalizedLetters = normalizeLetters(subtractLetters(normalizedLetters, leftNormalizedLetters));
+      let possibleRightAnagramKeys = [];
+      const leftAnagramKeysCOPY = new Set(leftResult.anagramKeys);
+      for (const rightAnagramKey of possibleLeftAnagramKeys) {
+        if (!leftAnagramKeysCOPY.has(rightAnagramKey) && wordIsSubset(rightAnagramKey, rightNormalizedLetters)) {
+          possibleRightAnagramKeys.push(rightAnagramKey);
+        }
+      }
+      const rightResult = OPT(rightNormalizedLetters, leftAnagramKeysCOPY, possibleRightAnagramKeys);
 
       let scoreForCurrentWord = 0;
       if (anagramKeyToWords.has(normalizedLetters)) {
         scoreForCurrentWord += normalizedLetters.length * anagramKeyToWords.get(normalizedLetters).length;
       }
 
-      const score = scoreForCurrentWord + left.score + right.score;
+      const score = scoreForCurrentWord + leftResult.score + rightResult.score;
 
       if (score > bestScore) {
         bestScore = score;
-        bestKey = anagramKey;
+        bestKey = leftAnagramKey;
+        bestAnagramKeys = new Set(rightResult.anagramKeys);
       }
     }
 
-    const result = { score: bestScore, bestKey };
+    const result = {
+      score: bestScore,
+      key: bestKey,
+      anagramKeys: new Set(bestAnagramKeys)
+    };
+
+    if (result.anagramKeys.has("himst") && result.anagramKeys.has("hirst")) {
+      console.log('error');
+    }
+
     memo.set(memoKey, result);
     return result;
   }
@@ -1038,10 +1079,14 @@ export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
   // ---------------------------
   // Compute final score + tree
   // ---------------------------
-  const { score, bestKey } = OPT(rootLetters);
-  const tree = buildTree(bestKey); // todo use best key to find best
+  const { score, key, anagramKeys } = OPT(normalizedRootLetters, new Set(), allAnagramKeys);
+  // const tree = buildTree(bestKey); // todo use best key to find best
+  console.log(`memo hits ${memoHits}`);
+  console.log(`memo miss ${memoMisses}`);
 
-
+  for (let usedAnagramKey of anagramKeys) {
+    console.log(`used ${usedAnagramKey}`);
+  }
   return { score };
 }
 

@@ -973,7 +973,7 @@ export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
   function OPT(normalizedLetters, usedAnagramKeys, anagramKeysAvailableFromParent) {
     // First recursion stopping condition: we have processed this state before (unlikely?)
     const usedAnagramKeyIDs = new Set();
-    for (const anagramKey of usedAnagramKeyIDs) {
+    for (const anagramKey of usedAnagramKeys) {
       usedAnagramKeyIDs.add(anagramKeyToIntID.get(anagramKey));
     }
     const memoKey = `${normalizedLetters}${setToBitmask(usedAnagramKeyIDs)}`;
@@ -1032,6 +1032,7 @@ export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
         scoreForCurrentWord += normalizedLetters.length * anagramKeyToWords.get(normalizedLetters).length;
       }
 
+      // TODO what if scoreforcurrent word is same as left result? Can we remove this somehow and change the leaf node? Double counting leaf node?
       const score = scoreForCurrentWord + leftResult.score + rightResult.score;
 
       if (score > bestScore) {

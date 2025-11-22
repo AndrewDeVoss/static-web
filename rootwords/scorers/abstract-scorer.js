@@ -1,7 +1,7 @@
-class Scorer {
+export class AbstractScorer {
 
     constructor() {
-        if (new.target === Scorer) {
+        if (new.target === AbstractScorer) {
             throw new Error("Cannot instantiate abstract class Scorer directly");
         }
     }

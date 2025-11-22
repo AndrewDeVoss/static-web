@@ -4,6 +4,7 @@ import { TreeNode } from './word-tree.js';
 import { drawTree } from './drawtree.js'
 import { drawGrass } from './drawgrass.js';
 import { drawSky } from './drawsky.js';
+import { ClassicScorer } from './scorers/classic/classic-scorer.js';
 
 
 const grid = document.getElementById('word-grid');
@@ -89,10 +90,11 @@ const bronzeScore = document.getElementById('bronze-score');
 const silverScore = document.getElementById('silver-score');
 const goldScore = document.getElementById('gold-score');
 const bestScore = document.getElementById('best-score');
-
-// Initialize
+const classicScorer = new ClassicScorer();
+classicScorer.getScoringTargets(treeRoot.word).then(result => {
+    console.log("Scoring targets returned:", result);
+});
 checkOrComputeGreedyScore(treeRoot.word);
-window.alert(`best possible ${computeOptimalScoreAndTree(treeRoot.word).score}`); // Sanity check letters of hiimrst=? acre=26 aemr=22, tumblenoose thinks it can do bluestone and emno?
 loadRootFromStorage();
 drawRoots();
 scoreRoots();

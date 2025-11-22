@@ -1,7 +1,8 @@
-import { TreeNode } from "../../word-tree";
+import { TreeNode } from "../../word-tree.js";
 import { getValidWordsFromLetters } from '../../../utility/isword/isword.js';
+import { AbstractScorer } from "../abstract-scorer.js";
 
-class ClassicScorer extends Scorer {
+export class ClassicScorer extends AbstractScorer {
     constructor() {
         super();
     }
@@ -13,17 +14,26 @@ class ClassicScorer extends Scorer {
      * bronze - breedy score * 1/3
      * @param {string} letters 
      */
-    getScoringTargets(letters) {
-        const gold = this.getGreedyScore();
-        const silver = Math.floor(gold * 2 / 3)
-        const bronze = Math.floor(gold * 1 / 3)
-        const opal = this.getOptimalScore();
-        return {
-            opal: opal,
-            gold: gold,
-            silver: silver,
-            bronze: bronze
-        }
+    async getScoringTargets(letters) {
+        return new Promise((resolve, reject) => {
+            const worker = new Worker(
+                new URL('./scorer-worker.js', import.meta.url),
+                { type: 'module' }
+            );
+
+            worker.onmessage = (e) => {
+                resolve(e.data);
+                worker.terminate();
+            };
+
+            worker.onerror = (err) => {
+                console.error("ERROR INSIDE WORKER:", err.message, "at", err.filename, ":", err.lineno);
+                reject(err);
+                worker.terminate();
+            };
+
+            worker.postMessage({ type: 'compute-scores', letters });
+        });
     }
 
     /**
@@ -34,10 +44,23 @@ class ClassicScorer extends Scorer {
         throw new Error("score tree not implemented")
     }
 
+    getTodayString() {
+        const today = new Date();
+        return today.toISOString().split('T')[0]; // 'YYYY-MM-DD'
+    }
+
+    getCookie(name) {
+        const cookieString = document.cookie
+            .split('; ')
+            .find(row => row.startsWith(encodeURIComponent(name) + '='));
+
+        return cookieString ? decodeURIComponent(cookieString.split('=')[1]) : null;
+    }
+
     getGreedyScore(letters, cookie = 'greedy-score') {
         // Check if cached
-        const todayKey = `${cookie}-${getTodayString()}`;
-        const cached = getCookie(todayKey);
+        const todayKey = `${cookie}-${this.getTodayString()}`;
+        const cached = this.getCookie(todayKey);
         if (cached) {
             try {
                 const cachedResult = JSON.parse(cached);
@@ -114,8 +137,8 @@ class ClassicScorer extends Scorer {
 
     getOptimalScore(letters, cookie = 'optimal-score') {
         // Check if cached
-        const todayKey = `${cookie}-${getTodayString()}`;
-        const cached = getCookie(todayKey);
+        const todayKey = `${cookie}-${this.getTodayString()}`;
+        const cached = this.getCookie(todayKey);
         if (cached) {
             try {
                 const cachedResult = JSON.parse(cached);

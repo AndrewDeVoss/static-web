@@ -92,7 +92,7 @@ const bestScore = document.getElementById('best-score');
 
 // Initialize
 checkOrComputeGreedyScore(treeRoot.word);
-console.log(computeOptimalScoreAndTree(treeRoot.word)); // Sanity check letters of hiimrst=? acre=26 aemr=22, tumblenoose thinks it can do bluestone and emno?
+window.alert(`best possible ${computeOptimalScoreAndTree(treeRoot.word).score}`); // Sanity check letters of hiimrst=? acre=26 aemr=22, tumblenoose thinks it can do bluestone and emno?
 loadRootFromStorage();
 drawRoots();
 scoreRoots();

@@ -92,7 +92,7 @@ const bestScore = document.getElementById('best-score');
 
 // Initialize
 checkOrComputeGreedyScore(treeRoot.word);
-console.log(computeOptimalScoreAndTree("acre")); // Sanity check letters of hiimrst=? acre=26
+console.log(computeOptimalScoreAndTree(treeRoot.word)); // Sanity check letters of hiimrst=? acre=26 aemr=22, tumblenoose thinks it can do bluestone and emno?
 loadRootFromStorage();
 drawRoots();
 scoreRoots();
@@ -900,12 +900,7 @@ function wordIsSubset(word, letters) {
   return true;
 }
 
-function wordIsStrictSubset(word, letters) {
-  return word.length < letters.length && wordIsSubset(word, letters);
-}
-
-
-export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
+function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
   const todayKey = `${cookie}-${getTodayString()}`;
   const cached = getCookie(todayKey);
 
@@ -951,59 +946,24 @@ export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
   }
 
   // ---------------------------
-  // Memo + Diagnostics
-  // ---------------------------
-  const memo = new Map();
-  let memoHits = 0;
-  let memoMisses = 0;
-
-  // ---------------------------
-  // Utility to convert distinct integers into a binary representation.
-  // It does not matter if nums are sorted.
-  // ---------------------------
-  function setToBitmask(nums) {
-    let mask = 0;
-    for (const n of nums) mask |= 1 << n;
-    return mask;
-  }
-
-  // ---------------------------
   // Optimal DP
   // ---------------------------
   function OPT(normalizedLetters, usedAnagramKeys, anagramKeysAvailableFromParent) {
-    // First recursion stopping condition: we have processed this state before (unlikely?)
-    const usedAnagramKeyIDs = new Set();
-    for (const anagramKey of usedAnagramKeys) {
-      usedAnagramKeyIDs.add(anagramKeyToIntID.get(anagramKey));
-    }
-    const memoKey = `${normalizedLetters}${setToBitmask(usedAnagramKeyIDs)}`;
-    if (memo.has(memoKey)) {
-      memoHits++;
-      let cachedResult = memo.get(memoKey);
-      return cachedResult;
-    }
-    memoMisses++;
-
     // Second recursion stopping condition: there is no possible subtree from this state
-    let possibleLeftAnagramKeys = [];
+    // TODO receive already pruned?
+    let anagramKeysAvailableWithTheseLetters = [];
     for (const possibleLeftAnagramKey of anagramKeysAvailableFromParent) {
       if (!usedAnagramKeys.has(possibleLeftAnagramKey) && wordIsSubset(possibleLeftAnagramKey, normalizedLetters)) {
-        possibleLeftAnagramKeys.push(possibleLeftAnagramKey);
+        anagramKeysAvailableWithTheseLetters.push(possibleLeftAnagramKey);
       }
     }
-    if (possibleLeftAnagramKeys.length === 0 || normalizedLetters === "") {
-      let leafScore = 0;
-      if (anagramKeyToWords.has(normalizedLetters)) {
-        leafScore += anagramKeyToWords.get(normalizedLetters).length * normalizedLetters.length;
-        usedAnagramKeys.add(normalizedLetters);
-      }
+    if (anagramKeysAvailableWithTheseLetters.length === 0 || normalizedLetters === "") {
       const leafResult = {
-        score: leafScore,
+        score: 0,
         key: null,
-        anagramKeys: usedAnagramKeys
+        anagramKeys: new Set(usedAnagramKeys)
       };
 
-      memo.set(memoKey, leafResult);
       return leafResult;
     }
 
@@ -1011,34 +971,50 @@ export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
     let bestScore = 0;
     let bestKey = null;
     let bestAnagramKeys = null;
-    for (const leftAnagramKey of possibleLeftAnagramKeys) {
+    for (const leftAnagramKey of anagramKeysAvailableWithTheseLetters) {
+      // Left represents the word we select + score that can be made with letters in the selected word
       const leftNormalizedLetters = leftAnagramKey;
+
+      // Right represents score that can be made with letters not in the selected word
+      const rightNormalizedLetters = normalizeLetters(subtractLetters(normalizedLetters, leftNormalizedLetters));
+
       const usedAnagramKeysCOPY = new Set(usedAnagramKeys);
       usedAnagramKeysCOPY.add(leftNormalizedLetters);
+
+      const nextAnagramKeysAvailableFromParent = anagramKeysAvailableWithTheseLetters.slice();
+      const indexOfKey = nextAnagramKeysAvailableFromParent.indexOf(leftAnagramKey);
+      nextAnagramKeysAvailableFromParent.splice(indexOfKey, 1);
+      let possibleLeftAnagramKeys = [];
+      for (const possibleLeftAnagramKey of nextAnagramKeysAvailableFromParent) {
+        if (!usedAnagramKeysCOPY.has(possibleLeftAnagramKey) && wordIsSubset(possibleLeftAnagramKey, leftAnagramKey)) {
+          possibleLeftAnagramKeys.push(possibleLeftAnagramKey);
+        }
+      }
       const leftResult = OPT(leftNormalizedLetters, usedAnagramKeysCOPY, possibleLeftAnagramKeys);
 
-      const rightNormalizedLetters = normalizeLetters(subtractLetters(normalizedLetters, leftNormalizedLetters));
+      // Right represents score that can be made with letters not in the selected word
       let possibleRightAnagramKeys = [];
       const leftAnagramKeysCOPY = new Set(leftResult.anagramKeys);
-      for (const rightAnagramKey of possibleLeftAnagramKeys) {
+      for (const rightAnagramKey of nextAnagramKeysAvailableFromParent) {
         if (!leftAnagramKeysCOPY.has(rightAnagramKey) && wordIsSubset(rightAnagramKey, rightNormalizedLetters)) {
           possibleRightAnagramKeys.push(rightAnagramKey);
         }
       }
       const rightResult = OPT(rightNormalizedLetters, leftAnagramKeysCOPY, possibleRightAnagramKeys);
 
-      let scoreForCurrentWord = 0;
-      if (anagramKeyToWords.has(normalizedLetters)) {
-        scoreForCurrentWord += normalizedLetters.length * anagramKeyToWords.get(normalizedLetters).length;
-      }
-
-      // TODO what if scoreforcurrent word is same as left result? Can we remove this somehow and change the leaf node? Double counting leaf node?
+      let scoreForCurrentWord = leftAnagramKey.length * anagramKeyToWords.get(leftAnagramKey).length;
       const score = scoreForCurrentWord + leftResult.score + rightResult.score;
 
       if (score > bestScore) {
         bestScore = score;
         bestKey = leftAnagramKey;
-        bestAnagramKeys = new Set(rightResult.anagramKeys);
+
+        const allUsedAnagramKeys = new Set(leftResult.anagramKeys);
+        for (const anagramKey of rightResult.anagramKeys) {
+          allUsedAnagramKeys.add(anagramKey);
+        }
+
+        bestAnagramKeys = new Set(allUsedAnagramKeys);
       }
     }
 
@@ -1048,45 +1024,16 @@ export function computeOptimalScoreAndTree(letters, cookie = "optimal-score") {
       anagramKeys: new Set(bestAnagramKeys)
     };
 
-    if (result.anagramKeys.has("himst") && result.anagramKeys.has("hirst")) {
-      console.log('error');
-    }
-
-    memo.set(memoKey, result);
     return result;
-  }
-
-  // ---------------------------
-  // Tree Reconstruction
-  // ---------------------------
-  function buildTree(L) {
-    const entry = memo.get(L);
-
-    if (!entry || entry.bestKey === null) return null;
-
-    const k = entry.bestKey;
-    const anagrams = anagramKeyToWords.get(k);
-
-    const leftLetters = k;
-    const rightLetters = subtractLetters(L, k);
-
-    return {
-      words: anagrams,
-      left: buildTree(leftLetters),
-      right: buildTree(rightLetters)
-    };
   }
 
   // ---------------------------
   // Compute final score + tree
   // ---------------------------
   const { score, key, anagramKeys } = OPT(normalizedRootLetters, new Set(), allAnagramKeys);
-  // const tree = buildTree(bestKey); // todo use best key to find best
-  console.log(`memo hits ${memoHits}`);
-  console.log(`memo miss ${memoMisses}`);
 
   for (let usedAnagramKey of anagramKeys) {
-    console.log(`used ${usedAnagramKey}`);
+    console.log(`used ${usedAnagramKey} for ${anagramKeyToWords.get(usedAnagramKey)}`);
   }
   return { score };
 }

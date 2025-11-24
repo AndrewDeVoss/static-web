@@ -92,7 +92,8 @@ const goldScore = document.getElementById('gold-score');
 const bestScore = document.getElementById('best-score');
 const classicScorer = new ClassicScorer();
 classicScorer.getScoringTargets(treeRoot.word).then(result => {
-    console.log("Scoring targets returned:", result);
+  const { greedyResult, optimalResult } = result;
+  window.alert(`best score ${optimalResult.score}`);
 });
 checkOrComputeGreedyScore(treeRoot.word);
 loadRootFromStorage();

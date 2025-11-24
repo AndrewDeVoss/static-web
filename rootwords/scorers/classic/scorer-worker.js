@@ -1,21 +1,34 @@
 import { ClassicScorer } from './classic-scorer.js';
-import { AbstractScorer } from '../abstract-scorer.js'; 
+import { AbstractScorer } from '../abstract-scorer.js';
+import { getValidWordsFromLetters } from '../../../utility/isword/isword.js';
+import { 
+    loadDictionary,
+    loadForbiddenWords,
+    loadSuitable5And6
+} from '../../../utility/isword/isword.js';
+
+// Preload dictionary in the worker
+let dictionaryReady = (async () => {
+    await loadDictionary();
+    await loadForbiddenWords();
+    await loadSuitable5And6();
+})();
 
 const scorer = new ClassicScorer();
 
 self.onmessage = async (e) => {
-    if (e.data.type === 'compute-scores') {
+    await dictionaryReady;
+    
+    if (e.data.type === "compute-scores") {
         const letters = e.data.letters;
 
-        const gold   = scorer.getGreedyScore(letters);
-        const opal   = scorer.getOptimalScore(letters);
-        const silver = Math.floor(gold * 2 / 3);
-        const bronze = Math.floor(gold * 1 / 3);
+        const greedyResult = scorer.computeGreedyResult(letters);
+        const optimalResult = scorer.computeOptimalResult(letters);
 
-        postMessage({ opal, gold, silver, bronze });
+        postMessage({ greedyResult, optimalResult });
     }
 };
 
-self.onerror = function(e) {
+self.onerror = function (e) {
     console.error("ERROR INSIDE WORKER:", e.message, "at", e.filename, ":", e.lineno);
 };

@@ -15,26 +15,49 @@ export class ClassicScorer extends AbstractScorer {
      * @param {string} letters 
      */
     async getScoringTargets(letters) {
+        const greedyCookie = "greedy-result";
+        const optimalCookie = "optimal-result";
+
+        // 1. Try cache
+        const greedyCached = this.checkCookie(greedyCookie, letters);
+        const optimalCached = this.checkCookie(optimalCookie, letters);
+
+        if (greedyCached && optimalCached) {
+            return {
+                greedyResult: greedyCached,
+                optimalResult: optimalCached
+            };
+        }
+
+        // 2. Compute via worker
         return new Promise((resolve, reject) => {
             const worker = new Worker(
                 new URL('./scorer-worker.js', import.meta.url),
-                { type: 'module' }
+                { type: "module" }
             );
 
             worker.onmessage = (e) => {
+                const { greedyResult, optimalResult } = e.data;
+
+                if (greedyResult)
+                    this.saveResultAsCookie(greedyCookie, greedyResult);
+
+                if (optimalResult)
+                    this.saveResultAsCookie(optimalCookie, optimalResult);
+
                 resolve(e.data);
                 worker.terminate();
             };
 
-            worker.onerror = (err) => {
-                console.error("ERROR INSIDE WORKER:", err.message, "at", err.filename, ":", err.lineno);
-                reject(err);
-                worker.terminate();
-            };
+            worker.onerror = reject;
 
-            worker.postMessage({ type: 'compute-scores', letters });
+            worker.postMessage({
+                type: "compute-scores",
+                letters
+            });
         });
     }
+
 
     /**
      * one point per letter in all created words
@@ -57,15 +80,14 @@ export class ClassicScorer extends AbstractScorer {
         return cookieString ? decodeURIComponent(cookieString.split('=')[1]) : null;
     }
 
-    getGreedyScore(letters, cookie = 'greedy-score') {
-        // Check if cached
+    checkCookie(cookie, letters) {
         const todayKey = `${cookie}-${this.getTodayString()}`;
         const cached = this.getCookie(todayKey);
         if (cached) {
             try {
                 const cachedResult = JSON.parse(cached);
                 if (!cachedResult.letters) {
-                    throw new Error("No letters in cached greedy score");
+                    throw new Error("No letters in cached score");
                 }
                 if (cachedResult.letters !== letters) {
                     throw new Error("Letter mismatch");
@@ -73,20 +95,21 @@ export class ClassicScorer extends AbstractScorer {
                 let score = cachedResult.score;
                 return score;
             } catch (err) {
-                console.warn("Failed to parse cached greedy score from cookie:", err);
+                console.warn("Failed to parse cached score from cookie:", err);
             }
         }
+        return null;
+    }
 
-        // Not cached: compute, cache, return
-        const result = this.computeGreedyResult(letters);
+    saveResultAsCookie(result, cookie) {
+        const todayKey = `${cookie}-${this.getTodayString()}`;
         const now = new Date();
         const midnight = new Date(now);
         midnight.setHours(24, 0, 0, 0);
         document.cookie = `${encodeURIComponent(todayKey)}=${encodeURIComponent(JSON.stringify(result))}; expires=${midnight.toUTCString()}; path=/`;
-        return result.score;
     }
 
-    computeGreedyResult() {
+    computeGreedyResult(letters) {
         const usedGreedyWords = new Set();
         let score = 0;
         const initialDictionary = getValidWordsFromLetters(letters);
@@ -135,36 +158,7 @@ export class ClassicScorer extends AbstractScorer {
         return resultToCache;
     }
 
-    getOptimalScore(letters, cookie = 'optimal-score') {
-        // Check if cached
-        const todayKey = `${cookie}-${this.getTodayString()}`;
-        const cached = this.getCookie(todayKey);
-        if (cached) {
-            try {
-                const cachedResult = JSON.parse(cached);
-                if (!cachedResult.letters) {
-                    throw new Error("No letters in cached greedy score");
-                }
-                if (cachedResult.letters !== letters) {
-                    throw new Error("Letter mismatch");
-                }
-                let score = cachedResult.score;
-                return score;
-            } catch (err) {
-                console.warn("Failed to parse cached greedy score from cookie:", err);
-            }
-        }
-
-        // Not cached: compute, cache, return
-        const result = this.computeOptimalResult(letters);
-        const now = new Date();
-        const midnight = new Date(now);
-        midnight.setHours(24, 0, 0, 0);
-        document.cookie = `${encodeURIComponent(todayKey)}=${encodeURIComponent(JSON.stringify(result))}; expires=${midnight.toUTCString()}; path=/`;
-        return result.score;
-    }
-
-    computeOptimalResult(letters, cookie = "optimal-score") {
+    computeOptimalResult(letters) {
         // ---------------------------
         // Utility: alphabetize letters
         // ---------------------------
@@ -313,9 +307,15 @@ export class ClassicScorer extends AbstractScorer {
         // ---------------------------
         const { score, key, anagramKeys } = OPT(normalizedRootLetters, new Set(), allAnagramKeys);
 
+        const wordsUsed = new Set();
         for (let usedAnagramKey of anagramKeys) {
-            console.log(`used ${usedAnagramKey} for ${anagramKeyToWords.get(usedAnagramKey)}`);
+            wordsUsed.add(anagramKeyToWords.get(usedAnagramKey));
         }
-        return { score };
+        
+        return { 
+            score,
+            letters,
+             words: [...wordsUsed]
+        };
     }
 }

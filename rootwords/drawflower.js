@@ -1,9 +1,12 @@
 import { getColors } from '../utility/color/color.js';
 import { drawLeaf } from './drawtree.js';
+import { random } from '../utility/random/random.js';
 
 // Colors
 let colors = getColors();
 let metallicColorMap = new Map();
+let drawFlowerRngSeedStr;
+
 function rescopeMetallicColorMap(svg) {
     // Clear map from previous svgs
     metallicColorMap = new Map();
@@ -89,22 +92,9 @@ function rescopeMetallicColorMap(svg) {
 
 }
 
-// Seeded rng
-let randomState = 0;
-function seededRandom() {
-    randomState = (randomState * 1664525 + 1013904223) % 4294967296;
-    return randomState / 4294967296;
-}
-export function seedFlowerRNG(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-    }
-    randomState = h >>> 0;
-}
-
-export function drawFlower(svg, baseX, baseY, flowerParameter, dateString, rarity = "common") {
+export function drawFlower(svg, baseX, baseY, flowerParameter, rngSeedString, rarity = "common") {
     colors = getColors();
+    drawFlowerRngSeedStr = rngSeedString;
 
     const flowerGroup = document.createElementNS(svg.namespaceURI, "g");
 
@@ -124,18 +114,18 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
 
     // Height
     const minStemHeight = 50;
-    const maxStemHeight = minStemHeight + seededRandom() * 60;
+    const maxStemHeight = minStemHeight + random(drawFlowerRngSeedStr) * 60;
     const stemHeight = minStemHeight + flowerParameter * (maxStemHeight - minStemHeight);
 
     // Tip
     const maxTipSwayFactor = 7;
-    const maxTipX = baseX + (seededRandom() * 2 * maxTipSwayFactor - maxTipSwayFactor);
+    const maxTipX = baseX + (random(drawFlowerRngSeedStr) * 2 * maxTipSwayFactor - maxTipSwayFactor);
     const tipX = baseX + flowerParameter * (maxTipX - baseX);
     const tipY = baseY - stemHeight;
 
     // Bend
     const maxStalkSwayFactor = 35;
-    const maxCtrlX = baseX + (seededRandom() * 2 * maxStalkSwayFactor - maxStalkSwayFactor);
+    const maxCtrlX = baseX + (random(drawFlowerRngSeedStr) * 2 * maxStalkSwayFactor - maxStalkSwayFactor);
     const ctrlX = baseX + flowerParameter * (maxCtrlX - baseX);
     const ctrlY = baseY - stemHeight * 0.5;
 
@@ -150,7 +140,7 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
     flowerGroup.appendChild(path);
 
     // --- Add one leaf ---
-    const leafFraction = 0.6 + seededRandom() * .3; // 0.4–0.8
+    const leafFraction = 0.6 + random(drawFlowerRngSeedStr) * .3; // 0.4–0.8
 
     // Quadratic Bézier formula for point at t:
     const leafX = Math.pow(1 - leafFraction, 2) * baseX + 2 * (1 - leafFraction) * leafFraction * ctrlX + Math.pow(leafFraction, 2) * tipX;
@@ -162,8 +152,8 @@ function drawFlowerStem(flowerGroup, baseX, baseY, flowerParameter) {
     const leafAngle = Math.atan2(dy, dx);
 
     // Randomly left (-1) or right (+1)
-    const leafSide = seededRandom() < 0.5 ? -1 : 1;
-    const leafSize = 5 + seededRandom() * 4;
+    const leafSide = random(drawFlowerRngSeedStr) < 0.5 ? -1 : 1;
+    const leafSize = 5 + random(drawFlowerRngSeedStr) * 4;
 
     let flowerLeafColors = {};
     flowerLeafColors.leaf1 = colors.stem2;
@@ -200,7 +190,7 @@ export function drawFlowerHead(flowerGroup, flowerParameter, cx, cy, rotation = 
     if (flowerName === "random") {
         const totalWeight = flowers.reduce((sum, f) => sum + f.weight, 0);
         function chooseFlower() {
-            const rand = seededRandom() * totalWeight;
+            const rand = random(drawFlowerRngSeedStr) * totalWeight;
             let cumulative = 0;
             for (const flower of flowers) {
                 cumulative += flower.weight;

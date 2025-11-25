@@ -1,33 +1,18 @@
 import { getColors } from '../utility/color/color.js';
-import { drawFlower, seedFlowerRNG } from './drawflower.js';
+import { drawFlower } from './drawflower.js';
+import { random, createSeed } from '../utility/random/random.js';
 
 let colors = new Map();
-let seed = null; // Global or file-local seed (updated each draw)
-let randomState = 0;
-
-// Basic seeded random number generator
-function seededRandom() {
-    // LCG constants (Numerical Recipes)
-    randomState = (randomState * 1664525 + 1013904223) % 4294967296;
-    return randomState / 4294967296;
-}
-
-// Initialize the RNG from a string (like a date)
-function seedFromString(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-        h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-    }
-    randomState = h >>> 0;
-}
-
+const treeRngSeedStr = 'tree';
+const flowerRngSeedStr = 'flower';
+const medalFlowerRngSeedStr = 'medal-flower'
 
 export function drawTree(score, treeContainer, dateString, medals) {
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
-    seed = dateString;
-    seedFromString(seed);
-    seedFlowerRNG(seed);
+    createSeed(`${treeRngSeedStr}-${dateString}`);
+    createSeed(`${flowerRngSeedStr}-${dateString}`);
+    createSeed(`${medalFlowerRngSeedStr}-${dateString}`);
 
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
@@ -35,8 +20,8 @@ export function drawTree(score, treeContainer, dateString, medals) {
 
     // Leaves and branches
     const leavesPerPoint = 2;
-    const numLeaves = Math.min(1 + score*leavesPerPoint, 50);
-    const leafPoints = Math.ceil((numLeaves-1) / leavesPerPoint);
+    const numLeaves = Math.min(1 + score * leavesPerPoint, 50);
+    const leafPoints = Math.ceil((numLeaves - 1) / leavesPerPoint);
     const maxLeavesPerBranch = Math.round(Math.sqrt(numLeaves));
     const numBranches = Math.max(2, Math.round(numLeaves / maxLeavesPerBranch));
     const trunkHeight = 50 + numBranches * 50;
@@ -279,8 +264,8 @@ export function drawTree(score, treeContainer, dateString, medals) {
             let bestFlowerX = baseX;
             let bestDistance = 0;
             for (let attempt = 0; attempt < 3; attempt++) {
-                const sideShift = seededRandom() < 0.5 ? -1 : 1;
-                let flowerX = baseX + sideShift * seededRandom() * (maxFlowerX - minFlowerX - 2 * margin) / 2;
+                const sideShift = random(`${medalFlowerRngSeedStr}-${dateString}`) < 0.5 ? -1 : 1;
+                let flowerX = baseX + sideShift * random(`${medalFlowerRngSeedStr}-${dateString}`) * (maxFlowerX - minFlowerX - 2 * margin) / 2;
                 const minDist = flowerXs.length
                     ? Math.min(...flowerXs.map(x => Math.abs(x - flowerX)))
                     : 0;
@@ -291,7 +276,7 @@ export function drawTree(score, treeContainer, dateString, medals) {
             }
             flowerXs.push(bestFlowerX);
 
-            drawFlower(svg, bestFlowerX, baseY, 1, dateString, medal);
+            drawFlower(svg, bestFlowerX, baseY, 1, `${medalFlowerRngSeedStr}-${dateString}`, medal);
         }
     }
 
@@ -303,8 +288,8 @@ export function drawTree(score, treeContainer, dateString, medals) {
         let bestFlowerX = baseX;
         let bestDistance = 0;
         for (let attempt = 0; attempt < 3; attempt++) {
-            const sideShift = seededRandom() < 0.5 ? -1 : 1;
-            let flowerX = baseX + sideShift * seededRandom() * (maxFlowerX - minFlowerX - 2 * margin) / 2;
+            const sideShift = random(`${flowerRngSeedStr}-${dateString}`) < 0.5 ? -1 : 1;
+            let flowerX = baseX + sideShift * random(`${flowerRngSeedStr}-${dateString}`) * (maxFlowerX - minFlowerX - 2 * margin) / 2;
             const minDist = flowerXs.length
                 ? Math.min(...flowerXs.map(x => Math.abs(x - flowerX)))
                 : 0;
@@ -315,7 +300,7 @@ export function drawTree(score, treeContainer, dateString, medals) {
         }
         flowerXs.push(bestFlowerX);
 
-        drawFlower(svg, bestFlowerX, baseY, flowerParameter, dateString);
+        drawFlower(svg, bestFlowerX, baseY, flowerParameter, `${flowerRngSeedStr}-${dateString}`);
     }
 
     // Re-retrieve bbox with flowers
@@ -558,7 +543,7 @@ function drawBlossom(svg, cx, cy, rotation, petalStep = 5, petalSize = 30) {
         budHighlight.setAttribute("fill", innerColor);
         budHighlight.setAttribute("fill-opacity", 0.5);
         blossomGroup.appendChild(budHighlight);
-    } else {        
+    } else {
         // Draw full blossom with multiple petals
         const petalLength = petalSize * 2;
         const petalWidth = petalSize;

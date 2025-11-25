@@ -85,17 +85,25 @@ function addToStack(encodedTree) {
 }
 
 // Score
-const currentScore = document.getElementById('current-score');
-const bronzeScore = document.getElementById('bronze-score');
-const silverScore = document.getElementById('silver-score');
-const goldScore = document.getElementById('gold-score');
-const bestScore = document.getElementById('best-score');
+const currentScoreEl = document.getElementById('current-score');
+const bronzeScoreEl = document.getElementById('bronze-score');
+const silverScoreEl = document.getElementById('silver-score');
+const goldScoreEl = document.getElementById('gold-score');
+const opalScoreEl = document.getElementById('opal-score');
+const bestScoreEl = document.getElementById('best-score');
 const classicScorer = new ClassicScorer();
 classicScorer.getScoringTargets(treeRoot.word).then(result => {
   const { greedyResult, optimalResult } = result;
-  window.alert(`best score ${optimalResult.score}`);
+  const goldScore = greedyResult.score;
+  const opalScore = optimalResult.score;
+
+  goldScoreEl.textContent = `${goldScore}`;
+  silverScoreEl.textContent = `${Math.floor(goldScore * 2 / 3)}`;
+  bronzeScoreEl.textContent = `${Math.floor(goldScore / 3)}`;
+  opalScoreEl.textContent = `${opalScore}`
+  scoreRoots();
 });
-checkOrComputeGreedyScore(treeRoot.word);
+
 loadRootFromStorage();
 drawRoots();
 scoreRoots();
@@ -180,20 +188,20 @@ function scoreRoots(rootNode = treeRoot) {
   // score = depthList[0] * depthList[depthList.length-1] + wordCount - 1;
   score = numLetters - rootNode.word.length;
 
-  currentScore.textContent = score;
+  currentScoreEl.textContent = score;
 
   // Check if score surpasses greedy scores
   let medals = new Map();
-  if (bronzeScore && parseInt(bronzeScore.textContent) > 0) {
-    let bronze = parseInt(bronzeScore.textContent);
+  if (bronzeScoreEl && parseInt(bronzeScoreEl.textContent) > 0) {
+    let bronze = parseInt(bronzeScoreEl.textContent);
     medals.set('bronze', Math.min(1, Math.floor(score / bronze)));
   }
-  if (silverScore && parseInt(silverScore.textContent) > 0) {
-    let silver = parseInt(silverScore.textContent);
+  if (silverScoreEl && parseInt(silverScoreEl.textContent) > 0) {
+    let silver = parseInt(silverScoreEl.textContent);
     medals.set('silver', Math.min(1, Math.floor(score / silver)));
   }
-  if (goldScore && parseInt(goldScore.textContent) > 0) {
-    let gold = parseInt(goldScore.textContent);
+  if (goldScoreEl && parseInt(goldScoreEl.textContent) > 0) {
+    let gold = parseInt(goldScoreEl.textContent);
     medals.set('gold', Math.min(1, Math.floor(score / gold)));
   }
 
@@ -709,7 +717,7 @@ function tryUpdateBestRoots(score) {
       const existingData = JSON.parse(existingDataJSON);
       if (existingData.score >= score) {
         // Existing score is higher or equal, don't overwrite
-        bestScore.textContent = `${existingData.score}`;
+        bestScoreEl.textContent = `${existingData.score}`;
         return;
       }
     } catch (e) {
@@ -719,7 +727,7 @@ function tryUpdateBestRoots(score) {
   }
 
   // New best score, update
-  bestScore.textContent = `${score}`;
+  bestScoreEl.textContent = `${score}`;
   // TODO press and hold high score to restore?
 
 
@@ -808,9 +816,9 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
         throw new Error("Letter mismatch");
       }
       let score = parsed.score;
-      goldScore.textContent = `${score}`;
-      silverScore.textContent = `${Math.floor(score * 2 / 3)}`;
-      bronzeScore.textContent = `${Math.floor(score / 3)}`;
+      goldScoreEl.textContent = `${score}`;
+      silverScoreEl.textContent = `${Math.floor(score * 2 / 3)}`;
+      bronzeScoreEl.textContent = `${Math.floor(score / 3)}`;
       return score;
     } catch (err) {
       console.warn("Failed to parse cached score from cookie:", err);
@@ -873,9 +881,9 @@ export function checkOrComputeGreedyScore(letters, cookie = 'greedy-score') {
 
   console.log("Computed and stored in cookie:", resultToCache);
 
-  goldScore.textContent = `${score}`;
-  silverScore.textContent = `${Math.floor(score * 2 / 3)}`;
-  bronzeScore.textContent = `${Math.floor(score / 3)}`;
+  goldScoreEl.textContent = `${score}`;
+  silverScoreEl.textContent = `${Math.floor(score * 2 / 3)}`;
+  bronzeScoreEl.textContent = `${Math.floor(score / 3)}`;
 
   return score;
 }

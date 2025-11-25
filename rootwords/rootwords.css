@@ -283,6 +283,11 @@ body.no-flex {
   /* deep gold-brown */
 }
 
+#opal-score {
+  background: linear-gradient(to bottom, #7752E8, #E36C35);
+  color: #014d4b;
+}
+
 #best-score {
   background: linear-gradient(to bottom, #87ceeb, #dde9ee);
   color: #225b72;

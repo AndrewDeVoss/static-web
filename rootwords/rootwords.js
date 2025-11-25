@@ -100,7 +100,9 @@ classicScorer.getScoringTargets(treeRoot.word).then(result => {
   goldScoreEl.textContent = `${goldScore}`;
   silverScoreEl.textContent = `${Math.floor(goldScore * 2 / 3)}`;
   bronzeScoreEl.textContent = `${Math.floor(goldScore / 3)}`;
-  opalScoreEl.textContent = `${opalScore}`
+  opalScoreEl.textContent = `${opalScore}`;
+  console.log(`greedy words: ${greedyResult.words}`);
+  console.log(`optimal words: ${optimalResult.words}`);
   scoreRoots();
 });
 
@@ -203,6 +205,12 @@ function scoreRoots(rootNode = treeRoot) {
   if (goldScoreEl && parseInt(goldScoreEl.textContent) > 0) {
     let gold = parseInt(goldScoreEl.textContent);
     medals.set('gold', Math.min(1, Math.floor(score / gold)));
+  }
+  if (opalScoreEl && parseInt(opalScoreEl.textContent) > 0) {
+    let opal = parseInt(opalScoreEl.textContent);
+    if (opal==score) {
+      medals.set('opal', 1);
+    }
   }
 
   updateCurrentTree();

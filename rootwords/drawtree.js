@@ -7,12 +7,12 @@ const treeRngSeedStr = 'tree';
 const flowerRngSeedStr = 'flower';
 const medalFlowerRngSeedStr = 'medal-flower'
 
-export function drawTree(score, treeContainer, dateString, medals) {
+export function drawTree(score, treeContainer, baseRngSeedString, medals) {
     treeContainer.innerHTML = ''; // Clear previous tree
     colors = getColors();
-    createSeed(`${treeRngSeedStr}-${dateString}`);
-    createSeed(`${flowerRngSeedStr}-${dateString}`);
-    createSeed(`${medalFlowerRngSeedStr}-${dateString}`);
+    createSeed(`${treeRngSeedStr}-${baseRngSeedString}`);
+    createSeed(`${flowerRngSeedStr}-${baseRngSeedString}`);
+    createSeed(`${medalFlowerRngSeedStr}-${baseRngSeedString}`);
 
     const svgNS = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(svgNS, "svg");
@@ -264,7 +264,7 @@ export function drawTree(score, treeContainer, dateString, medals) {
         for (let i = 0; i < count; i++) {
 
             // Create a unique deterministic RNG seed for this single flower
-            const flowerSeedBase = `${medalFlowerRngSeedStr}-${dateString}-${medal}-${i}`;
+            const flowerSeedBase = `${medalFlowerRngSeedStr}-${baseRngSeedString}-${medal}-${i}`;
             createSeed(flowerSeedBase);
 
             let bestFlowerX = baseX;
@@ -313,7 +313,7 @@ export function drawTree(score, treeContainer, dateString, medals) {
         const flowerParameter = flowerParameters[flower];
 
         // Unique deterministic seed per flower
-        const flowerSeedBase = `${flowerRngSeedStr}-${dateString}-${flower}`;
+        const flowerSeedBase = `${flowerRngSeedStr}-${baseRngSeedString}-${flower}`;
         createSeed(flowerSeedBase);
 
         let bestFlowerX = baseX;

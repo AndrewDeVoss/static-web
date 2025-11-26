@@ -252,55 +252,103 @@ export function drawTree(score, treeContainer, dateString, medals) {
     const minFlowerX = (trunkPercent - 50) * bboxWidth;
     const maxFlowerX = minFlowerX + screenWidth;
 
-    // Check for and draw medal flowers
-    const flowerXs = [];
-    flowerXs.push(baseX); // Don't overlap tree
-    flowerXs.push(minFlowerX);
-    flowerXs.push(maxFlowerX);
+    // Check for and draw medal flowers — fully deterministic (Option C)
+    const medalFlowerXs = [];
+    medalFlowerXs.push(baseX); // Don't overlap tree
+    medalFlowerXs.push(minFlowerX);
+    medalFlowerXs.push(maxFlowerX);
+
     for (let medal of medals.keys()) {
         const count = medals.get(medal);
+
         for (let i = 0; i < count; i++) {
-            // Try 10 different positions and choose the one farthest from any other flower
+
+            // Create a unique deterministic RNG seed for this single flower
+            const flowerSeedBase = `${medalFlowerRngSeedStr}-${dateString}-${medal}-${i}`;
+            createSeed(flowerSeedBase);
+
             let bestFlowerX = baseX;
             let bestDistance = 0;
+
+            // Try 3 candidate positions per flower
             for (let attempt = 0; attempt < 3; attempt++) {
-                const sideShift = random(`${medalFlowerRngSeedStr}-${dateString}`) < 0.5 ? -1 : 1;
-                let flowerX = baseX + sideShift * random(`${medalFlowerRngSeedStr}-${dateString}`) * (maxFlowerX - minFlowerX - 2 * margin) / 2;
-                const minDist = flowerXs.length
-                    ? Math.min(...flowerXs.map(x => Math.abs(x - flowerX)))
-                    : 0;
+
+                // Isolated RNG stream for THIS attempt:
+                const attemptSeed = `${flowerSeedBase}-attempt-${attempt}`;
+                createSeed(attemptSeed);
+
+                const r1 = random(attemptSeed);   // left/right
+                const r2 = random(attemptSeed);   // magnitude
+
+                const sideShift = r1 < 0.5 ? -1 : 1;
+
+                const flowerX =
+                    baseX +
+                    sideShift *
+                    r2 *
+                    (maxFlowerX - minFlowerX - 2 * margin) / 2;
+
+                const minDist = Math.min(...medalFlowerXs.map(x => Math.abs(x - flowerX)));
+
                 if (minDist > bestDistance) {
                     bestFlowerX = flowerX;
                     bestDistance = minDist;
                 }
             }
-            flowerXs.push(bestFlowerX);
 
-            drawFlower(svg, bestFlowerX, baseY, 1, `${medalFlowerRngSeedStr}-${dateString}`, medal);
+            medalFlowerXs.push(bestFlowerX);
+
+            // Draw using the isolated flower seed (fully deterministic shape + position)
+            drawFlower(svg, bestFlowerX, baseY, 1, flowerSeedBase, medal);
         }
     }
 
     // Use leftover points to draw flowers now that SVG is in the DOM
+    const flowerXs = [];
+    flowerXs.push(baseX); // Don't overlap tree
+    flowerXs.push(minFlowerX);
+    flowerXs.push(maxFlowerX);
+
     for (let flower = 0; flower < flowerParameters.length; flower++) {
         const flowerParameter = flowerParameters[flower];
 
-        // Try 10 different positions and choose the one farthest from any other flower
+        // Unique deterministic seed per flower
+        const flowerSeedBase = `${flowerRngSeedStr}-${dateString}-${flower}`;
+        createSeed(flowerSeedBase);
+
         let bestFlowerX = baseX;
         let bestDistance = 0;
+
+        // Try 3 candidate positions (each using isolated RNG)
         for (let attempt = 0; attempt < 3; attempt++) {
-            const sideShift = random(`${flowerRngSeedStr}-${dateString}`) < 0.5 ? -1 : 1;
-            let flowerX = baseX + sideShift * random(`${flowerRngSeedStr}-${dateString}`) * (maxFlowerX - minFlowerX - 2 * margin) / 2;
-            const minDist = flowerXs.length
-                ? Math.min(...flowerXs.map(x => Math.abs(x - flowerX)))
-                : 0;
+
+            // Attempt-specific deterministic RNG
+            const attemptSeed = `${flowerSeedBase}-attempt-${attempt}`;
+            createSeed(attemptSeed);
+
+            const r1 = random(attemptSeed); // left/right
+            const r2 = random(attemptSeed); // magnitude
+
+            const sideShift = r1 < 0.5 ? -1 : 1;
+
+            const flowerX =
+                baseX +
+                sideShift *
+                r2 *
+                (maxFlowerX - minFlowerX - 2 * margin) / 2;
+
+            const minDist = Math.min(...flowerXs.map(x => Math.abs(x - flowerX)));
+
             if (minDist > bestDistance) {
                 bestFlowerX = flowerX;
                 bestDistance = minDist;
             }
         }
+
         flowerXs.push(bestFlowerX);
 
-        drawFlower(svg, bestFlowerX, baseY, flowerParameter, `${flowerRngSeedStr}-${dateString}`);
+        // Draw flower using its isolated seed
+        drawFlower(svg, bestFlowerX, baseY, flowerParameter, flowerSeedBase);
     }
 
     // Re-retrieve bbox with flowers

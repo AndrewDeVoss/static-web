@@ -28,12 +28,12 @@ export function random(seedString) {
         return Math.random();
     }
 
-    console.log(`using seed ${seedString}`);
+    // console.log(`using seed ${seedString}`);
     return generators.get(seedString)();
 }
 
 export function createSeed(seedString) {
     const seed = seedFromString(seedString);
     generators.set(seedString, createGenerator(seed));
-    console.log(`created seed ${seedString}`);
+    // console.log(`created seed ${seedString}`);
 }

@@ -34,10 +34,8 @@
   background-color: #7a512f;
   color: #7a512f;
   opacity: 0.3;
-  pointer-events: none;
 }
 
 .letter.used {
   opacity: 0.3;
-  pointer-events: none;
 }

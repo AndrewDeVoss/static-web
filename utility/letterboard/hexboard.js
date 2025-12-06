@@ -138,6 +138,8 @@ class HexBoard extends LetterBoard {
         this.letterContainer.addEventListener('pointerdown', e => {
             const target = e.target.closest('.letter');
             if (!target) return;
+            if (target.classList.contains('disabled')) return;
+            if (target.classList.contains('used')) return;
             this.selectOrDeselectLetter(target);
         });
     }

@@ -82,8 +82,8 @@
     z-index: -1;
 
     position: absolute;
-    width: calc(var(--hex-bounding-width) - 20px);
-    height: calc(var(--hex-bounding-height) - 20px);
+    width: calc(var(--hex-bounding-width) - 10px);
+    height: calc(var(--hex-bounding-height) - 10px);
     clip-path: polygon(50% 0%,
             100% 25%,
             100% 75%,
@@ -109,13 +109,13 @@
 }
 
 .letter .hints-powerful-combination {
-    background: #1199dd;
+    background: #11bbdd;
     font-style: italic;
     z-index: -3;
 
     position: absolute;
-    width: calc(var(--hex-bounding-width) - 10px);
-    height: calc(var(--hex-bounding-height) - 10px);
+    width: calc(var(--hex-bounding-width) - 5px);
+    height: calc(var(--hex-bounding-height) - 5px);
     clip-path: polygon(50% 0%,
             100% 25%,
             100% 75%,

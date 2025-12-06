@@ -480,12 +480,20 @@ function selectNode(treeNode) {
   // Resets class and also adds disabled, used when necessary
   letterboard.updateLetterAvailability(treeNode.letterDivs, usedLetterDivs);
 
-
   let letters = '';
   for (let letterDiv of treeNode.letterDivs) {
     letters += letterDiv.dataset.letter;
   }
   const validWords = getValidWordsFromLetters(letters);
+
+  // If there are any hints, draw the inner hex
+  if (hintsAnagrams.checked || hintsPowerfulCombination.checked) {
+    for (let letterDiv of treeNode.letterDivs) {
+        const hintsBase = document.createElement('div');
+        hintsBase.classList.add('hints-base');
+        letterDiv.appendChild(hintsBase);
+      }
+  }
 
   // Add styling when anagram is available
   if (hintsAnagrams.checked) {
@@ -502,7 +510,9 @@ function selectNode(treeNode) {
 
     if (unusedAnagramFlag) {
       for (let letterDiv of treeNode.letterDivs) {
-        letterDiv.classList.add('hints-anagram');
+        const hintsAnagram = document.createElement('div');
+        hintsAnagram.classList.add('hints-anagram');
+        letterDiv.appendChild(hintsAnagram);
       }
     }
   }
@@ -516,7 +526,7 @@ function selectNode(treeNode) {
       if (word.length === letters.length) continue; // do not care about full length anagrams at any node
       // sort letters to get the key
       const key = word.toLowerCase().split('').sort().join('');
-    
+
       if (!anagramGroups.has(key)) {
         anagramGroups.set(key, []);
       }
@@ -563,7 +573,9 @@ function selectNode(treeNode) {
     }
 
     for (const letterDiv of getLetterDivsForWord(bestKey) || []) {
-      letterDiv.classList.add('hints-powerful-combination');
+      const hintsPowerfulCombination = document.createElement('div');
+      hintsPowerfulCombination.classList.add('hints-powerful-combination');
+      letterDiv.appendChild(hintsPowerfulCombination);
     }
   }
 }

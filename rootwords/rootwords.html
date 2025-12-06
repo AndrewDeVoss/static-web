@@ -64,23 +64,24 @@
 
       <label class="setting-item">
         <span class="title">Hints</span>
+        <span class="desc">These hints are designed to give you ideas, but do not necessarily lead to the optimal solution.</span>
 
         <label>
           <input id="hint-anagrams" type="checkbox">
           Anagrams
-          <span class="desc">- Highlight letters if a word can be formed that uses all available letters</span>
+          <span class="desc">- Highlight all available letters if a word can be formed using all of them</span>
         </label>
 
         <label>
           <input id="hint-powerful-combination" type="checkbox">
           Powerful Combination
-          <span class="desc">- Highlight the subset of letters that has the highest scoring set of anagrams</span>
+          <span class="desc">- Highlight the strict subset of available letters that has the highest scoring set of anagrams among all strict subsets</span>
         </label>
 
         <label class="coming-soon">
           <input id="hint-greedy" type="checkbox">
           Greedy
-          <span class="desc">- Highlight all letters in the longest possible next word</span>
+          <span class="desc">- Highlight all available letters contained in the longest possible next word</span>
         </label>
       </label>
 

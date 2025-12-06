@@ -226,7 +226,16 @@ class HexBoard extends LetterBoard {
 
     updateLetterAvailability(lettersToEnable, usedLetterDivs = []) {
         this.letterDivs.forEach(letterDiv => {
-            letterDiv.className = 'letter'; // reset classes
+            // loop through and remove children with hints classes
+            const children = Array.from(letterDiv.children);
+            children.forEach(child => {
+                if ([...child.classList].some(cls => cls.startsWith('hints-'))) {
+                    letterDiv.removeChild(child);
+                }
+            });
+            
+            // reset classes
+            letterDiv.className = 'letter';
             if (!lettersToEnable.includes(letterDiv)) {
                 letterDiv.classList.add('disabled');
             } else if (usedLetterDivs.includes(letterDiv)) {

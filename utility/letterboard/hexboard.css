@@ -76,14 +76,52 @@
     transition: background 0.2s, transform 0.2s;
 }
 
-.letter.hints-anagram {
-  background: #679969;
-  font-style: italic;
+.letter .hints-base {
+    background: #eee;
+    font-style: italic;
+    z-index: -1;
+
+    position: absolute;
+    width: calc(var(--hex-bounding-width) - 20px);
+    height: calc(var(--hex-bounding-height) - 20px);
+    clip-path: polygon(50% 0%,
+            100% 25%,
+            100% 75%,
+            50% 100%,
+            0% 75%,
+            0% 25%);
 }
 
-.letter.hints-powerful-combination {
-  background: #8d6799;
-  font-style: italic;
+.letter .hints-anagram {
+    background: #1155dd;
+    font-style: italic;
+    z-index: -4;
+
+    position: absolute;
+    width: var(--hex-bounding-width);
+    height: var(--hex-bounding-height);
+    clip-path: polygon(50% 0%,
+            100% 25%,
+            100% 75%,
+            50% 100%,
+            0% 75%,
+            0% 25%);
+}
+
+.letter .hints-powerful-combination {
+    background: #1199dd;
+    font-style: italic;
+    z-index: -3;
+
+    position: absolute;
+    width: calc(var(--hex-bounding-width) - 10px);
+    height: calc(var(--hex-bounding-height) - 10px);
+    clip-path: polygon(50% 0%,
+            100% 25%,
+            100% 75%,
+            50% 100%,
+            0% 75%,
+            0% 25%);
 }
 
 .letter.enter {

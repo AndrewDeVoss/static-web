@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
   <title>RootWords</title>
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="./rootwords.css" />
@@ -52,7 +52,63 @@
         <div id="opal-score" class="side-score-box">999</div>
       </div>
       <a class="disabled" id="stats-button" title="Stats">📊</a>
-      <div class="disabled" id="help-button" title="Help">❓</div>
+      <div id="help-button" title="Help">⚙️</div>
+    </div>
+  </div>
+
+
+  <!-- Settings Overlay -->
+  <div id="settings-overlay" class="hidden">
+    <div id="settings-panel">
+      <h2>Settings</h2>
+
+      <label class="setting-item">
+        <span class="title">Hints</span>
+
+        <label class="coming-soon">
+          <input id="hint-anagrams" type="checkbox">
+          Anagrams
+          <span class="desc">- Highlight letters if a word can be formed that uses all available letters</span>
+        </label>
+
+        <label class="coming-soon">
+          <input id="hint-powerful-combination" type="checkbox">
+          Powerful Combination
+          <span class="desc">- Highlight the subset of letters that has the highest scoring set of anagrams</span>
+        </label>
+
+        <label class="coming-soon">
+          <input id="hint-greedy" type="checkbox">
+          Greedy
+          <span class="desc">- Highlight all letters in the longest possible next word</span>
+        </label>
+      </label>
+
+      <label class="setting-item">
+        <span class="title">Scoring Mode</span>
+
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="mode" value="classic" checked>
+            Classic
+            <span class="desc">- One point for every letter used</span>
+          </label>
+
+          <label class="coming-soon">
+            <input type="radio" name="mode" value="softened">
+            Softened
+            <span class="desc">- One point for every word used</span>
+          </label>
+
+          <label class="coming-soon">
+            <input type="radio" name="mode" value="weighted">
+            Weighted
+            <span class="desc">- Varied points for each letter</span>
+          </label>
+        </div>
+      </label>
+
+      <button id="close-settings">Close</button>
     </div>
   </div>
 

@@ -7,6 +7,26 @@ import { drawSky } from './drawsky.js';
 import { ClassicScorer } from './scorers/classic/classic-scorer.js';
 
 
+// Settings
+const settingsOverlay = document.getElementById("settings-overlay");
+const closeSettings = document.getElementById("close-settings");
+const helpButton = document.getElementById("help-button");  // your gear icon
+
+helpButton.addEventListener("click", () => {
+  settingsOverlay.classList.add("visible");
+});
+
+closeSettings.addEventListener("click", () => {
+  settingsOverlay.classList.remove("visible");
+});
+
+// Optional: close overlay by clicking outside the panel
+settingsOverlay.addEventListener("click", (e) => {
+  if (e.target === settingsOverlay) {
+    settingsOverlay.classList.remove("visible");
+  }
+});
+
 const grid = document.getElementById('word-grid');
 
 async function createLetterBoardComponent(tagName, letters) {

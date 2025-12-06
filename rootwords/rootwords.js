@@ -11,21 +11,24 @@ import { ClassicScorer } from './scorers/classic/classic-scorer.js';
 const settingsOverlay = document.getElementById("settings-overlay");
 const closeSettings = document.getElementById("close-settings");
 const helpButton = document.getElementById("help-button");  // your gear icon
-
 helpButton.addEventListener("click", () => {
   settingsOverlay.classList.add("visible");
 });
-
 closeSettings.addEventListener("click", () => {
   settingsOverlay.classList.remove("visible");
 });
-
-// Optional: close overlay by clicking outside the panel
 settingsOverlay.addEventListener("click", (e) => {
   if (e.target === settingsOverlay) {
     settingsOverlay.classList.remove("visible");
   }
 });
+
+// Hints
+const hintsAnagrams = document.getElementById("hint-anagrams");
+const hintsPowerfulCombination = document.getElementById("hint-powerful-combination");
+const hintsGreedy = document.getElementById("hint-greedy");
+
+
 
 const grid = document.getElementById('word-grid');
 
@@ -228,7 +231,7 @@ function scoreRoots(rootNode = treeRoot) {
   }
   if (opalScoreEl && parseInt(opalScoreEl.textContent) > 0) {
     let opal = parseInt(opalScoreEl.textContent);
-    if (opal==score) {
+    if (opal == score) {
       medals.set('opal', 1);
     }
   }
@@ -461,7 +464,6 @@ function addLongPressListener(wordWrapper, node, holdTime = 1000) {
   wordWrapper.addEventListener('touchcancel', cancelHold);
 }
 
-
 function selectNode(treeNode) {
   // clear the word selection first
   letterboard.clearSelection();
@@ -475,7 +477,33 @@ function selectNode(treeNode) {
     usedLetterDivs.push(...child.letterDivs);
   }
 
+  // Resets class and also adds disabled, used when necessary
   letterboard.updateLetterAvailability(treeNode.letterDivs, usedLetterDivs);
+
+  // Add styling when anagram is available
+  if (hintsAnagrams.checked) {
+    let letters = '';
+    for (let letterDiv of treeNode.letterDivs) {
+      letters += letterDiv.dataset.letter;
+    }
+    const validWords = getValidWordsFromLetters(letters);
+    const anagrams = [...validWords].filter(w => w.length === letters.length);
+    let unusedAnagramFlag = false;
+    let unusedAnagram = '';
+    for (let anagram of anagrams) {
+      if (!usedWords.has(anagram.toUpperCase())) {
+        unusedAnagramFlag = true;
+        unusedAnagram = anagram;
+        break;
+      }
+    }
+
+    if (unusedAnagramFlag) {
+      for (let letterDiv of treeNode.letterDivs) {
+        letterDiv.classList.add('hints-anagram-available');
+      }
+    }
+  }
 }
 
 function highlightSelectedCell(selectedCell) {

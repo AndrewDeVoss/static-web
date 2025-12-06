@@ -76,6 +76,11 @@
     transition: background 0.2s, transform 0.2s;
 }
 
+.letter.hints-anagram-available {
+  background: #679969;
+  font-style: italic;
+}
+
 .letter.enter {
     background: #4caf50;
     color: white;

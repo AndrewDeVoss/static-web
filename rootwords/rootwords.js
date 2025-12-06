@@ -480,13 +480,15 @@ function selectNode(treeNode) {
   // Resets class and also adds disabled, used when necessary
   letterboard.updateLetterAvailability(treeNode.letterDivs, usedLetterDivs);
 
+
+  let letters = '';
+  for (let letterDiv of treeNode.letterDivs) {
+    letters += letterDiv.dataset.letter;
+  }
+  const validWords = getValidWordsFromLetters(letters);
+
   // Add styling when anagram is available
   if (hintsAnagrams.checked) {
-    let letters = '';
-    for (let letterDiv of treeNode.letterDivs) {
-      letters += letterDiv.dataset.letter;
-    }
-    const validWords = getValidWordsFromLetters(letters);
     const anagrams = [...validWords].filter(w => w.length === letters.length);
     let unusedAnagramFlag = false;
     let unusedAnagram = '';
@@ -500,8 +502,68 @@ function selectNode(treeNode) {
 
     if (unusedAnagramFlag) {
       for (let letterDiv of treeNode.letterDivs) {
-        letterDiv.classList.add('hints-anagram-available');
+        letterDiv.classList.add('hints-anagram');
       }
+    }
+  }
+
+  // Add styling for powerful letter combinations
+  if (hintsPowerfulCombination.checked) {
+    // TODO borrow work from elsewhere?
+    const anagramGroups = new Map();
+
+    for (const word of validWords) {
+      if (word.length === letters.length) continue; // do not care about full length anagrams at any node
+      // sort letters to get the key
+      const key = word.toLowerCase().split('').sort().join('');
+    
+      if (!anagramGroups.has(key)) {
+        anagramGroups.set(key, []);
+      }
+
+      anagramGroups.get(key).push(word);
+    }
+
+    // TODO use api for mode specific implementation
+    let bestScore = 0;
+    let bestKey = '';
+    for (const [key, words] of anagramGroups) {
+      const score = key.length * words.length;
+      if (score > bestScore) {
+        bestScore = score;
+        bestKey = key;
+      }
+    }
+
+    const letterMap = {};
+    for (let letterDiv of treeNode.letterDivs) {
+      const letter = letterDiv.dataset.letter;
+      if (!letterMap[letter]) letterMap[letter] = [];
+      letterMap[letter].push(letterDiv);
+    }
+    function getLetterDivsForWord(word) {
+      const usedDivs = [];
+      const tempMap = {};
+
+      // clone arrays so we don't modify original letterMap
+      for (const letter in letterMap) {
+        tempMap[letter] = [...letterMap[letter]];
+      }
+
+      for (const char of word) {
+        if (!tempMap[char.toUpperCase()] || tempMap[char.toUpperCase()].length === 0) {
+          // not enough letters available
+          return null;
+        }
+        // take one div for this letter
+        usedDivs.push(tempMap[char.toUpperCase()].pop());
+      }
+
+      return usedDivs; // array of letterDivs corresponding to the word
+    }
+
+    for (const letterDiv of getLetterDivsForWord(bestKey) || []) {
+      letterDiv.classList.add('hints-powerful-combination');
     }
   }
 }

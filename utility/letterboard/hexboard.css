@@ -76,8 +76,13 @@
     transition: background 0.2s, transform 0.2s;
 }
 
-.letter.hints-anagram-available {
+.letter.hints-anagram {
   background: #679969;
+  font-style: italic;
+}
+
+.letter.hints-powerful-combination {
+  background: #8d6799;
   font-style: italic;
 }
 

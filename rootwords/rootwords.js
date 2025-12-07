@@ -494,7 +494,7 @@ function selectNode(treeNode) {
   if (extrasDictionary.checked && isWord(letters)) {
     const definition = getDefinitionForWord(letters);
     if (definition) {
-      extraText.textContent = `${letters} - retrieved definition: ${definition}`;
+      extraText.textContent = `${letters} - ${definition}`;
       extraText.classList.remove('hidden');
     }
   } else {

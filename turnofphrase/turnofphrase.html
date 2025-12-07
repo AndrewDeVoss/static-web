@@ -14,18 +14,24 @@
 <body class="no-flex">
     <h1 class="header">Turn of Phrase</h1>
 
+
+
     <div class="root-container">
-        <label>
-            Width: <input type="number" id="grid-width" min="3" max="7" value="4"/>
-        </label>
-        <label>
-            Height: <input type="number" id="grid-height" min="3" max="7" value="4"/>
-        </label>
-        <!-- <label>
-            <input type="checkbox" id="random-mask" /> Random Mask
-        </label> -->
-        <button id="generate-btn" class="primary-btn">Generate Grid</button>
-        <pre id="grid-output" class="grid-output"></pre>
+        <div class="control-panel">
+            <div class="control-group">
+                <label for="grid-width">Width</label>
+                <input type="number" id="grid-width" min="3" max="6" value="4" />
+            </div>
+
+            <div class="control-group">
+                <label for="grid-height">Height</label>
+                <input type="number" id="grid-height" min="3" max="6" value="4" />
+            </div>
+
+            <button id="generate-btn" class="primary-btn">Generate Grid</button>
+        </div>
+
+        <div id="grid-output" class="grid-display"></div>
     </div>
 
 

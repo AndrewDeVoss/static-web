@@ -3,11 +3,16 @@
 ///////////////////////////////////////////////////////////////
 import { isWord, loadDictionary } from "../utility/isword/isword.js";
 
+const btn = document.getElementById("generate-btn");
+const out = document.getElementById("grid-output");
+
+btn.disabled = true;
 let DICT = [];
 loadDictionary().then(dictMap => {
     DICT = Array.from(dictMap.keys()).map(w => w.toUpperCase());
     // Optional: filter to only valid words
     DICT = DICT.filter(w => isWord(w));
+    btn.disabled = false;
 });
 
 ///////////////////////////////////////////////////////////////
@@ -139,32 +144,33 @@ function checkColCompletion(g, colIndex) {
 ///////////////////////////////////////////////////////////////
 // 6. BACKTRACKING SEARCH
 ///////////////////////////////////////////////////////////////
-function gridFind(g) {
+function nextCell(g, i) {
+    const total = g.w * g.h;
+    while (i < total) {
+        const x = i % g.w;
+        const y = Math.floor(i / g.w);
+        if (g.grid[y][x] !== null) break;
+        i++;
+    }
+    return i;
+}
+
+function gridFind(g, cell = 0) {
     const total = g.w * g.h;
 
-    function nextCell(i) {
-        while (i < total) {
-            const x = i % g.w;
-            const y = Math.floor(i / g.w);
-            if (g.grid[y][x] !== null) break;
-            i++;
-        }
-        return i;
-    }
+    cell = nextCell(g, cell);
+    if (cell >= total) return true;
 
-    g.cell = nextCell(g.cell);
-    if (g.cell === total) return true;
-
-    const idx = g.cell;
-    const x = idx % g.w;
-    const y = Math.floor(idx / g.w);
+    const x = cell % g.w;
+    const y = Math.floor(cell / g.w);
 
     const rowNode = g.row[y];
     const colNode = g.col[x];
 
-    g.cell++;
+    const order = g.order[cell];
+    if (!order) return false; // out-of-range; backtrack safely
 
-    for (const c of g.order[idx]) {
+    for (const c of order) {
         const nr = rowNode.next[c];
         const nc = colNode.next[c];
         if (!nr || !nc) continue;
@@ -173,33 +179,21 @@ function gridFind(g) {
         g.row[y] = nr;
         g.col[x] = nc;
 
-        // --- MERGED CHECKS ---
-        let rowOk = checkRowCompletion(g, y);
-        let colOk = checkColCompletion(g, x);
+        const rowOk = checkRowCompletion(g, y);
+        const colOk = checkColCompletion(g, x);
 
-        if (!rowOk || !colOk) {
-            // undo any registration
-            if (!rowOk && nr.end) g.usedWords.delete(getRowWord(g, y));
-            if (!colOk && nc.end) g.usedWords.delete(getColWord(g, x));
-
-            g.grid[y][x] = "";
-            g.row[y] = rowNode;
-            g.col[x] = colNode;
-            continue;
+        if (rowOk && colOk) {
+            if (gridFind(g, cell + 1)) return true;
         }
 
-        if (gridFind(g)) return true;
-
-        // BACKTRACK
+        // undo
         if (nr.end) g.usedWords.delete(getRowWord(g, y));
         if (nc.end) g.usedWords.delete(getColWord(g, x));
-
         g.grid[y][x] = "";
         g.row[y] = rowNode;
         g.col[x] = colNode;
     }
 
-    g.cell--;
     return false;
 }
 
@@ -227,8 +221,7 @@ function findWordGrid(dictionary, width, height, mask = null) {
 ///////////////////////////////////////////////////////////////
 // 8. DOM HOOKUP
 ///////////////////////////////////////////////////////////////
-const btn = document.getElementById("generate-btn");
-const out = document.getElementById("grid-output");
+
 
 function generateRandomMask(width, height, holeProbability = 0.2) {
     return Array.from({ length: height }, () =>
@@ -237,10 +230,12 @@ function generateRandomMask(width, height, holeProbability = 0.2) {
 }
 
 btn.addEventListener("click", () => {
-    const w = Math.min(parseInt(document.getElementById("grid-width").value, 7), 7);
-    const h = Math.min(parseInt(document.getElementById("grid-height").value, 7), 7);
+    const maxDim = 6;
+    const w = parseInt(document.getElementById("grid-width").value, 10);
+    const h = parseInt(document.getElementById("grid-height").value, 10);
+    if (w > maxDim) w = maxDim;
+    if (h > maxDim) h = maxDim;
     // const useMask = document.getElementById("random-mask").checked;
-
     // const mask = useMask ? generateRandomMask(w, h) : null;
 
     const grid = findWordGrid(DICT, w, h /*, mask*/);
@@ -250,9 +245,23 @@ btn.addEventListener("click", () => {
         return;
     }
 
-    out.textContent = grid
-        .map(row =>
-            row.map(c => (c === null ? "·" : c)).join(" ")
-        )
-        .join("\n");
+    renderGrid(grid);
 });
+
+function renderGrid(grid) {
+    const container = document.getElementById("grid-output");
+    container.innerHTML = ""; // clear previous
+
+    // Set CSS grid columns dynamically
+    container.style.gridTemplateColumns = `repeat(${grid[0].length}, 60px)`;
+
+    grid.forEach(row => {
+        row.forEach(letter => {
+            const cell = document.createElement("div");
+            cell.className = "grid-cell";
+            cell.textContent = letter || ""; // support masked/empty cells
+            container.appendChild(cell);
+        });
+    });
+}
+

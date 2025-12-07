@@ -1,5 +1,5 @@
 // rootwords.js
-import { loadDictionary, isWord, chooseRandomWordSet, loadForbiddenWords, getValidWordsFromLetters, loadSuitable5And6 } from '../utility/isword/isword.js';
+import { loadDictionary, isWord, chooseRandomWordSet, loadForbiddenWords, getValidWordsFromLetters, loadSuitable5And6, getDefinitionForWord } from '../utility/isword/isword.js';
 import { TreeNode } from './word-tree.js';
 import { drawTree } from './drawtree.js'
 import { drawGrass } from './drawgrass.js';
@@ -22,6 +22,10 @@ settingsOverlay.addEventListener("click", (e) => {
     settingsOverlay.classList.remove("visible");
   }
 });
+
+// Extra features
+const extrasDictionary = document.getElementById("extras-dictionary");
+const extraText = document.getElementById("extra-text");
 
 // Hints
 const hintsAnagrams = document.getElementById("hint-anagrams");
@@ -485,6 +489,18 @@ function selectNode(treeNode) {
     letters += letterDiv.dataset.letter;
   }
   const validWords = getValidWordsFromLetters(letters);
+
+  // Account for extra features
+  if (extrasDictionary.checked && isWord(letters)) {
+    const definition = getDefinitionForWord(letters);
+    if (definition) {
+      extraText.textContent = `${letters} - retrieved definition: ${definition}`;
+      extraText.classList.remove('hidden');
+    }
+  } else {
+    extraText.textContent = '';
+    extraText.classList.add('hidden');
+  }
 
   // If there are any hints, draw the inner hex
   if (hintsAnagrams.checked || hintsPowerfulCombination.checked) {

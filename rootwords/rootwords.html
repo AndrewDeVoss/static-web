@@ -10,7 +10,8 @@
 </head>
 
 <body class="no-flex">
-  <h1 class="header">RootWords</h1>
+  <h1 class="header">Root Words</h1>
+  <h3 class="subheader hidden" id="extra-text">Find words within words!</h3>
 
   <div class="drawn-wrapper">
     <div id="over-world">
@@ -64,8 +65,9 @@
 
       <label class="setting-item">
         <span class="title">Hints</span>
-        <span class="desc">These hints are designed to give you ideas, but do not necessarily lead to the optimal solution.</span>
-        <br/>
+        <span class="desc">These hints are designed to give you ideas, but do not necessarily lead to the optimal
+          solution.</span>
+        <br />
 
         <label>
           <input id="hint-anagrams" type="checkbox">
@@ -76,7 +78,8 @@
         <label>
           <input id="hint-powerful-combination" type="checkbox">
           Powerful Combination
-          <span class="desc">- Highlight the strict subset of available letters that has the highest scoring set of anagrams among all strict subsets</span>
+          <span class="desc">- Highlight the strict subset of available letters that has the highest scoring set of
+            anagrams among all strict subsets</span>
         </label>
 
         <label class="coming-soon">
@@ -108,6 +111,29 @@
             <span class="desc">- Varied points for each letter</span>
           </label>
         </div>
+      </label>
+
+      <label class="setting-item">
+        <span class="title">Extra Features</span>
+        <span class="desc">Just wish you could ... ?</span>
+        <br />
+
+        <label>
+          <input id="extras-dictionary" type="checkbox">
+          Dictionary
+          <span class="desc">- Define the selected word</span>
+          <br />
+          <span class="desc">
+            Definitions provided by
+            <br />
+            WordNet 3.0 © 2006 Princeton University.
+            <br />
+            and
+            <br />
+            Tatu Ylonen: Wiktextract: Wiktionary as Machine-Readable Structured Data, Proceedings of the 13th Conference
+            on Language Resources and Evaluation (LREC), pp. 1317-1325, Marseille, 20-25 June 2022. ttps://kaikki.org
+          </span>"
+        </label>
       </label>
 
       <button id="close-settings">Close</button>

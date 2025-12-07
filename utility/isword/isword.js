@@ -76,6 +76,15 @@ export function isWord(word) {
   return true;
 }
 
+export function getDefinitionForWord(word) {
+  const lower = word.toLowerCase();
+  if (bigDictionary.has(lower)) {
+    return bigDictionary.get(lower).definition;
+  } else {
+    return null;
+  }
+}
+
 export function getValidWordsFromLetters(charString, dictionarySet = null) {
   const availableLetters = {};
   for (const char of charString.toLowerCase()) {

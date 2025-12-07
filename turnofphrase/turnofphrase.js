@@ -230,11 +230,20 @@ function findWordGrid(dictionary, width, height, mask = null) {
 const btn = document.getElementById("generate-btn");
 const out = document.getElementById("grid-output");
 
-btn.addEventListener("click", () => {
-    const w = 6;
-    const h = 4;
+function generateRandomMask(width, height, holeProbability = 0.2) {
+    return Array.from({ length: height }, () =>
+        Array.from({ length: width }, () => (Math.random() < holeProbability ? null : ""))
+    );
+}
 
-    const grid = findWordGrid(DICT, w, h);
+btn.addEventListener("click", () => {
+    const w = parseInt(document.getElementById("grid-width").value, 10);
+    const h = parseInt(document.getElementById("grid-height").value, 10);
+    // const useMask = document.getElementById("random-mask").checked;
+
+    // const mask = useMask ? generateRandomMask(w, h) : null;
+
+    const grid = findWordGrid(DICT, w, h /*, mask*/);
 
     if (!grid) {
         out.textContent = "No grid found.";

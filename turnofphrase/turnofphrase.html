@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en-US">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Turn of Phrase</title>
+
+  <!-- Assuming your main style.css exists one level up like RootWords -->
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./turnofphrase.css" />
+</head>
+
+<body class="no-flex">
+  <h1 class="header">Turn of Phrase</h1>
+
+  <div class="drawn-wrapper">
+    <div id="over-world">
+      <div id="tree"></div>
+      <div id="grassery"></div>
+    </div>
+
+    <div class="root-container">
+      <button id="generate-btn" class="primary-btn">Generate Grid</button>
+      <pre id="grid-output" class="grid-output"></pre>
+    </div>
+  </div>
+
+  <!-- Simple Bottom Navigation Banner (EMPTY but styled) -->
+  <div class="bottom-banner">
+    <div class="game-controls">
+      <div id="home-button"><a href="../index.html">🏠</a></div>
+    </div>
+  </div>
+
+  <script src="./turnofphrase.js" type="module"></script>
+</body>
+
+</html>

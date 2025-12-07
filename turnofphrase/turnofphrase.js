@@ -237,8 +237,8 @@ function generateRandomMask(width, height, holeProbability = 0.2) {
 }
 
 btn.addEventListener("click", () => {
-    const w = parseInt(document.getElementById("grid-width").value, 10);
-    const h = parseInt(document.getElementById("grid-height").value, 10);
+    const w = Math.min(parseInt(document.getElementById("grid-width").value, 7), 7);
+    const h = Math.min(parseInt(document.getElementById("grid-height").value, 7), 7);
     // const useMask = document.getElementById("random-mask").checked;
 
     // const mask = useMask ? generateRandomMask(w, h) : null;

@@ -163,11 +163,11 @@
 /* TILE BOARD */
 .board {
     margin: 15px;
+    margin-bottom: 50px;
     display: grid;
     justify-content: center;
     gap: 4px;
     position: relative;
-    /* Required for ghost placement */
 }
 
 .board-cell {

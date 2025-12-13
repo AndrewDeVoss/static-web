@@ -55,8 +55,9 @@ function renderBoard(grid) {
     const board = document.getElementById("board");
     board.innerHTML = "";
     board.style.position = "relative"; // required for ghost + absolute tiles
+    board.style.display = "inline-grid";
     board.style.gridTemplateColumns = `repeat(${W}, 40px)`;
-    board.style.display = "grid";
+    board.style.width = "fit-content";
 
     board.dataset.rows = H;
     board.dataset.cols = W;

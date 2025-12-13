@@ -38,6 +38,9 @@ btn.addEventListener("click", () => {
         return;
     }
 
+    // If there are any tiles that exist, delete them
+    document.querySelectorAll(".game-area .tile").forEach(tile => tile.remove());
+
     renderBoard(grid);
     renderTiles(grid);
 });
@@ -205,6 +208,8 @@ function enableTileDrag(tileDiv) {
 
     tileDiv.addEventListener("mousedown", e => {
         dragging = true;
+        removeTileFromBoard(tileDiv);
+
         tileDiv.classList.add("dragging");
 
         const gameArea = document.querySelector(".game-area");
@@ -235,7 +240,6 @@ function enableTileDrag(tileDiv) {
     window.addEventListener("mousemove", e => {
         if (!dragging) return;
 
-        removeTileFromBoard(tileDiv);
         tileDiv.dataset.state = "dragging";
 
         const gameArea = document.querySelector(".game-area");

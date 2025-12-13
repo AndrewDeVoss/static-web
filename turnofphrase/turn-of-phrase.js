@@ -206,7 +206,7 @@ function enableTileDrag(tileDiv) {
     let startX = 0, startY = 0;
     let dragging = false;
 
-    tileDiv.addEventListener("mousedown", e => {
+    tileDiv.addEventListener("pointerdown", e => {
         dragging = true;
         removeTileFromBoard(tileDiv);
 
@@ -237,7 +237,7 @@ function enableTileDrag(tileDiv) {
     });
 
 
-    window.addEventListener("mousemove", e => {
+    window.addEventListener("pointermove", e => {
         if (!dragging) return;
 
         tileDiv.dataset.state = "dragging";
@@ -255,7 +255,7 @@ function enableTileDrag(tileDiv) {
         // drawGhost(tileDiv, startingBoardCell);
     });
 
-    window.addEventListener("mouseup", e => {
+    window.addEventListener("pointerup", e => {
         if (!dragging) return;
         dragging = false;
         tileDiv.classList.remove("dragging");

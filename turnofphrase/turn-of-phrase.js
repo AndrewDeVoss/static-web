@@ -160,6 +160,8 @@ function renderTileDOM(tile) {
     tileDiv.style.display = "inline-grid";
     tileDiv.style.cursor = "grab";
 
+    const tileColor = randomLowOpacityColor(0.2);
+
     const rows = maxR - minR + 1;
     const cols = maxC - minC + 1;
     tileDiv.dataset.rows = rows;
@@ -176,6 +178,7 @@ function renderTileDOM(tile) {
         tileCell.textContent = cell.letter;
         tileCell.style.gridRowStart = (cell.r - minR) + 1;
         tileCell.style.gridColumnStart = (cell.c - minC) + 1;
+        tileCell.style.backgroundColor = tileColor;
 
         // Data
         tileCell.dataset.row = cell.r - minR;
@@ -417,4 +420,11 @@ function removeTileFromBoard(tileDiv) {
             boardCell.classList.remove("filled");
         }
     }
+}
+
+function randomLowOpacityColor(alpha = 0.25) {
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }

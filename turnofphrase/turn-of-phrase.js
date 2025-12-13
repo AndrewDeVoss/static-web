@@ -54,7 +54,6 @@ function renderBoard(grid) {
     board.style.position = "relative"; // required for ghost + absolute tiles
     board.style.gridTemplateColumns = `repeat(${W}, 40px)`;
     board.style.display = "grid";
-    board.style.gap = "6px";
 
     board.dataset.rows = H;
     board.dataset.cols = W;
@@ -78,6 +77,15 @@ function renderTiles(grid) {
     const tiles = generateTiles(grid);
     const bank = document.getElementById("tile-bank");
 
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+    shuffle(tiles);
+
     bank.innerHTML = "";
     bank.style.position = "relative"; // for absolute positioning
 
@@ -95,7 +103,7 @@ function renderTiles(grid) {
         )
     );
 
-    const bankCellSize = 40*maxTileDim + 4*(maxTileDim - 1) + 10;
+    const bankCellSize = 40 * maxTileDim + 4 * (maxTileDim - 1) + 10;
     bank.style.width = `${cols * bankCellSize}px`;
     bank.style.height = `${rows * bankCellSize}px`;
 

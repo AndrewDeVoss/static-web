@@ -159,7 +159,7 @@
     margin: 15px;
     display: grid;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     position: relative;
     /* Required for ghost placement */
 }

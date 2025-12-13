@@ -110,7 +110,12 @@
     margin-top: 30px;
     text-align: center;
     position: relative;
+
+    max-height: calc(100vh - 220px); /* adjust as needed */
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
+
 
 /* TILE BANK */
 .tile-bank {

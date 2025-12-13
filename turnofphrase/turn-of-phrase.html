@@ -8,13 +8,11 @@
 
     <!-- Assuming your main style.css exists one level up like RootWords -->
     <link rel="stylesheet" href="../style.css" />
-    <link rel="stylesheet" href="./turnofphrase.css" />
+    <link rel="stylesheet" href="./turn-of-phrase.css" />
 </head>
 
 <body class="no-flex">
     <h1 class="header">Turn of Phrase</h1>
-
-
 
     <div class="root-container">
         <div class="control-panel">
@@ -31,9 +29,14 @@
             <button id="generate-btn" class="primary-btn">Generate Grid</button>
         </div>
 
-        <div id="grid-output" class="grid-display"></div>
-    </div>
+        <div class="game-area">
+            <h2>Tiles</h2>
+            <div id="tile-bank" class="tile-bank"></div>
 
+            <h2>Board</h2>
+            <div id="board" class="board"></div>
+        </div>
+    </div>
 
     <!-- Simple Bottom Navigation Banner (EMPTY but styled) -->
     <div class="bottom-banner">
@@ -42,7 +45,7 @@
         </div>
     </div>
 
-    <script src="./turnofphrase.js" type="module"></script>
+    <script src="./turn-of-phrase.js" type="module"></script>
 </body>
 
 </html>

@@ -3,18 +3,6 @@
 ///////////////////////////////////////////////////////////////
 import { isWord, loadDictionary } from "../utility/isword/isword.js";
 
-const btn = document.getElementById("generate-btn");
-const out = document.getElementById("grid-output");
-
-btn.disabled = true;
-let DICT = [];
-loadDictionary().then(dictMap => {
-    DICT = Array.from(dictMap.keys()).map(w => w.toUpperCase());
-    // Optional: filter to only valid words
-    DICT = DICT.filter(w => isWord(w));
-    btn.disabled = false;
-});
-
 ///////////////////////////////////////////////////////////////
 // 2. TRIE STRUCTURE
 ///////////////////////////////////////////////////////////////
@@ -212,56 +200,8 @@ function getColWord(g, colIndex) {
 ///////////////////////////////////////////////////////////////
 // 7. PUBLIC FUNCTION
 ///////////////////////////////////////////////////////////////
-function findWordGrid(dictionary, width, height, mask = null) {
+export function findWordGrid(dictionary, width, height, mask = null) {
     const g = new Grid(width, height, dictionary, mask);
     if (!gridFind(g)) return null;
     return g.grid;
 }
-
-///////////////////////////////////////////////////////////////
-// 8. DOM HOOKUP
-///////////////////////////////////////////////////////////////
-
-
-function generateRandomMask(width, height, holeProbability = 0.2) {
-    return Array.from({ length: height }, () =>
-        Array.from({ length: width }, () => (Math.random() < holeProbability ? null : ""))
-    );
-}
-
-btn.addEventListener("click", () => {
-    const maxDim = 6;
-    const w = parseInt(document.getElementById("grid-width").value, 10);
-    const h = parseInt(document.getElementById("grid-height").value, 10);
-    if (w > maxDim) w = maxDim;
-    if (h > maxDim) h = maxDim;
-    // const useMask = document.getElementById("random-mask").checked;
-    // const mask = useMask ? generateRandomMask(w, h) : null;
-
-    const grid = findWordGrid(DICT, w, h /*, mask*/);
-
-    if (!grid) {
-        out.textContent = "No grid found.";
-        return;
-    }
-
-    renderGrid(grid);
-});
-
-function renderGrid(grid) {
-    const container = document.getElementById("grid-output");
-    container.innerHTML = ""; // clear previous
-
-    // Set CSS grid columns dynamically
-    container.style.gridTemplateColumns = `repeat(${grid[0].length}, 60px)`;
-
-    grid.forEach(row => {
-        row.forEach(letter => {
-            const cell = document.createElement("div");
-            cell.className = "grid-cell";
-            cell.textContent = letter || ""; // support masked/empty cells
-            container.appendChild(cell);
-        });
-    });
-}
-

@@ -1,0 +1,176 @@
+/* Modern grid styling for general use */
+.grid-display {
+    display: grid;
+    gap: 8px;
+    margin-top: 20px;
+    justify-content: center;
+    grid-auto-rows: 60px;
+}
+
+/* Each generic grid cell */
+.grid-cell {
+    width: 60px;
+    height: 60px;
+    background: #ffffff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #333;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.grid-cell:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.grid-cell {
+    animation: popIn 0.2s ease-out;
+}
+
+/* Control Panel Layout */
+.control-panel {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0;
+    justify-content: center;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.control-group label {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.control-panel input[type="number"] {
+    width: 70px;
+    padding: 8px 10px;
+    font-size: 1rem;
+    border: 1px solid #d0d0d0;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    outline: none;
+    transition: box-shadow 0.15s ease, border 0.15s ease;
+}
+
+.control-panel input[type="number"]:focus {
+    border-color: #6c8cff;
+    box-shadow: 0 3px 8px rgba(0, 80, 255, 0.2);
+}
+
+/* Primary Button */
+.primary-btn {
+    padding: 10px 18px;
+    font-size: 1rem;
+    background: #6c8cff;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-weight: 600;
+}
+
+.primary-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
+}
+
+.primary-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+
+.game-area {
+    margin-top: 30px;
+    text-align: center;
+    position: relative;
+}
+
+/* TILE BANK */
+.tile-bank {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+}
+
+/* TILE */
+.tile {
+    display: inline-grid;
+    grid-auto-rows: 40px;
+    grid-auto-columns: 40px;
+    gap: 4px;
+    cursor: grab;
+    user-select: none;
+    z-index: 10;
+    transition: transform 0.1s ease;
+}
+
+.tile:active {
+    cursor: grabbing;
+}
+
+/* TILE CELL */
+.tile-cell {
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+
+.tile.in-board {
+    opacity: 0.95;
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.25));
+}
+
+/* TILE BOARD */
+.board {
+    margin: 15px;
+    display: grid;
+    justify-content: center;
+    gap: 6px;
+    position: relative;
+    /* Required for ghost placement */
+}
+
+.board-cell {
+    width: 40px;
+    height: 40px;
+    background: #d6aaf5;
+    border-radius: 6px;
+}
+
+.board-cell.filled {
+    background: #85d5f5;
+}

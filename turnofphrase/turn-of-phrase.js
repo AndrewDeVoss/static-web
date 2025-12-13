@@ -80,52 +80,84 @@ function renderTiles(grid) {
     const tiles = generateTiles(grid);
     const bank = document.getElementById("tile-bank");
 
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
+    // ---- SORT: height (rows) → width (cols)
+    function tileDims(tile) {
+        const rows =
+            Math.max(...tile.cells.map(c => c.r)) -
+            Math.min(...tile.cells.map(c => c.r)) + 1;
+
+        const cols =
+            Math.max(...tile.cells.map(c => c.c)) -
+            Math.min(...tile.cells.map(c => c.c)) + 1;
+
+        return { rows, cols };
     }
-    shuffle(tiles);
 
-    bank.innerHTML = "";
-    bank.style.position = "relative"; // for absolute positioning
+    tiles.sort((a, b) => {
+        const da = tileDims(a);
+        const db = tileDims(b);
 
-    const N = tiles.length;
-    const cols = Math.ceil(Math.sqrt(N));
-    const rows = Math.ceil(N / cols);
-
-    // Set container fixed size so layout never shifts
-    const maxTileDim = Math.max(
-        ...tiles.map(t =>
-            Math.max(
-                Math.max(...t.cells.map(c => c.r)) - Math.min(...t.cells.map(c => c.r)) + 1,
-                Math.max(...t.cells.map(c => c.c)) - Math.min(...t.cells.map(c => c.c)) + 1
-            )
-        )
-    );
-
-    const bankCellSize = 40 * maxTileDim + 4 * (maxTileDim - 1) + 10;
-    bank.style.width = `${cols * bankCellSize}px`;
-    bank.style.height = `${rows * bankCellSize}px`;
-
-    tiles.forEach((tile, i) => {
-        let tileDiv = renderTileDOM(tile);
-
-        const r = Math.floor(i / cols);
-        const c = i % cols;
-
-        tileDiv.dataset.bankRow = r;
-        tileDiv.dataset.bankCol = c;
-
-        // Store the cell size so "placeTileInBank" can compute left/top
-        tileDiv.dataset.bankCellSize = bankCellSize;
-
-        placeTileInBank(tileDiv);
-        enableTileDrag(tileDiv);
+        if (da.rows !== db.rows) return da.rows - db.rows;
+        return da.cols - db.cols;
     });
+
+    // ---- BANK SETUP
+    bank.innerHTML = "";
+    bank.style.position = "relative";
+
+    const CELL = 40;
+    const GAP = 4;
+    const PADDING = 10;
+
+    // Choose a reasonable max width (responsive)
+    const maxBankWidth = window.innerWidth - 20;
+
+    let x = 0;
+    let y = 0;
+    let rowHeight = 0;
+    let maxRowWidth = 0;
+
+
+    // ---- LAYOUT
+    tiles.forEach(tile => {
+        const tileDiv = renderTileDOM(tile);
+
+        const rows = parseInt(tileDiv.dataset.rows, 10);
+        const cols = parseInt(tileDiv.dataset.cols, 10);
+
+        const tileWidth =
+            cols * CELL + (cols - 1) * GAP + PADDING;
+
+        const tileHeight =
+            rows * CELL + (rows - 1) * GAP + PADDING;
+
+        // New row if tile doesn't fit
+        if (x + tileWidth > maxBankWidth) {
+            maxRowWidth = Math.max(maxRowWidth, x);
+
+            x = 0;
+            y += rowHeight;
+            rowHeight = 0;
+        }
+
+
+        tileDiv.style.position = "absolute";
+        tileDiv.style.left = `${x}px`;
+        tileDiv.style.top = `${y}px`;
+
+        bank.appendChild(tileDiv);
+        enableTileDrag(tileDiv);
+
+        x += tileWidth;
+        rowHeight = Math.max(rowHeight, tileHeight);
+        maxRowWidth = Math.max(maxRowWidth, x);
+    });
+
+    bank.style.width = `${maxRowWidth}px`;
+    bank.style.height = `${y + rowHeight}px`;
+
 }
+
 
 function placeTileInBank(tileDiv) {
     const bank = document.getElementById("tile-bank");

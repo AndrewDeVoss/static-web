@@ -145,6 +145,10 @@ function renderTiles(grid) {
         tileDiv.style.left = `${x}px`;
         tileDiv.style.top = `${y}px`;
 
+        // Save location for when we place in bank
+        tileDiv.dataset.bankLeft = x;
+        tileDiv.dataset.bankTop = y;
+
         bank.appendChild(tileDiv);
         enableTileDrag(tileDiv);
 
@@ -155,7 +159,6 @@ function renderTiles(grid) {
 
     bank.style.width = `${maxRowWidth}px`;
     bank.style.height = `${y + rowHeight}px`;
-
 }
 
 
@@ -164,20 +167,19 @@ function placeTileInBank(tileDiv) {
 
     tileDiv.dataset.state = "in-bank";
 
-    // Absolute positioning inside the bank grid
-    const bankCellRow = parseInt(tileDiv.dataset.bankRow, 10);
-    const bankCellCol = parseInt(tileDiv.dataset.bankCol, 10);
-    const cellSize = parseInt(tileDiv.dataset.bankCellSize, 10);
+    const left = parseFloat(tileDiv.dataset.bankLeft);
+    const top = parseFloat(tileDiv.dataset.bankTop);
 
     tileDiv.style.position = "absolute";
-    tileDiv.style.left = `${bankCellCol * cellSize}px`;
-    tileDiv.style.top = `${bankCellRow * cellSize}px`;
+    tileDiv.style.left = `${left}px`;
+    tileDiv.style.top = `${top}px`;
 
-    // Reparent tile if necessary
+    // Reparent if necessary
     if (tileDiv.parentElement !== bank) {
         bank.appendChild(tileDiv);
     }
 }
+
 
 function renderTileDOM(tile) {
     const minR = Math.min(...tile.cells.map(c => c.r));

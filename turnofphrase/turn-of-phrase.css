@@ -110,6 +110,7 @@
     margin-top: 30px;
     text-align: center;
     position: relative;
+    touch-action: none;
 }
 
 /* TILE BANK */
@@ -129,6 +130,7 @@
     user-select: none;
     z-index: 10;
     transition: transform 0.1s ease;
+    touch-action: none;
 }
 
 .tile:active {
@@ -167,6 +169,7 @@
 .board-cell {
     width: 40px;
     height: 40px;
-    background: #9e9aa1;
+    background: #dadada;
+    outline: #333 2px solid;
     border-radius: 6px;
 }

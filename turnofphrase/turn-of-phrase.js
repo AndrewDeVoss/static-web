@@ -109,7 +109,6 @@ function renderTiles(grid) {
     const bankScale = 0.75
     const CELL = 40 * bankScale;
     const GAP = 4  * bankScale;
-    const PADDING = 10 * bankScale;
 
     // Choose a reasonable max width (responsive)
     const maxBankWidth = window.innerWidth - 20;
@@ -127,11 +126,8 @@ function renderTiles(grid) {
         const rows = parseInt(tileDiv.dataset.rows, 10);
         const cols = parseInt(tileDiv.dataset.cols, 10);
 
-        const tileWidth =
-            cols * CELL + (cols - 1) * GAP + PADDING;
-
-        const tileHeight =
-            rows * CELL + (rows - 1) * GAP + PADDING;
+        const tileWidth = cols * CELL + (cols - 1) * GAP;
+        const tileHeight = rows * CELL + (rows - 1) * GAP;
 
         // New row if tile doesn't fit
         if (x + tileWidth > maxBankWidth) {
@@ -150,6 +146,7 @@ function renderTiles(grid) {
         // Save location for when we place in bank
         tileDiv.dataset.bankLeft = x;
         tileDiv.dataset.bankTop = y;
+        console.log(`Bank pos for tile ${tile.id}: ${x}, ${y}`);
 
         bank.appendChild(tileDiv);
         enableTileDrag(tileDiv);

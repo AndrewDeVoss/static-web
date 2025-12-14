@@ -1,6 +1,11 @@
 .root-container {
     padding-top: 50px;
     padding-bottom: 50px;
+    width: 100vw;
+    padding-bottom: 20vh;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 /* Modern grid styling for general use */
@@ -115,10 +120,6 @@
     margin-top: 30px;
     text-align: center;
     position: relative;
-
-    max-height: calc(100vh - 220px); /* adjust as needed */
-    overflow-y: auto;
-    overscroll-behavior: contain;
 }
 
 

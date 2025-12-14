@@ -1,3 +1,7 @@
+html, body {
+    overscroll-behavior-y: none;
+}
+
 .root-container {
     padding-top: 50px;
     padding-bottom: 50px;
@@ -5,7 +9,6 @@
     padding-bottom: 20vh;
     max-height: calc(100vh - 220px);
     overflow-y: auto;
-    overscroll-behavior: contain;
 }
 
 /* Modern grid styling for general use */

@@ -457,8 +457,9 @@ function removeTileFromBoard(tileDiv) {
 }
 
 function randomLowOpacityColor(alpha = 0.25) {
-    const r = Math.floor(Math.random() * 256);
-    const g = Math.floor(Math.random() * 256);
-    const b = Math.floor(Math.random() * 256);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = 60 + Math.random() * 40; // avoid gray
+    const lightness = 40 + Math.random() * 20;
+
+    return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
 }

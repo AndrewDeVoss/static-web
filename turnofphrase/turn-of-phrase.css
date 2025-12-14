@@ -143,6 +143,22 @@
     touch-action: none;
 }
 
+.tile[data-state="in-bank"] {
+    transform: scale(0.75);
+}
+
+.tile[data-state="dragging"] {
+    transform: scale(1);
+}
+
+.tile[data-state="dragging"] .tile-cell {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+
+.tile[data-state="in-board"] {
+    transform: scale(1);
+}
+
 .tile:active {
     cursor: grabbing;
 }

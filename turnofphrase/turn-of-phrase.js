@@ -106,9 +106,10 @@ function renderTiles(grid) {
     bank.innerHTML = "";
     bank.style.position = "relative";
 
-    const CELL = 40;
-    const GAP = 4;
-    const PADDING = 10;
+    const bankScale = 0.75
+    const CELL = 40 * bankScale;
+    const GAP = 4  * bankScale;
+    const PADDING = 10 * bankScale;
 
     // Choose a reasonable max width (responsive)
     const maxBankWidth = window.innerWidth - 20;
@@ -201,6 +202,7 @@ function renderTileDOM(tile) {
     const cols = maxC - minC + 1;
     tileDiv.dataset.rows = rows;
     tileDiv.dataset.cols = cols;
+    tileDiv.dataset.state = "in-bank";
 
     tileDiv.style.gridTemplateRows = `repeat(${rows}, 40px)`;
     tileDiv.style.gridTemplateColumns = `repeat(${cols}, 40px)`;

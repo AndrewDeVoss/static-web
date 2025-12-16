@@ -30,7 +30,7 @@ btn.addEventListener("click", () => {
     const maxDim = 6;
     const w = Math.min(maxDim, parseInt(document.getElementById("grid-width").value, 10));
     const h = Math.min(maxDim, parseInt(document.getElementById("grid-height").value, 10));
-
+    tileColors = [];
     const grid = findWordGrid(DICT, w, h);
 
     if (!grid) {
@@ -455,10 +455,63 @@ function removeTileFromBoard(tileDiv) {
     }
 }
 
-function randomLowOpacityColor(alpha = 0.25) {
-    const hue = Math.floor(Math.random() * 360);
-    const saturation = 60 + Math.random() * 40; // avoid gray
-    const lightness = 40 + Math.random() * 20;
+let tileColors = [];
 
-    return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
+function randomLowOpacityColor(alpha = 0.25, candidates = 9) {
+    // First color: no comparison needed
+    if (tileColors.length === 0) {
+        const first = generateRandomHSL(alpha);
+        tileColors.push(first);
+        return `hsla(${first.h}, ${first.s}%, ${first.l}%, ${first.a})`;
+    }
+
+    let bestCandidate = null;
+    let bestScore = -Infinity;
+
+    for (let i = 0; i < candidates; i++) {
+        const candidate = generateRandomHSL(alpha);
+
+        // Find distance to closest existing color
+        let minDist = Infinity;
+        for (const used of tileColors) {
+            const d = hslDistance(candidate, used);
+            if (d < minDist) minDist = d;
+        }
+
+        // Maximize the minimum distance
+        if (minDist > bestScore) {
+            bestScore = minDist;
+            bestCandidate = candidate;
+        }
+    }
+
+    tileColors.push(bestCandidate);
+
+    return `hsla(${bestCandidate.h}, ${bestCandidate.s}%, ${bestCandidate.l}%, ${bestCandidate.a})`;
+}
+
+function generateRandomHSL(alpha) {
+    return {
+        h: Math.random() * 360,
+        s: 60 + Math.random() * 40, // 60–100%
+        l: 40 + Math.random() * 20, // 40–60%
+        a: alpha
+    };
+}
+
+function hslDistance(a, b) {
+    const dh = Math.min(
+        Math.abs(a.h - b.h),
+        360 - Math.abs(a.h - b.h)
+    ) / 180; // normalize
+
+    const ds = Math.abs(a.s - b.s) / 100;
+    const dl = Math.abs(a.l - b.l) / 100;
+
+    // Weighted Euclidean distance
+    return Math.sqrt(
+        dh * dh * 2 + // hue matters most
+        ds * ds +
+        dl * dl
+    );
 }

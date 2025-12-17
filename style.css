@@ -8,22 +8,26 @@ body {
   justify-content: center;
   font-family: 'Segoe UI', Arial, sans-serif;
 }
+
 .container {
   position: relative;
   background: #fff;
   padding: 2rem 1.5rem;
   border-radius: 1rem;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
   text-align: center;
   max-width: 350px;
   width: 100%;
-  overflow: hidden; /* Ensures canvas doesn't overflow */
+  overflow: hidden;
+  /* Ensures canvas doesn't overflow */
 }
+
 p {
   font-size: 1.2rem;
   color: #333;
   margin: 0;
 }
+
 .button {
   display: inline-block;
   margin-top: 1rem;
@@ -36,8 +40,10 @@ p {
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s;
-  box-sizing: border-box; /* Add this line */
+  box-sizing: border-box;
+  /* Add this line */
 }
+
 .button:hover {
   background: #357ae8;
 }
@@ -50,6 +56,7 @@ p {
   opacity: 0.7;
   box-shadow: none;
 }
+
 .button.fixed-width {
   display: inline-block;
   width: 200px;
@@ -57,8 +64,10 @@ p {
 
 .disabled {
   opacity: 0.4;
-  pointer-events: none; /* Prevents clicking */
-  cursor: default;      /* Shows default cursor (not a pointer) */
+  pointer-events: none;
+  /* Prevents clicking */
+  cursor: default;
+  /* Shows default cursor (not a pointer) */
 }
 
 .input-group {
@@ -81,6 +90,7 @@ p {
   margin-top: 0;
   padding: 0.7rem 1.2rem;
 }
+
 .home-button {
   position: absolute;
   top: 16px;
@@ -95,17 +105,18 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   z-index: 100;
   border: 1px solid #ddd;
   transition: background 0.2s;
-  line-height: 1;           /* Ensures icon is vertically centered */
-  vertical-align: middle;   /* Helps with vertical alignment */
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .input {
   font-size: 16px;
 }
+
 .fixed-width {
   width: 280px;
   text-align: center;
@@ -209,9 +220,91 @@ p {
 #help-button,
 #undo-button,
 #redo-button,
-#shuffle-button {
+#shuffle-button,
+#back-button {
   text-decoration: none;
   color: white;
   font-size: 1.8rem;
   cursor: pointer;
+}
+
+#home-button a:visited,
+#stats-button a:visited,
+#help-button a:visited,
+#undo-button a:visited,
+#redo-button a:visited,
+#back-button a:visited {
+    color: inherit;
+    text-decoration: none;
+}
+
+#home-button a,
+#stats-button a,
+#help-button a,
+#undo-button a,
+#redo-button a,
+#back-button a {
+    color: inherit;
+    text-decoration: none;
+}
+/* Day Selector – pill style */
+.day-selector {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0; /* buttons touch */
+    width: 60%;
+    margin-top: 10px;
+    background: #ddd;
+    border-radius: 999px; /* outer pill */
+    padding: 2px; /* thin outer border */
+}
+
+/* Individual day */
+.day-button {
+    padding: 4px 0; /* tighter vertical padding */
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+
+    border-radius: 0; /* default: square inside */
+    transition: background 0.15s ease, transform 0.12s ease;
+}
+
+/* Round only outer edges */
+.day-button:first-child {
+    border-top-left-radius: 999px;
+    border-bottom-left-radius: 999px;
+}
+
+.day-button:last-child {
+    border-top-right-radius: 999px;
+    border-bottom-right-radius: 999px;
+}
+
+/* States */
+.day-button[data-state="unstarted"] {
+    background: #f0f0f0;
+    color: #555;
+}
+
+.day-button[data-state="started"] {
+    background: #ffe08a;
+    color: #333;
+}
+
+.day-button[data-state="finished"] {
+    background: #9fd8a0;
+    color: #214d21;
+}
+
+/* Hover */
+.day-button:hover {
+    filter: brightness(0.95);
+}
+
+/* Active press */
+.day-button:active {
+    transform: translateY(1px);
 }

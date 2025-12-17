@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
     overscroll-behavior-y: none;
 }
 
@@ -59,9 +60,9 @@ html, body {
 
 /* Control Panel Layout */
 .control-panel {
-    display: flex;
+    display: none;
     gap: 15px;
-    margin: 20px 0;
+    margin: 20px 10vw;
     justify-content: center;
     align-items: flex-end;
     flex-wrap: wrap;
@@ -93,30 +94,6 @@ html, body {
 .control-panel input[type="number"]:focus {
     border-color: #6c8cff;
     box-shadow: 0 3px 8px rgba(0, 80, 255, 0.2);
-}
-
-/* Primary Button */
-.primary-btn {
-    padding: 10px 18px;
-    font-size: 1rem;
-    background: #6c8cff;
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    font-weight: 600;
-}
-
-.primary-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.25);
-}
-
-.primary-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
 }
 
 .game-area {
@@ -202,4 +179,69 @@ html, body {
     background: #dadada;
     outline: #333 2px solid;
     border-radius: 6px;
+}
+
+/* Difficulty selection layout */
+.difficulty-panel {
+    gap: 30px;
+    margin: 20px 10vw;
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Individual difficulty card */
+.difficulty-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;;
+    height: 15vh;
+    padding: 18px 16px;
+    margin: 3vh;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.difficulty-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Grid preview sizing */
+.difficulty-card .grid-display {
+    margin: 0 0 12px 0;
+}
+
+.difficulty-card .grid-cell {
+    pointer-events: none;
+}
+
+.difficulty-card .title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #333;
+    margin: 20px;
+}
+
+/* Label under button */
+.difficulty-label {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+}
+
+/* Random preview */
+.random-preview {
+    grid-template-columns: 60px;
+}
+
+.random-preview .grid-cell {
+    font-size: 2rem;
+    color: #6c8cff;
 }

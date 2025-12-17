@@ -1,36 +1,23 @@
-/**********************************************************************
- *  TURN OF PHRASE — FIXED TILE SYSTEM
- *  - Ghost highlighting fixed
- *  - Proper tile dragging and snapping
- *  - Debug line from tile centroid to landing location
- *********************************************************************/
-
 import { isWord, loadDictionary } from "../utility/isword/isword.js";
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
 
-/*********************************************************************
- *  INITIAL SETUP
- *********************************************************************/
-const btn = document.getElementById("generate-btn");
-btn.disabled = true;
+const params = new URLSearchParams(window.location.search);
 
-let DICT = [];
-
-loadDictionary().then(dictMap => {
-    DICT = Array.from(dictMap.keys()).map(w => w.toUpperCase());
-    DICT = DICT.filter(w => isWord(w));
-    btn.disabled = false;
-});
-
-/*********************************************************************
- *  MAIN BUTTON
- *********************************************************************/
-btn.addEventListener("click", () => {
+const launchDifficulty = params.get("difficulty"); // easy | medium | hard | random | null
+const launchSeed = params.get("seed");
+function generateGame({ width, height, seed }) {
     const maxDim = 6;
-    const w = Math.min(maxDim, parseInt(document.getElementById("grid-width").value, 10));
-    const h = Math.min(maxDim, parseInt(document.getElementById("grid-height").value, 10));
+
+    const w = Math.min(maxDim, width);
+    const h = Math.min(maxDim, height);
+
+    if (seed !== null) {
+        setSeed(Number(seed)); // no-op if you don’t have this yet
+    }
+
     tileColors = [];
+
     const grid = findWordGrid(DICT, w, h);
 
     if (!grid) {
@@ -38,12 +25,67 @@ btn.addEventListener("click", () => {
         return;
     }
 
-    // If there are any tiles that exist, delete them
     document.querySelectorAll(".game-area .tile").forEach(tile => tile.remove());
 
     renderBoard(grid);
     renderTiles(grid);
+}
+const generateBtn = document.getElementById("generate-btn");
+generateBtn.addEventListener("click", () => {
+    const width = parseInt(document.getElementById("grid-width").value, 10);
+    const height = parseInt(document.getElementById("grid-height").value, 10);
+
+    generateGame({
+        width,
+        height,
+        seed: null
+    });
 });
+
+const DIFFICULTY_DIMENSIONS = {
+    easy:   { width: 5, height: 5 },
+    medium: { width: 6, height: 5 },
+    hard:   { width: 6, height: 6 }
+};
+
+let DICT = [];
+loadDictionary().then(dictMap => {
+    DICT = Array.from(dictMap.keys()).map(w => w.toUpperCase());
+    DICT = DICT.filter(w => isWord(w));
+    generateBtn.disabled = false;
+
+    handleLaunchMode();
+});
+
+function handleLaunchMode() {
+    const controls = document.querySelector(".control-panel");
+
+    // Random difficulty → manual controls
+    if (launchDifficulty === "random") {
+        controls.style.display = "flex";
+        return;
+    }
+
+    // Difficulty or day-selector launch
+    if (launchDifficulty && DIFFICULTY_DIMENSIONS[launchDifficulty]) {
+        controls.style.display = "none";
+
+        const { width, height } = DIFFICULTY_DIMENSIONS[launchDifficulty];
+
+        generateGame({
+            width,
+            height,
+            seed: launchSeed ? Number(launchSeed) : null
+        });
+
+        return;
+    }
+
+    // Direct page load (no params) → behave like clicking Generate
+    controls.style.display = "flex";
+    generateBtn.click();
+}
+
 
 /*********************************************************************
  *  BOARD RENDERING

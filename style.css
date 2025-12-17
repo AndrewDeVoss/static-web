@@ -262,7 +262,7 @@ p {
 /* Individual day */
 .day-button {
     padding: 4px 0; /* tighter vertical padding */
-    font-size: 0.7rem;
+    font-size: 1.2rem;
     font-weight: 700;
     text-align: center;
     cursor: pointer;

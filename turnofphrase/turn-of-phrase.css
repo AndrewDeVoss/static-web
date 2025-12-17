@@ -195,7 +195,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;;
+    justify-content: center;
+    ;
     height: 15vh;
     padding: 18px 16px;
     margin: 3vh;
@@ -205,6 +206,24 @@ body {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
 }
+
+.difficulty-card[data-difficulty="easy"] {
+    background: hsla(120, 100%, 85%, 0.6);
+}
+
+.difficulty-card[data-difficulty="medium"] {
+    background: hsla(177, 88%, 77%, 0.6);
+}
+
+.difficulty-card[data-difficulty="hard"] {
+    background: hsla(300, 89%, 75%, 0.6);
+}
+
+.difficulty-card[data-difficulty="random"] {
+    background: hsla(268, 81%, 72%, 0.6);
+}
+
+
 
 .difficulty-card:hover {
     transform: translateY(-4px);
@@ -244,4 +263,17 @@ body {
 .random-preview .grid-cell {
     font-size: 2rem;
     color: #6c8cff;
+}
+
+.primary-btn {
+    padding: 10px 18px;
+    font-size: 1rem;
+    background: #6c8cff;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    font-weight: 600;
 }

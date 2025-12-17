@@ -467,6 +467,47 @@ function placeTileInBoard(tileDiv, startingBoardCell) {
             boardCell.classList.add("filled");
         }
     }
+
+    let complete = checkBoardForCompletion();
+    if (complete) {
+        launchFireworks(tileColors);
+    }
+}
+
+function checkBoardForCompletion() {
+    const board = document.getElementById("board");
+    for (const cell of board.querySelectorAll(".board-cell")) {
+        if (cell.dataset.letter === "") {
+            return false;
+        }
+    }
+
+    // All cells filled, check if each row and column forms a valid word
+    const rows = parseInt(board.dataset.rows, 10);
+    const cols = parseInt(board.dataset.cols, 10);
+    for (let r = 0; r < rows; r++) {
+        let rowWord = "";
+        for (let c = 0; c < cols; c++) {
+            const cell = board.querySelector(`.board-cell[data-row="${r}"][data-col="${c}"]`);
+            rowWord += cell.dataset.letter;
+        }   
+        if (!isWord(rowWord)) {
+            return false;
+        }   
+    }
+
+    for (let c = 0; c < cols; c++) {
+        let colWord = "";
+        for (let r = 0; r < rows; r++) {
+            const cell = board.querySelector(`.board-cell[data-row="${r}"][data-col="${c}"]`);
+            colWord += cell.dataset.letter;
+        }   
+        if (!isWord(colWord)) {
+            return false;
+        }   
+    }
+
+    return true;
 }
 
 function removeTileFromBoard(tileDiv) {
@@ -496,6 +537,97 @@ function removeTileFromBoard(tileDiv) {
         }
     }
 }
+
+function launchFireworks(colors) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.style.position = "fixed";
+    canvas.style.top = 0;
+    canvas.style.left = 0;
+    canvas.style.pointerEvents = "none";
+    canvas.style.zIndex = 9999;
+
+    document.body.appendChild(canvas);
+
+    resize();
+    window.addEventListener("resize", resize);
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    const particles = [];
+    const gravity = 0.04;
+    const duration = 2000;
+    const startTime = performance.now();
+
+    function createFirework() {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height * 0.6;
+
+        const colorDict = colors[Math.floor(Math.random() * colors.length)];
+        const color = `hsla(${colorDict.h}, ${colorDict.s}%, ${colorDict.l}%, ${1})`
+
+        for (let i = 0; i < 30; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 3 + 1;
+
+            particles.push({
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                alpha: 1,
+                color
+            });
+        }
+    }
+
+    function update() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach(p => {
+            p.vy += gravity;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.alpha -= 0.015;
+
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.globalAlpha = 1;
+
+        // Remove faded particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+            if (particles[i].alpha <= 0) {
+                particles.splice(i, 1);
+            }
+        }
+
+        if (performance.now() - startTime < duration) {
+            if (Math.random() < 0.15) createFirework();
+            requestAnimationFrame(update);
+        } else {
+            cleanup();
+        }
+    }
+
+    function cleanup() {
+        window.removeEventListener("resize", resize);
+        canvas.remove();
+    }
+
+    // Initial burst
+    for (let i = 0; i < 5; i++) createFirework();
+    update();
+}
+
 
 let tileColors = [];
 

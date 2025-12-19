@@ -253,7 +253,6 @@ p {
     grid-template-columns: repeat(7, 1fr);
     gap: 0; /* buttons touch */
     width: 60%;
-    margin-top: 10px;
     background: #ddd;
     border-radius: 999px; /* outer pill */
     padding: 2px; /* thin outer border */
@@ -261,7 +260,7 @@ p {
 
 /* Individual day */
 .day-button {
-    padding: 4px 0; /* tighter vertical padding */
+    padding: 0.5rem;;
     font-size: 1.2rem;
     font-weight: 700;
     text-align: center;

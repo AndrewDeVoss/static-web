@@ -125,7 +125,8 @@ body {
 }
 
 .tile.locked {
-    cursor: not-allowed;
+    cursor: default;
+    pointer-events: none;
 }
 
 .tile[data-state="in-bank"] {

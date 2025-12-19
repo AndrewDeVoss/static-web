@@ -202,7 +202,7 @@ body {
     justify-content: center;
     height: 8vh;
     padding: 32px;
-    margin: 3vh;
+    margin: 1.5vh;
     border-radius: 18px;
     background: rgba(255, 255, 255, 0.6);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
@@ -222,7 +222,7 @@ body {
     background: hsla(300, 89%, 75%, 0.6);
 }
 
-.difficulty-card[data-difficulty="random"] {
+.difficulty-card[data-difficulty="custom"] {
     background: hsla(268, 81%, 72%, 0.6);
 }
 
@@ -245,7 +245,6 @@ body {
 .difficulty-card .title {
     font-size: 1.7rem;
     font-weight: 700;
-    margin-bottom: 6px;
     color: #333;
 }
 

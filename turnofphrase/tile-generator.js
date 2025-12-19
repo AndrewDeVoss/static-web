@@ -1,4 +1,6 @@
-export function generateTiles(grid) {
+import { random } from '../utility/random/random.js';
+
+export function generateTiles(grid, seedString) {
     const H = grid.length;
     const W = grid[0].length;
 
@@ -35,7 +37,7 @@ export function generateTiles(grid) {
             while (tileCells.length < targetSize) {
                 let frontier = tileCells.flatMap(cell => neighbors(cell.r, cell.c));
                 if (frontier.length === 0) break; // cannot grow
-                let [nr, nc] = frontier[Math.floor(Math.random()*frontier.length)];
+                let [nr, nc] = frontier[Math.floor(random(seedString)*frontier.length)];
                 used[nr][nc] = true;
                 tileCells.push({r:nr, c:nc});
             }

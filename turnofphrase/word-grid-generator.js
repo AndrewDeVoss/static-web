@@ -2,6 +2,7 @@
 // 1. LOAD DICTIONARY
 ///////////////////////////////////////////////////////////////
 import { isWord, loadDictionary } from "../utility/isword/isword.js";
+import { random, createSeed } from '../utility/random/random.js';
 
 ///////////////////////////////////////////////////////////////
 // 2. TRIE STRUCTURE
@@ -89,7 +90,7 @@ class Grid {
 ///////////////////////////////////////////////////////////////
 function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(random(seedStr) * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
@@ -200,7 +201,9 @@ function getColWord(g, colIndex) {
 ///////////////////////////////////////////////////////////////
 // 7. PUBLIC FUNCTION
 ///////////////////////////////////////////////////////////////
-export function findWordGrid(dictionary, width, height, mask = null) {
+let seedStr = "";
+export function findWordGrid(dictionary, width, height, seedString, mask = null) {
+    seedStr = seedString;
     const g = new Grid(width, height, dictionary, mask);
     if (!gridFind(g)) return null;
     return g.grid;

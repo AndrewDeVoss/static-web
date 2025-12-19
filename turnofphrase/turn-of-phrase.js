@@ -6,9 +6,14 @@ import { generateTiles } from "./tile-generator.js";
 const params = new URLSearchParams(window.location.search);
 const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null
 const launchDate = params.get("date"); // YYYY-MM-DD
+let seedString = `${launchDate}-${launchDifficulty}`;
+if (!launchDate || !launchDifficulty) {
+    seedString = random(seedString).toString(36).slice(2);
+}
 
-function generateGame({ width, height, seedString }) {
+function generateGame({ width, height}) {
     const maxDim = 6;
+    console.log('seed '+seedString);
     createSeed(seedString);
 
     const w = Math.min(maxDim, width);
@@ -16,7 +21,7 @@ function generateGame({ width, height, seedString }) {
 
     tileColors = [];
 
-    const grid = findWordGrid(DICT, w, h);
+    const grid = findWordGrid(DICT, w, h, seedString);
 
     if (!grid) {
         document.getElementById("grid-output").textContent = "No grid found.";
@@ -35,15 +40,14 @@ generateBtn.addEventListener("click", () => {
 
     generateGame({
         width,
-        height,
-        seed: null
+        height
     });
 });
 
 const DIFFICULTY_DIMENSIONS = {
-    easy:   { width: 5, height: 5 },
+    easy: { width: 5, height: 5 },
     medium: { width: 6, height: 5 },
-    hard:   { width: 6, height: 6 }
+    hard: { width: 6, height: 6 }
 };
 
 let DICT = [];
@@ -59,7 +63,7 @@ function handleLaunchMode() {
     const controls = document.querySelector(".control-panel");
 
     // Random difficulty → manual controls
-    if (launchDifficulty === "random") {
+    if (launchDifficulty === "custom") {
         controls.style.display = "flex";
         return;
     }
@@ -72,8 +76,7 @@ function handleLaunchMode() {
 
         generateGame({
             width,
-            height,
-            seedString: launchDifficulty || "random"
+            height
         });
 
         return;
@@ -118,7 +121,7 @@ function renderBoard(grid) {
  *  TILE RENDERING
  *********************************************************************/
 function renderTiles(grid) {
-    const tiles = generateTiles(grid);
+    const tiles = generateTiles(grid, seedString);
     const bank = document.getElementById("tile-bank");
 
     // ---- SORT: height (rows) → width (cols)
@@ -148,7 +151,7 @@ function renderTiles(grid) {
 
     const bankScale = 0.75
     const CELL = 40 * bankScale;
-    const GAP = 4  * bankScale;
+    const GAP = 4 * bankScale;
 
     // Choose a reasonable max width (responsive)
     const maxBankWidth = window.innerWidth - 20;
@@ -186,7 +189,6 @@ function renderTiles(grid) {
         // Save location for when we place in bank
         tileDiv.dataset.bankLeft = x;
         tileDiv.dataset.bankTop = y;
-        console.log(`Bank pos for tile ${tile.id}: ${x}, ${y}`);
 
         bank.appendChild(tileDiv);
         enableTileDrag(tileDiv);
@@ -490,10 +492,10 @@ function checkBoardForCompletion() {
         for (let c = 0; c < cols; c++) {
             const cell = board.querySelector(`.board-cell[data-row="${r}"][data-col="${c}"]`);
             rowWord += cell.dataset.letter;
-        }   
+        }
         if (!isWord(rowWord)) {
             return false;
-        }   
+        }
     }
 
     for (let c = 0; c < cols; c++) {
@@ -501,10 +503,10 @@ function checkBoardForCompletion() {
         for (let r = 0; r < rows; r++) {
             const cell = board.querySelector(`.board-cell[data-row="${r}"][data-col="${c}"]`);
             colWord += cell.dataset.letter;
-        }   
+        }
         if (!isWord(colWord)) {
             return false;
-        }   
+        }
     }
 
     return true;
@@ -564,15 +566,15 @@ function launchFireworks(colors) {
     const startTime = performance.now();
 
     function createFirework() {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height * 0.6;
+        const x = random(seedString) * canvas.width;
+        const y = random(seedString) * canvas.height * 0.6;
 
-        const colorDict = colors[Math.floor(Math.random() * colors.length)];
+        const colorDict = colors[Math.floor(random(seedString) * colors.length)];
         const color = `hsla(${colorDict.h}, ${colorDict.s}%, ${colorDict.l}%, ${1})`
 
         for (let i = 0; i < 30; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 3 + 1;
+            const angle = random(seedString) * Math.PI * 2;
+            const speed = random(seedString) * 3 + 1;
 
             particles.push({
                 x,
@@ -611,7 +613,7 @@ function launchFireworks(colors) {
         }
 
         if (performance.now() - startTime < duration) {
-            if (Math.random() < 0.15) createFirework();
+            if (random(seedString) < 0.15) createFirework();
             requestAnimationFrame(update);
         } else {
             cleanup();
@@ -665,9 +667,9 @@ function randomLowOpacityColor(alpha = 0.25, candidates = 9) {
 
 function generateRandomHSL(alpha) {
     return {
-        h: Math.random() * 360,
-        s: 60 + Math.random() * 40, // 60–100%
-        l: 40 + Math.random() * 20, // 40–60%
+        h: random(seedString) * 360,
+        s: 60 + random(seedString) * 40, // 60–100%
+        l: 40 + random(seedString) * 20, // 40–60%
         a: alpha
     };
 }

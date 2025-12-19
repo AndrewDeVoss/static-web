@@ -1,20 +1,18 @@
 import { isWord, loadDictionary } from "../utility/isword/isword.js";
+import { random, createSeed } from '../utility/random/random.js';
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
 
 const params = new URLSearchParams(window.location.search);
+const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null
+const launchDate = params.get("date"); // YYYY-MM-DD
 
-const launchDifficulty = params.get("difficulty"); // easy | medium | hard | random | null
-const launchSeed = params.get("seed");
-function generateGame({ width, height, seed }) {
+function generateGame({ width, height, seedString }) {
     const maxDim = 6;
+    createSeed(seedString);
 
     const w = Math.min(maxDim, width);
     const h = Math.min(maxDim, height);
-
-    if (seed !== null) {
-        setSeed(Number(seed)); // no-op if you don’t have this yet
-    }
 
     tileColors = [];
 
@@ -75,7 +73,7 @@ function handleLaunchMode() {
         generateGame({
             width,
             height,
-            seed: launchSeed ? Number(launchSeed) : null
+            seedString: launchDifficulty || "random"
         });
 
         return;

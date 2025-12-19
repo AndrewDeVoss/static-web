@@ -123,6 +123,10 @@ body {
     touch-action: none;
 }
 
+.tile.locked {
+    cursor: not-allowed;
+}
+
 .tile[data-state="in-bank"] {
     transform: scale(0.75);
     transform-origin: top left;
@@ -184,7 +188,7 @@ body {
 /* Difficulty selection layout */
 .difficulty-panel {
     gap: 30px;
-    margin: 20px 10vw;
+    margin: 20px 5vw;
     align-items: stretch;
     flex-direction: column;
     justify-content: center;

@@ -470,6 +470,9 @@ function placeTileInBoard(tileDiv, startingBoardCell) {
 
     let complete = checkBoardForCompletion();
     if (complete) {
+        for (const tile of document.querySelectorAll(".tile")) {
+            tile.classList.add("locked");
+        }
         launchFireworks(tileColors);
     }
 }
@@ -560,7 +563,7 @@ function launchFireworks(colors) {
 
     const particles = [];
     const gravity = 0.04;
-    const duration = 2000;
+    const duration = 4000;
     const startTime = performance.now();
 
     function createFirework() {
@@ -627,7 +630,6 @@ function launchFireworks(colors) {
     for (let i = 0; i < 5; i++) createFirework();
     update();
 }
-
 
 let tileColors = [];
 

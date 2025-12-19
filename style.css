@@ -252,7 +252,6 @@ p {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 0; /* buttons touch */
-    width: 60%;
     background: #ddd;
     border-radius: 999px; /* outer pill */
     padding: 2px; /* thin outer border */

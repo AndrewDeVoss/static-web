@@ -11,9 +11,9 @@ if (!launchDate || !launchDifficulty) {
     seedString = random(seedString).toString(36).slice(2);
 }
 
-function generateGame({ width, height}) {
+function generateGame({ width, height }) {
     const maxDim = 6;
-    console.log('seed '+seedString);
+    console.log('seed ' + seedString);
     createSeed(seedString);
 
     const w = Math.min(maxDim, width);
@@ -37,6 +37,8 @@ const generateBtn = document.getElementById("generate-btn");
 generateBtn.addEventListener("click", () => {
     const width = parseInt(document.getElementById("grid-width").value, 10);
     const height = parseInt(document.getElementById("grid-height").value, 10);
+    seedString = random(seedString).toString(36).slice(2);
+    createSeed(seedString);
 
     generateGame({
         width,

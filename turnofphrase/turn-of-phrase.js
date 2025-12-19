@@ -233,7 +233,6 @@ function renderTileDOM(tile) {
     tileDiv.innerHTML = "";
     tileDiv.className = "tile";
     tileDiv.style.display = "inline-grid";
-    tileDiv.style.cursor = "grab";
 
     const tileColor = randomLowOpacityColor(0.2);
 

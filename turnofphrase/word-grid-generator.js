@@ -102,33 +102,70 @@ function shuffle(arr) {
 function checkRowCompletion(g, rowIndex) {
     const len = g.rowLengths[rowIndex];
     let filled = 0;
+
     for (let c = 0; c < g.w; c++) {
         if (typeof g.grid[rowIndex][c] === "string" && g.grid[rowIndex][c].length === 1)
             filled++;
     }
-    if (filled !== len) return true; // row not yet complete
 
-    const word = getRowWord(g, rowIndex);
-    if (g.usedWords.has(word)) return false; // duplicate detected
-    g.usedWords.add(word);
+    // Row not yet complete
+    if (filled !== len) return true;
+
+    const rowWord = getRowWord(g, rowIndex);
+
+    // Global duplicate check
+    if (g.usedWords.has(rowWord)) return false;
+
+    // Check only the transposed column, if it exists
+    if (rowIndex < g.w && g.colLengths[rowIndex] === len) {
+        const colWord = getColWord(g, rowIndex);
+        if (!wordsBelowSimilarityThreshold(rowWord, colWord, 0.61)) return false;
+    }
+
+    g.usedWords.add(rowWord);
     return true;
 }
 
 function checkColCompletion(g, colIndex) {
     const len = g.colLengths[colIndex];
     let filled = 0;
+
     for (let r = 0; r < g.h; r++) {
         if (typeof g.grid[r][colIndex] === "string" && g.grid[r][colIndex].length === 1)
             filled++;
     }
-    if (filled !== len) return true; // column not yet complete
 
-    const word = getColWord(g, colIndex);
-    if (g.usedWords.has(word)) return false; // duplicate detected
-    g.usedWords.add(word);
+    // Column not yet complete
+    if (filled !== len) return true;
+
+    const colWord = getColWord(g, colIndex);
+
+    // Global duplicate check
+    if (g.usedWords.has(colWord)) return false;
+
+    // Check only the transposed row, if it exists
+    if (colIndex < g.h && g.rowLengths[colIndex] === len) {
+        const rowWord = getRowWord(g, colIndex);
+        if (!wordsBelowSimilarityThreshold(rowWord, colWord, 0.61)) return false;
+    }
+
+    g.usedWords.add(colWord);
     return true;
 }
 
+function wordsBelowSimilarityThreshold(a, b, threshold) {
+    const lenA = a.length;
+    const lenB = b.length;
+    const total = Math.max(lenA, lenB);
+    let sameForward = 0;
+    for (let i = 0; i < Math.min(lenA, lenB); i++) {
+        if (a[i] === b[i]) sameForward++;
+    }
+    const forwardRatio = sameForward / total;
+    if (forwardRatio>threshold) return false;
+
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////
 // 6. BACKTRACKING SEARCH

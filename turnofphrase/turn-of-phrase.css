@@ -8,8 +8,7 @@ body {
     padding-top: 50px;
     padding-bottom: 50px;
     width: 100vw;
-    padding-bottom: 20vh;
-    max-height: calc(100vh - 220px);
+    height: 100%;
     overflow-y: auto;
 }
 
@@ -170,9 +169,15 @@ body {
 }
 
 /* TILE BOARD */
+#board-container {
+    display: grid;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+}
+
 .board {
-    margin: 15px;
-    margin-bottom: 50px;
+    margin: 20px;
     display: grid;
     justify-content: center;
     gap: 4px;

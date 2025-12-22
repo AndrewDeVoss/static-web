@@ -522,7 +522,7 @@ function updateRowColHelpers() {
 
         const helper = document.createElement("div");
         helper.className = "word-helper";
-        helper.textContent = "🛈";
+        helper.textContent = "❓";
         helper.dataset.type = "row";
         helper.dataset.index = r;
         helper.dataset.word = word;
@@ -575,7 +575,7 @@ function updateRowColHelpers() {
 
         const helper = document.createElement("div");
         helper.className = "word-helper";
-        helper.textContent = "🛈";
+        helper.textContent = "❓";
         helper.dataset.type = "col";
         helper.dataset.index = c;
         helper.dataset.word = word;

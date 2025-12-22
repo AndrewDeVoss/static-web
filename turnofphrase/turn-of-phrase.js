@@ -1,8 +1,9 @@
-import { isWord, loadDictionary } from "../utility/isword/isword.js";
+import { isWord, loadDictionary, getDefinitionForWord } from "../utility/isword/isword.js";
 import { random, createSeed } from '../utility/random/random.js';
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
 
+const extraText = document.getElementById("extra-text");
 const params = new URLSearchParams(window.location.search);
 const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null
 const launchDate = params.get("date"); // YYYY-MM-DD
@@ -221,6 +222,8 @@ function placeTileInBank(tileDiv) {
     if (tileDiv.parentElement !== bank) {
         bank.appendChild(tileDiv);
     }
+
+    updateRowColHelpers();
 }
 
 
@@ -469,6 +472,8 @@ function placeTileInBoard(tileDiv, startingBoardCell) {
         }
     }
 
+    updateRowColHelpers();
+
     let complete = checkBoardForCompletion();
     if (complete) {
         for (const tile of document.querySelectorAll(".tile")) {
@@ -477,6 +482,134 @@ function placeTileInBoard(tileDiv, startingBoardCell) {
         launchFireworks(tileColors);
     }
 }
+
+function updateRowColHelpers() {
+    const board = document.getElementById("board");
+    const container = document.getElementById("board-container");
+
+    const rows = parseInt(board.dataset.rows, 10);
+    const cols = parseInt(board.dataset.cols, 10);
+
+    const CELL = 40;
+    const GAP = 4;
+
+    // Remove helpers that are no longer valid
+    container.querySelectorAll(".word-helper").forEach(h => h.remove());
+
+    const boardRect = board.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const offsetX = boardRect.left - containerRect.left;
+    const offsetY = boardRect.top - containerRect.top;
+
+    // ---- ROWS
+    for (let r = 0; r < rows; r++) {
+        let word = "";
+        let complete = true;
+
+        for (let c = 0; c < cols; c++) {
+            const cell = board.querySelector(
+                `.board-cell[data-row="${r}"][data-col="${c}"]`
+            );
+            if (!cell || cell.dataset.letter === "") {
+                complete = false;
+                break;
+            }
+            word += cell.dataset.letter;
+        }
+
+        if (!complete) continue;
+
+        const helper = document.createElement("div");
+        helper.className = "word-helper";
+        helper.textContent = "🛈";
+        helper.dataset.type = "row";
+        helper.dataset.index = r;
+        helper.dataset.word = word;
+
+        const top =
+            offsetY +
+            r * (CELL + GAP) +
+            CELL / 2 -
+            7;
+
+        const left =
+            offsetX +
+            cols * (CELL + GAP) +
+            6;
+
+        helper.style.top = `${top}px`;
+        helper.style.left = `${left}px`;
+
+        helper.addEventListener("click", () => {
+            const definition = getDefinitionForWord(word);
+            if (definition) {
+                extraText.textContent = `${word} - ${definition}`;
+                extraText.classList.remove('hidden');
+            } else {
+                extraText.textContent = `No match found for ${word}`;
+                extraText.classList.remove('hidden');
+            }
+        });
+
+        container.appendChild(helper);
+    }
+
+    // ---- COLUMNS
+    for (let c = 0; c < cols; c++) {
+        let word = "";
+        let complete = true;
+
+        for (let r = 0; r < rows; r++) {
+            const cell = board.querySelector(
+                `.board-cell[data-row="${r}"][data-col="${c}"]`
+            );
+            if (!cell || cell.dataset.letter === "") {
+                complete = false;
+                break;
+            }
+            word += cell.dataset.letter;
+        }
+
+        if (!complete) continue;
+
+        const helper = document.createElement("div");
+        helper.className = "word-helper";
+        helper.textContent = "🛈";
+        helper.dataset.type = "col";
+        helper.dataset.index = c;
+        helper.dataset.word = word;
+
+        const left =
+            offsetX +
+            c * (CELL + GAP) +
+            CELL / 2 -
+            7;
+
+        const top =
+            offsetY +
+            rows * (CELL + GAP) +
+            6;
+
+        helper.style.left = `${left}px`;
+        helper.style.top = `${top}px`;
+
+        helper.addEventListener("click", () => {
+            const definition = getDefinitionForWord(word);
+            if (definition) {
+                extraText.textContent = `${word} - ${definition}`;
+                extraText.classList.remove('hidden');
+            } else {
+                extraText.textContent = `No match found for ${word}`;
+                extraText.classList.remove('hidden');
+
+            }
+        });
+
+        container.appendChild(helper);
+    }
+}
+
 
 function checkBoardForCompletion() {
     const board = document.getElementById("board");

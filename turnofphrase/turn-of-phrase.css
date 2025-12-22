@@ -192,6 +192,20 @@ body {
     border-radius: 6px;
 }
 
+.word-helper {
+    position: absolute;
+    font-size: 14px;
+    opacity: 0.5;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 120ms ease;
+}
+
+.word-helper:active {
+    opacity: 0.7;
+}
+
+
 /* Difficulty selection layout */
 .difficulty-panel {
     gap: 30px;

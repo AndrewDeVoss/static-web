@@ -202,6 +202,7 @@ function renderTiles(grid) {
 
         bank.appendChild(tileDiv);
         enableTileDrag(tileDiv);
+        enableTileRotation(tileDiv);
 
         x += tileWidth;
         rowHeight = Math.max(rowHeight, tileHeight);
@@ -279,17 +280,114 @@ function renderTileDOM(tile) {
 }
 
 function enableTileRotation(tileDiv) {
-    tileDiv.addEventListener("click", e => {
-        if (tileDiv.classList.contains("dragging")) return;
+    let downX = 0;
+    let downY = 0;
+    let downTime = 0;
+    let moved = false;
+    let startedOnCell = false;
 
-        tile.cells = tile.cells.map(({ r, c, letter }) => ({
-            r: c,
-            c: -r,
-            letter
-        }));
+    const MOVE_THRESHOLD = 5;
+    const CLICK_TIME = 250;
 
-        renderTileDOM(tile);
+    tileDiv.addEventListener("pointerdown", e => {
+        // Did this pointer start on a tile cell?
+        startedOnCell = !!e.target.closest(".tile-cell");
+
+        if (!startedOnCell) return;
+
+        downX = e.clientX;
+        downY = e.clientY;
+        downTime = performance.now();
+        moved = false;
     });
+
+    tileDiv.addEventListener("pointermove", e => {
+        if (!startedOnCell) return;
+
+        if (
+            Math.abs(e.clientX - downX) > MOVE_THRESHOLD ||
+            Math.abs(e.clientY - downY) > MOVE_THRESHOLD
+        ) {
+            moved = true;
+        }
+    });
+
+    tileDiv.addEventListener("pointerup", e => {
+        if (!startedOnCell) return;
+
+        const elapsed = performance.now() - downTime;
+        if (!moved && elapsed < CLICK_TIME) {
+            const cell = e.target.closest(".tile-cell");
+            rotateTile(tileDiv, cell);
+        }
+    });
+
+}
+
+function rotateTile(tileDiv, pivotCell) {
+    if (tileDiv.classList.contains("locked")) return;
+
+    // If tile was on board, clear it first
+    removeTileFromBoard(tileDiv);
+
+    const CELL = 40;
+    const GAP = 4;
+
+    const cells = Array.from(tileDiv.querySelectorAll(".tile-cell"));
+
+    const rows = parseInt(tileDiv.dataset.rows, 10);
+    const cols = parseInt(tileDiv.dataset.cols, 10);
+
+    // --- Pivot position BEFORE rotation (tile-local)
+    const oldRow = parseInt(pivotCell.dataset.row, 10);
+    const oldCol = parseInt(pivotCell.dataset.col, 10);
+
+    const oldX = oldCol * (CELL + GAP);
+    const oldY = oldRow * (CELL + GAP);
+
+    // --- Rotate logical coordinates (90° clockwise)
+    cells.forEach(cell => {
+        const r = parseInt(cell.dataset.row, 10);
+        const c = parseInt(cell.dataset.col, 10);
+
+        const newR = c;
+        const newC = (rows - 1) - r;
+
+        cell.dataset.row = newR;
+        cell.dataset.col = newC;
+    });
+
+    const newRows = cols;
+    const newCols = rows;
+
+    tileDiv.dataset.rows = newRows;
+    tileDiv.dataset.cols = newCols;
+
+    tileDiv.style.gridTemplateRows = `repeat(${newRows}, ${CELL}px)`;
+    tileDiv.style.gridTemplateColumns = `repeat(${newCols}, ${CELL}px)`;
+
+    // --- Apply new CSS grid placement
+    cells.forEach(cell => {
+        cell.style.gridRowStart = parseInt(cell.dataset.row, 10) + 1;
+        cell.style.gridColumnStart = parseInt(cell.dataset.col, 10) + 1;
+    });
+
+    // --- Pivot position AFTER rotation (tile-local)
+    const newRow = parseInt(pivotCell.dataset.row, 10);
+    const newCol = parseInt(pivotCell.dataset.col, 10);
+
+    const newX = newCol * (CELL + GAP);
+    const newY = newRow * (CELL + GAP);
+
+    // --- Offset tile so pivot cell stays visually fixed
+    const dx = oldX - newX;
+    const dy = oldY - newY;
+
+    const left = parseFloat(tileDiv.style.left || 0);
+    const top = parseFloat(tileDiv.style.top || 0);
+
+    tileDiv.style.left = `${left + dx}px`;
+    tileDiv.style.top = `${top + dy}px`;
 }
 
 function enableTileDrag(tileDiv) {

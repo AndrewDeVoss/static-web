@@ -4,59 +4,136 @@ export function generateTiles(grid, seedString) {
     const H = grid.length;
     const W = grid[0].length;
 
-    const dirs = [
-        [1,0], [-1,0], [0,1], [0,-1]
-    ];
-    const used = Array.from({length:H}, ()=>Array(W).fill(false));
+    const MIN = Math.min(H, W);
+    const MAX = Math.max(H, W);
 
+    const used = Array.from({ length: H }, () => Array(W).fill(false));
     const tiles = [];
-    let tileId = 1;
 
-    function neighbors(r,c) {
-        return dirs
-            .map(([dr,dc]) => [r+dr, c+dc])
-            .filter(([nr,nc]) =>
-                nr>=0 && nr<H && nc>=0 && nc<W && !used[nr][nc]
-            );
+    const dirs = [
+        [1, 0], [-1, 0], [0, 1], [0, -1]
+    ];
+
+    function inBounds(r, c) {
+        return r >= 0 && r < H && c >= 0 && c < W;
     }
 
-    for (let r=0; r<H; r++) {
-        for (let c=0; c<W; c++) {
-            if (used[r][c]) continue;
+    function shuffled(arr) {
+        return arr
+            .map(v => [random(seedString), v])
+            .sort((a, b) => a[0] - b[0])
+            .map(v => v[1]);
+    }
 
-            // Start a new tile
-            let tileCells = [{r, c}];
-            used[r][c] = true;
+    function findFirstUnused() {
+        const cells = [];
+        for (let r = 0; r < H; r++) {
+            for (let c = 0; c < W; c++) {
+                if (!used[r][c]) cells.push({ r, c });
+            }
+        }
+        // Avoid top-left bias
+        return cells.length
+            ? cells[Math.floor(random(seedString) * cells.length)]
+            : null;
+    }
 
-            // Target size: mostly 4
-            // But if we are near the end, allow flexible sizes
-            let remaining = countRemaining(used);
-            let targetSize = 4;
-            if (remaining <= 5) targetSize = remaining; // final piece
+    function canExtendBounds(minR, maxR, minC, maxC) {
+        if (maxR - minR + 1 === H) return false;
+        if (maxC - minC + 1 === W) return false;
+        return true;
+    }
 
-            while (tileCells.length < targetSize) {
-                let frontier = tileCells.flatMap(cell => neighbors(cell.r, cell.c));
-                if (frontier.length === 0) break; // cannot grow
-                let [nr, nc] = frontier[Math.floor(random(seedString)*frontier.length)];
-                used[nr][nc] = true;
-                tileCells.push({r:nr, c:nc});
+    /**
+     * Generate all contiguous polyominoes of given size
+     * starting from seed cell.
+     */
+    function generateShapes(seed, targetSize) {
+        const results = [];
+
+        function dfs(cells, frontier, minR, maxR, minC, maxC) {
+            if (cells.length === targetSize) {
+                results.push([...cells]);
+                return;
             }
 
-            // Build final tile object
-            tiles.push({
-                id: tileId++,
-                cells: tileCells.map(({r,c}) => ({ r, c, letter: grid[r][c] }))
-            });
+            for (const idx in frontier) {
+                const cell = frontier[idx];
+
+                for (const [dr, dc] of dirs) {
+                    const nr = cell.r + dr;
+                    const nc = cell.c + dc;
+
+                    if (
+                        !inBounds(nr, nc) ||
+                        used[nr][nc] ||
+                        cells.some(c => c.r === nr && c.c === nc)
+                    ) continue;
+
+                    const nextMinR = Math.min(minR, nr);
+                    const nextMaxR = Math.max(maxR, nr);
+                    const nextMinC = Math.min(minC, nc);
+                    const nextMaxC = Math.max(maxC, nc);
+
+                    if (!canExtendBounds(
+                        nextMinR, nextMaxR,
+                        nextMinC, nextMaxC
+                    )) continue;
+
+                    dfs(
+                        [...cells, { r: nr, c: nc }],
+                        [...frontier, { r: nr, c: nc }],
+                        nextMinR, nextMaxR,
+                        nextMinC, nextMaxC
+                    );
+                }
+            }
         }
+
+        dfs(
+            [seed],
+            [seed],
+            seed.r, seed.r,
+            seed.c, seed.c
+        );
+
+        return results;
+    }
+
+    function backtrack() {
+        const seed = findFirstUnused();
+        if (!seed) return true; // success
+
+        for (let size = MIN; size <= MAX; size++) {
+            const shapes = generateShapes(seed, size);
+
+            for (const shape of shuffled(shapes)) {
+                // Commit
+                shape.forEach(({ r, c }) => used[r][c] = true);
+
+                tiles.push({
+                    id: tiles.length + 1,
+                    cells: shape.map(({ r, c }) => ({
+                        r,
+                        c,
+                        letter: grid[r][c]
+                    }))
+                });
+
+                if (backtrack()) return true;
+
+                // Undo
+                tiles.pop();
+                shape.forEach(({ r, c }) => used[r][c] = false);
+            }
+        }
+
+        return false;
+    }
+
+    if (!backtrack()) {
+        throw new Error("No valid tiling exists under given constraints.");
     }
 
     return tiles;
-
-    function countRemaining(used) {
-        let count = 0;
-        for (let r=0; r<H; r++)
-            for (let c=0; c<W; c++)
-                if (!used[r][c]) count++;
-        return count;
-    }
 }

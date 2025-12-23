@@ -172,6 +172,27 @@ p {
   line-height: 30px;
 }
 
+.subheader-close {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+
+  background: rgba(0, 0, 0, 0.05);
+  color: #666;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
 .subheader.hidden {
   display: none;
 }

@@ -3,7 +3,14 @@ import { random, createSeed } from '../utility/random/random.js';
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
 
-const extraText = document.getElementById("extra-text");
+const subHeader = document.querySelector(".subheader");
+const subHeaderText = document.querySelector(".subheader-text");
+const subHeaderClose = document.querySelector(".subheader-close");
+subHeaderClose.addEventListener("click", () => {
+    subHeader.classList.add("hidden");
+});
+
+
 const params = new URLSearchParams(window.location.search);
 const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null
 const launchDate = params.get("date"); // YYYY-MM-DD
@@ -544,11 +551,11 @@ function updateRowColHelpers() {
         helper.addEventListener("click", () => {
             const definition = getDefinitionForWord(word);
             if (definition) {
-                extraText.textContent = `${word} - ${definition}`;
-                extraText.classList.remove('hidden');
+                subHeaderText.textContent = `${word} - ${definition}`;
+                subHeader.classList.remove('hidden');
             } else {
-                extraText.textContent = `No match found for ${word}`;
-                extraText.classList.remove('hidden');
+                subHeaderText.textContent = `No match found for ${word}`;
+                subHeader.classList.remove('hidden');
             }
         });
 
@@ -597,11 +604,11 @@ function updateRowColHelpers() {
         helper.addEventListener("click", () => {
             const definition = getDefinitionForWord(word);
             if (definition) {
-                extraText.textContent = `${word} - ${definition}`;
-                extraText.classList.remove('hidden');
+                subHeaderText.textContent = `${word} - ${definition}`;
+                subHeader.classList.remove('hidden');
             } else {
-                extraText.textContent = `No match found for ${word}`;
-                extraText.classList.remove('hidden');
+                subHeaderText.textContent = `No match found for ${word}`;
+                subHeader.classList.remove('hidden');
 
             }
         });

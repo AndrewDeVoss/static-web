@@ -134,36 +134,22 @@ function renderTiles(grid) {
     const tiles = generateTiles(grid, seedString);
     const bank = document.getElementById("tile-bank");
 
-    // ---- SORT: height (rows) → width (cols)
-    function tileDims(tile) {
-        const rows =
-            Math.max(...tile.cells.map(c => c.row)) -
-            Math.min(...tile.cells.map(c => c.row)) + 1;
-
-        const cols =
-            Math.max(...tile.cells.map(c => c.col)) -
-            Math.min(...tile.cells.map(c => c.col)) + 1;
-
-        return { rows, cols };
-    }
-
-    tiles.sort((a, b) => {
-        const da = tileDims(a);
-        const db = tileDims(b);
-
-        if (da.rows !== db.rows) return da.rows - db.rows;
-        return da.cols - db.cols;
-    });
+    // --------------------------------------------------
+    // 1. SHUFFLE tiles (instead of sorting by dimensions)
+    // --------------------------------------------------
+    const shuffledTiles = tiles
+        .map(t => [random(seedString), t])
+        .sort((a, b) => a[0] - b[0])
+        .map(pair => pair[1]);
 
     // ---- BANK SETUP
     bank.innerHTML = "";
     bank.style.position = "relative";
 
-    const bankScale = 0.75
+    const bankScale = 0.75;
     const CELL = 40 * bankScale;
     const GAP = 4 * bankScale;
 
-    // Choose a reasonable max width (responsive)
     const maxBankWidth = window.innerWidth - 20;
 
     let x = 0;
@@ -171,10 +157,19 @@ function renderTiles(grid) {
     let rowHeight = 0;
     let maxRowWidth = 0;
 
-
-    // ---- LAYOUT
-    tiles.forEach(tile => {
+    // --------------------------------------------------
+    // 2. LAYOUT + RANDOM INITIAL ROTATION
+    // --------------------------------------------------
+    shuffledTiles.forEach(tile => {
         const tileDiv = renderTileDOM(tile);
+
+        // Randomly rotate 0–3 times BEFORE layout
+        const rotations = Math.floor(random(seedString) * 4);
+        for (let i = 0; i < rotations; i++) {
+            // Rotate around top-left cell for initialization
+            const pivot = tileDiv.querySelector(".tile-cell");
+            if (pivot) rotateTile(tileDiv, pivot);
+        }
 
         const rows = parseInt(tileDiv.dataset.rows, 10);
         const cols = parseInt(tileDiv.dataset.cols, 10);
@@ -185,18 +180,15 @@ function renderTiles(grid) {
         // New row if tile doesn't fit
         if (x + tileWidth > maxBankWidth) {
             maxRowWidth = Math.max(maxRowWidth, x);
-
             x = 0;
             y += rowHeight;
             rowHeight = 0;
         }
 
-
         tileDiv.style.position = "absolute";
         tileDiv.style.left = `${x}px`;
         tileDiv.style.top = `${y}px`;
 
-        // Save location for when we place in bank
         tileDiv.dataset.bankLeft = x;
         tileDiv.dataset.bankTop = y;
 
@@ -212,7 +204,6 @@ function renderTiles(grid) {
     bank.style.width = `${maxRowWidth}px`;
     bank.style.height = `${y + rowHeight}px`;
 }
-
 
 function placeTileInBank(tileDiv) {
     const bank = document.getElementById("tile-bank");

@@ -47,8 +47,8 @@ export function generateTiles(grid, seedString) {
 
     let startingCells = new Set();
     let cellsArray = [...allCells];
-
-    for (let i = 0; i < 6 && cellsArray.length > 0; i++) {
+    const numStartingTiles = Math.min(W,H);
+    for (let i = 0; i < numStartingTiles && cellsArray.length > 0; i++) {
         let candidates = new Set();
         for (let j = 0; j <= i && cellsArray.length > 0; j++) {
             const c = cellsArray[Math.floor(random(seedString) * cellsArray.length)];

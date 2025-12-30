@@ -1,3 +1,4 @@
+import { todayInSaintLouis } from "../utility/datetime/datetime.js";
 import { DaySelector } from "./day-selector.js";
 
 document.querySelectorAll(".day-selector").forEach(el => {
@@ -14,7 +15,7 @@ const difficultyConfig = {
 // When clicking on a difficulty card, use today's date.
 document.querySelectorAll(".difficulty-card").forEach(card => {
   card.addEventListener("click", () => {
-    const date = new Date().toISOString().slice(0, 10);
+    const date = todayInSaintLouis();
     const difficulty = card.dataset.difficulty;
     updateUrl(difficulty, date);
   });

@@ -1,6 +1,6 @@
 // day-selector.js
 
-import { todayInSaintLouis } from "../utility/datetime/datetime";
+import { todayInSaintLouis } from "../utility/datetime/datetime.js";
 
 const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -36,11 +36,11 @@ export class DaySelector {
   }
 
   dateOffsetFromToday(offset) {
-    // Convert "now" → St. Louis calendar date string
     const todayKey = todayInSaintLouis(this.now);
+    const [year, month, day] = todayKey.split("-").map(Number);
 
-    // Parse safely as local midnight
-    const base = new Date(`${todayKey}T00:00:00`);
+    // Month is 0-based
+    const base = new Date(year, month - 1, day);
 
     base.setDate(base.getDate() - offset);
     return base;

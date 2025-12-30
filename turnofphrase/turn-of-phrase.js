@@ -137,12 +137,12 @@ function renderTiles(grid) {
     // ---- SORT: height (rows) → width (cols)
     function tileDims(tile) {
         const rows =
-            Math.max(...tile.cells.map(c => c.r)) -
-            Math.min(...tile.cells.map(c => c.r)) + 1;
+            Math.max(...tile.cells.map(c => c.row)) -
+            Math.min(...tile.cells.map(c => c.row)) + 1;
 
         const cols =
-            Math.max(...tile.cells.map(c => c.c)) -
-            Math.min(...tile.cells.map(c => c.c)) + 1;
+            Math.max(...tile.cells.map(c => c.col)) -
+            Math.min(...tile.cells.map(c => c.col)) + 1;
 
         return { rows, cols };
     }
@@ -236,10 +236,10 @@ function placeTileInBank(tileDiv) {
 
 
 function renderTileDOM(tile) {
-    const minR = Math.min(...tile.cells.map(c => c.r));
-    const minC = Math.min(...tile.cells.map(c => c.c));
-    const maxR = Math.max(...tile.cells.map(c => c.r));
-    const maxC = Math.max(...tile.cells.map(c => c.c));
+    const minR = Math.min(...tile.cells.map(c => c.row));
+    const minC = Math.min(...tile.cells.map(c => c.col));
+    const maxR = Math.max(...tile.cells.map(c => c.row));
+    const maxC = Math.max(...tile.cells.map(c => c.col));
 
     const tileDiv = document.createElement("div");
 
@@ -264,13 +264,13 @@ function renderTileDOM(tile) {
 
         // Visuals
         tileCell.textContent = cell.letter;
-        tileCell.style.gridRowStart = (cell.r - minR) + 1;
-        tileCell.style.gridColumnStart = (cell.c - minC) + 1;
+        tileCell.style.gridRowStart = (cell.row - minR) + 1;
+        tileCell.style.gridColumnStart = (cell.col - minC) + 1;
         tileCell.style.backgroundColor = tileColor;
 
         // Data
-        tileCell.dataset.row = cell.r - minR;
-        tileCell.dataset.col = cell.c - minC;
+        tileCell.dataset.row = cell.row - minR;
+        tileCell.dataset.col = cell.col - minC;
         tileCell.dataset.tileId = tile.id;
         tileCell.dataset.letter = cell.letter;
         tileDiv.appendChild(tileCell);

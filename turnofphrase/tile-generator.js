@@ -4,18 +4,14 @@ export function generateTiles(grid, seedString) {
     const H = grid.length;
     const W = grid[0].length;
 
-    const MIN = Math.min(H, W);
     const MAX = Math.max(H, W);
-
-    const used = Array.from({ length: H }, () => Array(W).fill(false));
-    const tiles = [];
 
     const dirs = [
         [1, 0], [-1, 0], [0, 1], [0, -1]
     ];
 
-    function inBounds(r, c) {
-        return r >= 0 && r < H && c >= 0 && c < W;
+    function inGrid(r, c) {
+        return r >= 0 && r < H && c >= 0 && c < W && grid[r][c] != null;
     }
 
     function shuffled(arr) {
@@ -25,114 +21,204 @@ export function generateTiles(grid, seedString) {
             .map(v => v[1]);
     }
 
-    function findFirstUnused() {
-        const cells = [];
-        for (let r = 0; r < H; r++) {
-            for (let c = 0; c < W; c++) {
-                if (!used[r][c]) cells.push({ r, c });
+    function manhattan(r1, c1, r2, c2) {
+        return Math.abs(r2 - r1) + Math.abs(c2 - c1);
+    }
+
+    /* -------------------------------------------------- */
+    /* Grid state                                         */
+    /* -------------------------------------------------- */
+
+    const used = Array.from({ length: H }, () => Array(W).fill(false));
+    const tileAt = Array.from({ length: H }, () => Array(W).fill(null));
+
+    const allCells = [];
+    for (let r = 0; r < H; r++) {
+        for (let c = 0; c < W; c++) {
+            if (grid[r][c] != null) {
+                allCells.push({ row: r, col: c, letter: grid[r][c] });
             }
         }
-        // Avoid top-left bias
-        return cells.length
-            ? cells[Math.floor(random(seedString) * cells.length)]
-            : null;
     }
 
-    function canExtendBounds(minR, maxR, minC, maxC) {
-        if (maxR - minR + 1 === H) return false;
-        if (maxC - minC + 1 === W) return false;
-        return true;
-    }
+    /* -------------------------------------------------- */
+    /* Pick starting cells                                */
+    /* -------------------------------------------------- */
 
-    /**
-     * Generate all contiguous polyominoes of given size
-     * starting from seed cell.
-     */
-    function generateShapes(seed, targetSize) {
-        const results = [];
+    let startingCells = new Set();
+    let cellsArray = [...allCells];
 
-        function dfs(cells, frontier, minR, maxR, minC, maxC) {
-            if (cells.length === targetSize) {
-                results.push([...cells]);
-                return;
+    for (let i = 0; i < 6 && cellsArray.length > 0; i++) {
+        let candidates = new Set();
+        for (let j = 0; j <= i && cellsArray.length > 0; j++) {
+            const c = cellsArray[Math.floor(random(seedString) * cellsArray.length)];
+            candidates.add(c);
+        }
+
+        let best = candidates.values().next().value;
+        let bestDist = -1;
+
+        for (const cand of candidates) {
+            let minDist = Infinity;
+            for (const s of startingCells) {
+                minDist = Math.min(
+                    minDist,
+                    manhattan(cand.row, cand.col, s.row, s.col)
+                );
             }
+            if (minDist > bestDist) {
+                bestDist = minDist;
+                best = cand;
+            }
+        }
 
-            for (const idx in frontier) {
-                const cell = frontier[idx];
+        startingCells.add(best);
+        cellsArray = cellsArray.filter(c => c !== best);
+    }
 
-                for (const [dr, dc] of dirs) {
-                    const nr = cell.r + dr;
-                    const nc = cell.c + dc;
+    /* -------------------------------------------------- */
+    /* Create tiles                                       */
+    /* -------------------------------------------------- */
 
-                    if (
-                        !inBounds(nr, nc) ||
-                        used[nr][nc] ||
-                        cells.some(c => c.r === nr && c.c === nc)
-                    ) continue;
+    const tiles = [];
+    let nextTileID = 0;
 
-                    const nextMinR = Math.min(minR, nr);
-                    const nextMaxR = Math.max(maxR, nr);
-                    const nextMinC = Math.min(minC, nc);
-                    const nextMaxC = Math.max(maxC, nc);
+    for (const cell of startingCells) {
+        const tile = {
+            id: nextTileID++,
+            cells: [cell],
+            boundary: new Set([cell])
+        };
+        tiles.push(tile);
 
-                    if (!canExtendBounds(
-                        nextMinR, nextMaxR,
-                        nextMinC, nextMaxC
-                    )) continue;
+        used[cell.row][cell.col] = true;
+        tileAt[cell.row][cell.col] = tile;
+    }
 
-                    dfs(
-                        [...cells, { r: nr, c: nc }],
-                        [...frontier, { r: nr, c: nc }],
-                        nextMinR, nextMaxR,
-                        nextMinC, nextMaxC
-                    );
+    /* -------------------------------------------------- */
+    /* Region detection                                   */
+    /* -------------------------------------------------- */
+
+    function findRegions() {
+        const visited = Array.from({ length: H }, () => Array(W).fill(false));
+        const regions = [];
+
+        function dfs(r, c, acc) {
+            visited[r][c] = true;
+            acc.push({ row: r, col: c });
+
+            for (const [dr, dc] of dirs) {
+                const nr = r + dr, nc = c + dc;
+                if (inGrid(nr, nc) && !used[nr][nc] && !visited[nr][nc]) {
+                    dfs(nr, nc, acc);
                 }
             }
         }
 
-        dfs(
-            [seed],
-            [seed],
-            seed.r, seed.r,
-            seed.c, seed.c
-        );
-
-        return results;
-    }
-
-    function backtrack() {
-        const seed = findFirstUnused();
-        if (!seed) return true; // success
-
-        for (let size = MIN; size <= MAX; size++) {
-            const shapes = generateShapes(seed, size);
-
-            for (const shape of shuffled(shapes)) {
-                // Commit
-                shape.forEach(({ r, c }) => used[r][c] = true);
-
-                tiles.push({
-                    id: tiles.length + 1,
-                    cells: shape.map(({ r, c }) => ({
-                        r,
-                        c,
-                        letter: grid[r][c]
-                    }))
-                });
-
-                if (backtrack()) return true;
-
-                // Undo
-                tiles.pop();
-                shape.forEach(({ r, c }) => used[r][c] = false);
+        for (let r = 0; r < H; r++) {
+            for (let c = 0; c < W; c++) {
+                if (inGrid(r, c) && !used[r][c] && !visited[r][c]) {
+                    const region = [];
+                    dfs(r, c, region);
+                    regions.push(region);
+                }
             }
         }
 
+        return regions;
+    }
+
+    function borderingTiles(r, c) {
+        const set = new Set();
+        for (const [dr, dc] of dirs) {
+            const nr = r + dr, nc = c + dc;
+            if (inGrid(nr, nc) && used[nr][nc]) {
+                set.add(tileAt[nr][nc]);
+            }
+        }
+        return set;
+    }
+
+    /* -------------------------------------------------- */
+    /* Expansion safety                                   */
+    /* -------------------------------------------------- */
+
+    function canClaimCell(tile, cell) {
+        const neighbors = borderingTiles(cell.row, cell.col);
+
+        // HARD GUARANTEE:
+        // If only one tile borders this cell, it must be allowed
+        if (neighbors.size === 1 && neighbors.has(tile)) {
+            return true;
+        }
+
+        const before = findRegions();
+
+        used[cell.row][cell.col] = true;
+        tileAt[cell.row][cell.col] = tile;
+
+        const after = findRegions();
+
+        used[cell.row][cell.col] = false;
+        tileAt[cell.row][cell.col] = null;
+
+        if (after.length > before.length) return false;
+
+        return true;
+    }
+
+    /* -------------------------------------------------- */
+    /* Tile growth                                        */
+    /* -------------------------------------------------- */
+
+    function expandTile(tile) {
+        const boundary = shuffled([...tile.boundary]);
+
+        for (const b of boundary) {
+            for (const [dr, dc] of dirs) {
+                const r = b.row + dr;
+                const c = b.col + dc;
+
+                if (!inGrid(r, c) || used[r][c]) continue;
+
+                const cell = {
+                    row: r,
+                    col: c,
+                    letter: grid[r][c]
+                };
+
+                if (!canClaimCell(tile, cell)) continue;
+
+                tile.cells.push(cell);
+                tile.boundary.add(cell);
+                used[r][c] = true;
+                tileAt[r][c] = tile;
+
+                return true;
+            }
+        }
         return false;
     }
 
-    if (!backtrack()) {
-        throw new Error("No valid tiling exists under given constraints.");
+    /* -------------------------------------------------- */
+    /* Round-robin expansion                              */
+    /* -------------------------------------------------- */
+
+    let expandable = tiles.filter(t => t.cells.length < MAX);
+    let changed = true;
+
+    while (changed && expandable.length) {
+        changed = false;
+        const next = [];
+
+        for (const tile of expandable) {
+            if (expandTile(tile)) {
+                next.push(tile);
+                changed = true;
+            }
+        }
+
+        expandable = next;
     }
 
     return tiles;

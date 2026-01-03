@@ -12,29 +12,30 @@ subHeaderClose.addEventListener("click", () => {
 
 // Prevent double click zoom on iOS
 (function preventIosDoubleTapZoom() {
-  const ua = navigator.userAgent;
-  const isIosSafari =
-    /iPad|iPhone/.test(ua) &&
-    /WebKit/.test(ua) &&
-    !/CriOS/.test(ua);
+    const ua = navigator.userAgent;
+    const isIosSafari =
+        /iPad|iPhone/.test(ua) &&
+        /WebKit/.test(ua) &&
+        !/CriOS/.test(ua);
 
-  if (!isIosSafari) return;
+    if (!isIosSafari) return;
 
-  let lastTouchEnd = 0;
+    let lastTouchEnd = 0;
 
-  document.addEventListener(
-    'touchend',
-    function (e) {
-      const now = Date.now();
-      if (now - lastTouchEnd <= 300) {
-        e.preventDefault();
-      }
-      lastTouchEnd = now;
-    },
-    { passive: false }
-  );
+    document.addEventListener(
+        'touchend',
+        function (e) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        },
+        { passive: false }
+    );
 })();
 
+// Get params from URL
 const params = new URLSearchParams(window.location.search);
 const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null
 const launchDate = params.get("date"); // YYYY-MM-DD
@@ -53,17 +54,18 @@ function generateGame({ width, height }) {
 
     tileColors = [];
 
-    const grid = findWordGrid(DICT, w, h, seedString);
+    const wordGrid = findWordGrid(DICT, w, h, seedString);
 
-    if (!grid) {
+    if (!wordGrid) {
         document.getElementById("grid-output").textContent = "No grid found.";
         return;
     }
 
     document.querySelectorAll(".game-area .tile").forEach(tile => tile.remove());
 
-    renderBoard(grid);
-    renderTiles(grid);
+    renderBank(wordGrid);
+    renderBoard(wordGrid);
+    renderTiles(wordGrid);
 }
 const generateBtn = document.getElementById("generate-btn");
 generateBtn.addEventListener("click", () => {
@@ -121,6 +123,32 @@ function handleLaunchMode() {
     generateBtn.click();
 }
 
+/*********************************************************************
+ *  BANK RENDERING
+ *********************************************************************/
+function renderBank(grid) {
+    const extraCells = 3
+    const H = grid.length + extraCells;
+    const W = grid[0].length + extraCells;
+    const bank = document.getElementById("bank");
+    bank.innerHTML = "";
+    bank.style.position = "relative"; // required for ghost + absolute tiles
+    bank.style.display = "inline-grid";
+    bank.style.gridTemplateColumns = `repeat(${W}, 30px)`;
+    bank.style.width = "fit-content";
+    bank.dataset.rows = H;
+    bank.dataset.cols = W;
+
+    for (let r = 0; r < H; r++) {
+        for (let c = 0; c < W; c++) {
+            const gridCell = document.createElement("div");
+            gridCell.className = "bank-cell";
+            gridCell.dataset.row = r;
+            gridCell.dataset.col = c;
+            bank.appendChild(gridCell);
+        }
+    }
+}
 
 /*********************************************************************
  *  BOARD RENDERING
@@ -156,7 +184,6 @@ function renderBoard(grid) {
  *********************************************************************/
 function renderTiles(grid) {
     const tiles = generateTiles(grid, seedString);
-    const bank = document.getElementById("tile-bank");
 
     // --------------------------------------------------
     // 1. SHUFFLE tiles (instead of sorting by dimensions)
@@ -166,89 +193,50 @@ function renderTiles(grid) {
         .sort((a, b) => a[0] - b[0])
         .map(pair => pair[1]);
 
-    // ---- BANK SETUP
-    bank.innerHTML = "";
-    bank.style.position = "relative";
-
-    const bankScale = 0.75;
-    const CELL = 40 * bankScale;
-    const GAP = 4 * bankScale;
-
-    const maxBankWidth = window.innerWidth - 20;
-
-    let x = 0;
-    let y = 0;
-    let rowHeight = 0;
-    let maxRowWidth = 0;
+    const bank = document.getElementById("bank");
+    const BANK_COLS = parseInt(bank.dataset.cols, 10);
 
     // --------------------------------------------------
     // 2. LAYOUT + RANDOM INITIAL ROTATION
     // --------------------------------------------------
+    let bankIndex = 0;
+
     shuffledTiles.forEach(tile => {
         const tileDiv = renderTileDOM(tile);
 
-        // Randomly rotate 0–3 times BEFORE layout
+        // Random initial rotation
         const rotations = Math.floor(random(seedString) * 4);
         for (let i = 0; i < rotations; i++) {
-            // Rotate around top-left cell for initialization
             const pivot = tileDiv.querySelector(".tile-cell");
             if (pivot) rotateTile(tileDiv, pivot);
         }
 
-        const rows = parseInt(tileDiv.dataset.rows, 10);
-        const cols = parseInt(tileDiv.dataset.cols, 10);
+        tileDiv.dataset.state = "in-bank";
 
-        const tileWidth = cols * CELL + (cols - 1) * GAP;
-        const tileHeight = rows * CELL + (rows - 1) * GAP;
+        // --- TEMP placement so snapping works
+        const gameArea = document.querySelector(".game-area");
+        const bankCells = bank.querySelectorAll(".bank-cell");
+        const cell = bankCells[bankIndex % bankCells.length];
 
-        // New row if tile doesn't fit
-        if (x + tileWidth > maxBankWidth) {
-            maxRowWidth = Math.max(maxRowWidth, x);
-            x = 0;
-            y += rowHeight;
-            rowHeight = 0;
-        }
+        const areaRect = gameArea.getBoundingClientRect();
+        const cellRect = cell.getBoundingClientRect();
 
         tileDiv.style.position = "absolute";
-        tileDiv.style.left = `${x}px`;
-        tileDiv.style.top = `${y}px`;
+        tileDiv.style.left = `${cellRect.left - areaRect.left}px`;
+        tileDiv.style.top = `${cellRect.top - areaRect.top}px`;
 
-        tileDiv.dataset.bankLeft = x;
-        tileDiv.dataset.bankTop = y;
+        gameArea.appendChild(tileDiv);
 
-        bank.appendChild(tileDiv);
+        // --- Snap using the same logic as drag-drop
+        placeTileInBank(tileDiv);
+
         enableTileDrag(tileDiv);
         enableTileRotation(tileDiv);
 
-        x += tileWidth;
-        rowHeight = Math.max(rowHeight, tileHeight);
-        maxRowWidth = Math.max(maxRowWidth, x);
+        bankIndex++;
     });
 
-    bank.style.width = `${maxRowWidth}px`;
-    bank.style.height = `${y + rowHeight}px`;
 }
-
-function placeTileInBank(tileDiv) {
-    const bank = document.getElementById("tile-bank");
-
-    tileDiv.dataset.state = "in-bank";
-
-    const left = parseFloat(tileDiv.dataset.bankLeft);
-    const top = parseFloat(tileDiv.dataset.bankTop);
-
-    tileDiv.style.position = "absolute";
-    tileDiv.style.left = `${left}px`;
-    tileDiv.style.top = `${top}px`;
-
-    // Reparent if necessary
-    if (tileDiv.parentElement !== bank) {
-        bank.appendChild(tileDiv);
-    }
-
-    updateRowColHelpers();
-}
-
 
 function renderTileDOM(tile) {
     const minR = Math.min(...tile.cells.map(c => c.row));
@@ -548,6 +536,90 @@ function tileFits(tileDiv, startingBoardCell) {
     }
 
     return true;
+}
+
+function placeTileInBank(tileDiv) {
+    tileDiv.dataset.state = "in-bank";
+
+    const bank = document.getElementById("bank");
+    const gameArea = document.querySelector(".game-area");
+
+    const areaRect = gameArea.getBoundingClientRect();
+    const tileRect = tileDiv.getBoundingClientRect();
+
+    // Ensure absolute positioning in game-area
+    if (tileDiv.parentElement !== gameArea) {
+        tileDiv.style.position = "absolute";
+        tileDiv.style.left = `${tileRect.left - areaRect.left}px`;
+        tileDiv.style.top = `${tileRect.top - areaRect.top}px`;
+        gameArea.appendChild(tileDiv);
+    }
+
+    const tileRows = parseInt(tileDiv.dataset.rows, 10);
+    const tileCols = parseInt(tileDiv.dataset.cols, 10);
+
+    const bankCells = Array.from(bank.querySelectorAll(".bank-cell"));
+
+    let bestCell = null;
+    let bestDist = Infinity;
+
+    const tileCenterX = (tileRect.left + tileRect.right) / 2;
+    const tileCenterY = (tileRect.top + tileRect.bottom) / 2;
+
+    for (const cell of bankCells) {
+        const startRow = parseInt(cell.dataset.row, 10);
+        const startCol = parseInt(cell.dataset.col, 10);
+
+        // ---- Check bounds: tile must fully fit in bank
+        let fits = true;
+
+        for (const tileCell of tileDiv.querySelectorAll(".tile-cell")) {
+            const r = startRow + parseInt(tileCell.dataset.row, 10);
+            const c = startCol + parseInt(tileCell.dataset.col, 10);
+
+            if (!bank.querySelector(
+                `.bank-cell[data-row="${r}"][data-col="${c}"]`
+            )) {
+                fits = false;
+                break;
+            }
+        }
+
+        if (!fits) continue;
+
+        // ---- Distance from tile center to landing center
+        const startCellRect = cell.getBoundingClientRect();
+
+        const endCell = bank.querySelector(
+            `.bank-cell[data-row="${startRow + tileRows - 1}"][data-col="${startCol + tileCols - 1}"]`
+        );
+        if (!endCell) continue;
+
+        const endCellRect = endCell.getBoundingClientRect();
+
+        const landingCenterX = (startCellRect.left + endCellRect.right) / 2;
+        const landingCenterY = (startCellRect.top + endCellRect.bottom) / 2;
+
+        const dx = tileCenterX - landingCenterX;
+        const dy = tileCenterY - landingCenterY;
+        const dist = dx * dx + dy * dy;
+
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestCell = cell;
+        }
+    }
+
+    // If no valid placement exists, leave tile where it is
+    if (!bestCell) return;
+
+    // ---- Snap tile to chosen bank cell
+    const bestRect = bestCell.getBoundingClientRect();
+
+    tileDiv.style.left = `${bestRect.left - areaRect.left}px`;
+    tileDiv.style.top = `${bestRect.top - areaRect.top}px`;
+
+    tileDiv.classList.remove("in-board");
 }
 
 function placeTileInBoard(tileDiv, startingBoardCell) {

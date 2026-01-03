@@ -101,14 +101,10 @@ body {
     margin-top: 30px;
     text-align: center;
     position: relative;
-}
-
-
-/* TILE BANK */
-.tile-bank {
-    position: relative;
-    margin-left: auto;
-    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 /* TILE */
@@ -171,6 +167,30 @@ body {
     filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.25));
 }
 
+/* BANK */
+#bank-container {
+    display: grid;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+}
+
+#bank {
+    margin: 20px;
+    display: grid;
+    justify-content: center;
+    gap: 3px;
+    position: relative;
+}
+
+.bank-cell {
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    outline: #929292 1px solid;
+    border-radius: 6px;
+}
+
 /* TILE BOARD */
 #board-container {
     display: grid;
@@ -179,7 +199,7 @@ body {
     align-items: center;
 }
 
-.board {
+#board {
     margin: 20px;
     display: grid;
     justify-content: center;

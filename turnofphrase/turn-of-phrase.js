@@ -184,27 +184,20 @@ function renderBoard(grid) {
  *********************************************************************/
 function renderTiles(grid) {
     const tiles = generateTiles(grid, seedString);
-
-    // --------------------------------------------------
-    // 1. SHUFFLE tiles (instead of sorting by dimensions)
-    // --------------------------------------------------
-    const shuffledTiles = tiles
-        .map(t => [random(seedString), t])
-        .sort((a, b) => a[0] - b[0])
-        .map(pair => pair[1]);
-
     const bank = document.getElementById("bank");
+    const gameArea = document.querySelector(".game-area");
+
     const BANK_COLS = parseInt(bank.dataset.cols, 10);
+    const BANK_ROWS = parseInt(bank.dataset.rows, 10);
+
+    const bankCells = Array.from(bank.querySelectorAll(".bank-cell"));
 
     // --------------------------------------------------
-    // 2. LAYOUT + RANDOM INITIAL ROTATION
+    // 1. CREATE + ROTATE ALL TILES FIRST
     // --------------------------------------------------
-    let bankIndex = 0;
-
-    shuffledTiles.forEach(tile => {
+    const tileDivs = tiles.map(tile => {
         const tileDiv = renderTileDOM(tile);
 
-        // Random initial rotation
         const rotations = Math.floor(random(seedString) * 4);
         for (let i = 0; i < rotations; i++) {
             const pivot = tileDiv.querySelector(".tile-cell");
@@ -212,12 +205,82 @@ function renderTiles(grid) {
         }
 
         tileDiv.dataset.state = "in-bank";
+        enableTileDrag(tileDiv);
+        enableTileRotation(tileDiv);
 
-        // --- TEMP placement so snapping works
-        const gameArea = document.querySelector(".game-area");
-        const bankCells = bank.querySelectorAll(".bank-cell");
-        const cell = bankCells[bankIndex % bankCells.length];
+        return tileDiv;
+    });
 
+    // --------------------------------------------------
+    // 2. SORT BY NUMBER OF ROWS (AFTER ROTATION)
+    // --------------------------------------------------
+    tileDivs.sort(
+        (a, b) =>
+            parseInt(a.dataset.rows, 10) -
+            parseInt(b.dataset.rows, 10)
+    );
+
+    // --------------------------------------------------
+    // 3. GRID PLACEMENT
+    // --------------------------------------------------
+    let curRow = 0;
+    let curCol = 0;
+
+    tileDivs.forEach(tileDiv => {
+        const tileRows = parseInt(tileDiv.dataset.rows, 10);
+        const tileCols = parseInt(tileDiv.dataset.cols, 10);
+
+        let placed = false;
+
+        // ---- Try normal flowing layout
+        for (let r = curRow; r < BANK_ROWS && !placed; r++) {
+            for (let c = curCol; c < BANK_COLS && !placed; c++) {
+                if (c + tileCols > BANK_COLS && r + tileRows > BANK_ROWS) continue;
+                if (c + tileCols > BANK_COLS) {
+                    // Advance to next row 
+                    curCol = 0;
+                    curRow = r + 1;
+                }
+
+                const cell = bank.querySelector(
+                    `.bank-cell[data-row="${r}"][data-col="${c}"]`
+                );
+                if (!cell) continue;
+
+                console.log(`Placing tile ${tileDiv.dataset.rows}x${tileDiv.dataset.cols} at bank cell (${r}, ${c})`);
+                placeTileAtCell(tileDiv, cell);
+                placed = true;
+
+                // Advance column based on tile width
+                curCol = (c + tileCols);
+                if (curCol >= BANK_COLS) {
+                    curCol = 0;
+                    curRow = r + tileRows;
+                    console.log(`Advancing to bank row ${curRow}`);
+                }
+            }
+        }
+
+        // ---- Fallback: place near end of bank
+        if (!placed) {
+            for (let i = bankCells.length - 1; i >= 0; i--) {
+                const cell = bankCells[i];
+                const r = parseInt(cell.dataset.row, 10);
+                const c = parseInt(cell.dataset.col, 10);
+
+                if (r + tileRows <= BANK_ROWS && c + tileCols <= BANK_COLS) {
+                    placeTileAtCell(tileDiv, cell);
+                    placed = true;
+                    break;
+                }
+            }
+        }
+    });
+
+    // --------------------------------------------------
+    // Helper: position tile and snap
+    // --------------------------------------------------
+    function placeTileAtCell(tileDiv, cell) {
         const areaRect = gameArea.getBoundingClientRect();
         const cellRect = cell.getBoundingClientRect();
 
@@ -226,16 +289,8 @@ function renderTiles(grid) {
         tileDiv.style.top = `${cellRect.top - areaRect.top}px`;
 
         gameArea.appendChild(tileDiv);
-
-        // --- Snap using the same logic as drag-drop
         placeTileInBank(tileDiv);
-
-        enableTileDrag(tileDiv);
-        enableTileRotation(tileDiv);
-
-        bankIndex++;
-    });
-
+    }
 }
 
 function renderTileDOM(tile) {

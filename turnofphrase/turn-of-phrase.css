@@ -136,7 +136,7 @@ body {
 }
 
 .tile[data-state="dragging"] {
-    transform: scale(1);
+    transform: scale(0.75);
 }
 
 .tile[data-state="dragging"] .tile-cell {

@@ -278,7 +278,7 @@ function enableTileRotation(tileDiv) {
     let startedOnCell = false;
 
     const MOVE_THRESHOLD = 5;
-    const CLICK_TIME = 250;
+    const CLICK_TIME = 350;
 
     tileDiv.addEventListener("pointerdown", e => {
         // Did this pointer start on a tile cell?

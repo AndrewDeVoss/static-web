@@ -233,7 +233,7 @@ class HexBoard extends LetterBoard {
                     letterDiv.removeChild(child);
                 }
             });
-            
+
             // reset classes
             letterDiv.className = 'letter';
             if (!lettersToEnable.includes(letterDiv)) {
@@ -253,12 +253,12 @@ class HexBoard extends LetterBoard {
         // Disable double-tap zoom (the modern way)
         const style = document.createElement('style');
         style.textContent = `
-        :host, * {
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: manipulation;
-        }
-    `;
+            :host, * {
+                -webkit-user-select: none;
+                -webkit-touch-callout: none;
+                touch-action: manipulation;
+            }
+        `;
         root.appendChild(style);
 
         // Prevent hover-related glitches

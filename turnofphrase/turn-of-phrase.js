@@ -10,6 +10,30 @@ subHeaderClose.addEventListener("click", () => {
     subHeader.classList.add("hidden");
 });
 
+// Prevent double click zoom on iOS
+(function preventIosDoubleTapZoom() {
+  const ua = navigator.userAgent;
+  const isIosSafari =
+    /iPad|iPhone/.test(ua) &&
+    /WebKit/.test(ua) &&
+    !/CriOS/.test(ua);
+
+  if (!isIosSafari) return;
+
+  let lastTouchEnd = 0;
+
+  document.addEventListener(
+    'touchend',
+    function (e) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    },
+    { passive: false }
+  );
+})();
 
 const params = new URLSearchParams(window.location.search);
 const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null

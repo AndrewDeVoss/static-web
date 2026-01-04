@@ -233,13 +233,14 @@ function renderTiles(grid) {
         let placed = false;
 
         // ---- Try normal flowing layout
-        for (let r = curRow; r < BANK_ROWS && !placed; r++) {
+        for (let r = curRow; r < BANK_ROWS && !placed; r+=tileRows) {
             for (let c = curCol; c < BANK_COLS && !placed; c++) {
                 if (c + tileCols > BANK_COLS && r + tileRows > BANK_ROWS) continue;
                 if (c + tileCols > BANK_COLS) {
                     // Advance to next row 
                     curCol = 0;
-                    curRow = r + 1;
+                    curRow = r + tileRows;
+                    continue;
                 }
 
                 const cell = bank.querySelector(

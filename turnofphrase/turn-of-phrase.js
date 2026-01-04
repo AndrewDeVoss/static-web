@@ -233,7 +233,7 @@ function renderTiles(grid) {
         let placed = false;
 
         // ---- Try normal flowing layout
-        for (let r = curRow; r < BANK_ROWS && !placed; r+=tileRows) {
+        for (let r = curRow; r < BANK_ROWS && !placed; r += tileRows) {
             for (let c = curCol; c < BANK_COLS && !placed; c++) {
                 if (c + tileCols > BANK_COLS && r + tileRows > BANK_ROWS) continue;
                 if (c + tileCols > BANK_COLS) {
@@ -349,6 +349,8 @@ function enableTileRotation(tileDiv) {
     const CLICK_TIME = 350;
 
     tileDiv.addEventListener("pointerdown", e => {
+        if (tileDiv.classList.contains("locked")) return;
+
         // Did this pointer start on a tile cell?
         startedOnCell = !!e.target.closest(".tile-cell");
 
@@ -485,7 +487,7 @@ function enableTileDrag(tileDiv) {
 
 
     window.addEventListener("pointermove", e => {
-        if (!dragging) return;
+        if (!dragging || tileDiv.classList.contains("locked")) return;
 
         tileDiv.dataset.state = "dragging";
 
@@ -503,7 +505,7 @@ function enableTileDrag(tileDiv) {
     });
 
     window.addEventListener("pointerup", e => {
-        if (!dragging) return;
+        if (!dragging || tileDiv.classList.contains("locked")) return;
         dragging = false;
         tileDiv.classList.remove("dragging");
 

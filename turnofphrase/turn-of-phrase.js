@@ -449,73 +449,95 @@ function rotateTile(tileDiv, pivotCell) {
 
     tileDiv.style.left = `${left + dx}px`;
     tileDiv.style.top = `${top + dy}px`;
+
+    const targetCell = findBestStartingBoardCell(tileDiv);
+    if (targetCell) {
+        placeTileInBoard(tileDiv, targetCell);
+    } else {
+        placeTileInBank(tileDiv);
+    }
 }
 
 function enableTileDrag(tileDiv) {
+    let downX = 0, downY = 0;
     let startX = 0, startY = 0;
     let dragging = false;
+    let startedOnCell = false;
+
+    const DRAG_THRESHOLD = 6;
 
     tileDiv.addEventListener("pointerdown", e => {
-        dragging = true;
-        removeTileFromBoard(tileDiv);
+        if (tileDiv.classList.contains("locked")) return;
 
-        tileDiv.classList.add("dragging");
+        const cell = e.target.closest(".tile-cell");
+        if (!cell) return;
 
-        const gameArea = document.querySelector(".game-area");
-        const areaRect = gameArea.getBoundingClientRect();
+        startedOnCell = true;
+        dragging = false;
+
+        downX = e.clientX;
+        downY = e.clientY;
+
         const tileRect = tileDiv.getBoundingClientRect();
-
-        // Mouse offset inside tile
         startX = e.clientX - tileRect.left;
         startY = e.clientY - tileRect.top;
-
-        // Absolute pos relative to game-area BEFORE reparenting
-        const absLeft = tileRect.left - areaRect.left;
-        const absTop = tileRect.top - areaRect.top;
-
-        tileDiv.style.position = "absolute";
-        tileDiv.style.left = absLeft + "px";
-        tileDiv.style.top = absTop + "px";
-
-        // Always drag inside gameArea
-        if (tileDiv.parentElement !== gameArea) {
-            gameArea.appendChild(tileDiv);
-        }
-
-        e.preventDefault();
     });
 
+    tileDiv.addEventListener("pointermove", e => {
+        if (!startedOnCell || tileDiv.classList.contains("locked")) return;
 
-    window.addEventListener("pointermove", e => {
-        if (!dragging || tileDiv.classList.contains("locked")) return;
+        const dx = e.clientX - downX;
+        const dy = e.clientY - downY;
 
-        tileDiv.dataset.state = "dragging";
+        // Promote to drag only after threshold
+        if (!dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+            dragging = true;
+
+            tileDiv.setPointerCapture(e.pointerId);
+
+            removeTileFromBoard(tileDiv);
+            tileDiv.classList.add("dragging");
+
+            const gameArea = document.querySelector(".game-area");
+            const areaRect = gameArea.getBoundingClientRect();
+            const tileRect = tileDiv.getBoundingClientRect();
+
+            tileDiv.style.position = "absolute";
+            tileDiv.style.left = `${tileRect.left - areaRect.left}px`;
+            tileDiv.style.top = `${tileRect.top - areaRect.top}px`;
+
+            if (tileDiv.parentElement !== gameArea) {
+                gameArea.appendChild(tileDiv);
+            }
+        }
+
+        if (!dragging) return;
 
         const gameArea = document.querySelector(".game-area");
         const rect = gameArea.getBoundingClientRect();
 
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        tileDiv.style.left = `${mouseX - startX}px`;
-        tileDiv.style.top = `${mouseY - startY}px`;
-
-        const startingBoardCell = findBestStartingBoardCell(tileDiv);
-        // drawGhost(tileDiv, startingBoardCell);
+        tileDiv.style.left = `${e.clientX - rect.left - startX}px`;
+        tileDiv.style.top = `${e.clientY - rect.top - startY}px`;
     });
 
-    window.addEventListener("pointerup", e => {
-        if (!dragging || tileDiv.classList.contains("locked")) return;
-        dragging = false;
-        tileDiv.classList.remove("dragging");
+    tileDiv.addEventListener("pointerup", e => {
+        if (!startedOnCell) return;
 
-        const targetCell = findBestStartingBoardCell(tileDiv);
+        if (dragging) {
+            tileDiv.releasePointerCapture(e.pointerId);
 
-        if (!targetCell) {
-            placeTileInBank(tileDiv);
-        } else {
-            placeTileInBoard(tileDiv, targetCell);
+            tileDiv.classList.remove("dragging");
+
+            const targetCell = findBestStartingBoardCell(tileDiv);
+            if (!targetCell) {
+                placeTileInBank(tileDiv);
+            } else {
+                placeTileInBoard(tileDiv, targetCell);
+            }
         }
+
+        dragging = false;
+        startedOnCell = false;
     });
 
 }

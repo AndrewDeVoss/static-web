@@ -118,10 +118,10 @@ body {
     z-index: 10;
     transition: transform 0.1s ease;
     touch-action: none;
-    pointer-events: auto;
+    pointer-events: none;
 }
 
-.tile.locked {
+.tile.locked .tile-cell {
     cursor: default;
     pointer-events: none;
 }

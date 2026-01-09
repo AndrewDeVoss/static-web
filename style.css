@@ -311,11 +311,12 @@ p {
 .day-button[data-state="started"] {
     background: #ffe08a;
     color: #333;
+    font-style: italic;
 }
 
 .day-button[data-state="finished"] {
-    background: #9fd8a0;
-    color: #214d21;
+    background: hsla(var(--difficulty-hsl), 1);
+    color: #000000;
 }
 
 /* Hover */

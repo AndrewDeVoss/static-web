@@ -256,22 +256,24 @@ body {
 }
 
 .difficulty-card[data-difficulty="easy"] {
-    background: hsla(120, 100%, 85%, 0.6);
+    --difficulty-hsl: 120, 100%, 85%;
+    background: hsla(var(--difficulty-hsl), 0.4);
 }
 
 .difficulty-card[data-difficulty="medium"] {
-    background: hsla(177, 88%, 77%, 0.6);
+    --difficulty-hsl: 177, 88%, 77%;
+    background: hsla(var(--difficulty-hsl), 0.4);
 }
 
 .difficulty-card[data-difficulty="hard"] {
-    background: hsla(300, 89%, 75%, 0.6);
+    --difficulty-hsl: 300, 89%, 75%;
+    background: hsla(var(--difficulty-hsl), 0.4);
 }
 
 .difficulty-card[data-difficulty="custom"] {
-    background: hsla(268, 81%, 72%, 0.6);
+    --difficulty-hsl: 268, 81%, 72%;
+    background: hsla(var(--difficulty-hsl), 0.4);
 }
-
-
 
 .difficulty-card:hover {
     transform: translateY(-4px);

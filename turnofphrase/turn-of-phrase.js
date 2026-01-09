@@ -44,6 +44,152 @@ if (!launchDate || !launchDifficulty) {
     seedString = random(seedString).toString(36).slice(2);
 }
 
+// Identifier for the current game
+function getGameStorageKey() {
+    return seedString;
+}
+
+// Saving
+function saveGameState() {
+    const masterKey = "turn-of-phrase";
+    const key = getGameStorageKey();
+
+    const board = document.getElementById("board");
+    const rows = parseInt(board.dataset.rows, 10);
+    const cols = parseInt(board.dataset.cols, 10);
+
+    const boardLetters = Array.from({ length: rows }, (_, r) =>
+        Array.from({ length: cols }, (_, c) => {
+            const cell = board.querySelector(
+                `.board-cell[data-row="${r}"][data-col="${c}"]`
+            );
+            return cell?.dataset.letter || "";
+        })
+    );
+
+    const tiles = Array.from(document.querySelectorAll(".tile")).map(tile => ({
+        id: tile.querySelector(".tile-cell")?.dataset.tileId,
+        rows: parseInt(tile.dataset.rows, 10),
+        cols: parseInt(tile.dataset.cols, 10),
+        state: tile.dataset.state,
+        color: tile.querySelector(".tile-cell")?.style.backgroundColor || null,
+        boardRow: tile.dataset.boardRow ?? null,
+        boardCol: tile.dataset.boardCol ?? null,
+        left: tile.style.left,
+        top: tile.style.top,
+        cells: Array.from(tile.querySelectorAll(".tile-cell")).map(cell => ({
+            row: parseInt(cell.dataset.row, 10),
+            col: parseInt(cell.dataset.col, 10),
+            letter: cell.dataset.letter
+        }))
+    }));
+
+    const state = {
+        seedString,
+        completed: checkBoardForCompletion(),
+        tileColors,
+        board: { rows, cols, letters: boardLetters },
+        tiles
+    };
+
+    // Load existing games from the master key
+    const allGamesRaw = localStorage.getItem(masterKey);
+    const allGames = allGamesRaw ? JSON.parse(allGamesRaw) : {};
+
+    // Save/update this game's state
+    allGames[key] = state;
+
+    localStorage.setItem(masterKey, JSON.stringify(allGames));
+}
+
+// Loading
+function loadGameState() {
+    const masterKey = "turn-of-phrase";
+    const key = getGameStorageKey();
+
+    const allGamesRaw = localStorage.getItem(masterKey);
+    if (!allGamesRaw) return false;
+
+    const allGames = JSON.parse(allGamesRaw);
+    const state = allGames[key];
+    if (!state) return false;
+
+    seedString = state.seedString;
+    tileColors = state.tileColors || [];
+
+    renderBoard(
+        Array.from({ length: state.board.rows }, () => Array(state.board.cols).fill(""))
+    );
+
+    // Restore board letters
+    state.board.letters.forEach((row, r) => {
+        row.forEach((letter, c) => {
+            if (letter) {
+                const cell = document.querySelector(
+                    `.board-cell[data-row="${r}"][data-col="${c}"]`
+                );
+                cell.dataset.letter = letter;
+                cell.classList.add("filled");
+            }
+        });
+    });
+
+    renderBank(
+        Array.from({ length: state.board.rows }, () => Array(state.board.cols).fill(""))
+    );
+
+    const gameArea = document.querySelector(".game-area");
+
+    state.tiles.forEach(t => {
+        const tileDiv = document.createElement("div");
+        tileDiv.className = "tile";
+        tileDiv.dataset.rows = t.rows;
+        tileDiv.dataset.cols = t.cols;
+        tileDiv.dataset.state = t.state;
+        tileDiv.style.position = "absolute";
+        tileDiv.style.left = t.left;
+        tileDiv.style.top = t.top;
+        tileDiv.style.display = "inline-grid";
+        tileDiv.style.gridTemplateRows = `repeat(${t.rows}, 40px)`;
+        tileDiv.style.gridTemplateColumns = `repeat(${t.cols}, 40px)`;
+        
+
+        t.cells.forEach(c => {
+            const cell = document.createElement("div");
+            cell.className = "tile-cell";
+            cell.dataset.row = c.row;
+            cell.dataset.col = c.col;
+            cell.dataset.letter = c.letter;
+            cell.textContent = c.letter;
+            cell.style.gridRowStart = c.row + 1;
+            cell.style.gridColumnStart = c.col + 1;
+            if (t.color) {
+                cell.style.backgroundColor = t.color;
+            }
+            tileDiv.appendChild(cell);
+        });
+
+        if (t.state === "in-board") {
+            tileDiv.dataset.boardRow = t.boardRow;
+            tileDiv.dataset.boardCol = t.boardCol;
+            tileDiv.classList.add("in-board");
+        }
+
+        enableTileDrag(tileDiv);
+        enableTileRotation(tileDiv);
+        gameArea.appendChild(tileDiv);
+    });
+
+    updateRowColHelpers();
+
+    if (state.completed) {
+        onComplete();
+    }
+
+    return true;
+}
+
+
 function generateGame({ width, height }) {
     const maxDim = 6;
     console.log('seed ' + seedString);
@@ -66,6 +212,7 @@ function generateGame({ width, height }) {
     renderBank(wordGrid);
     renderBoard(wordGrid);
     renderTiles(wordGrid);
+    saveGameState();
 }
 const generateBtn = document.getElementById("generate-btn");
 generateBtn.addEventListener("click", () => {
@@ -97,6 +244,12 @@ loadDictionary().then(dictMap => {
 
 function handleLaunchMode() {
     const controls = document.querySelector(".control-panel");
+
+    if (loadGameState()) {
+        console.log("Loaded saved game");
+        return;
+    }
+
 
     // Random difficulty → manual controls
     if (launchDifficulty === "custom") {
@@ -201,7 +354,10 @@ function renderTiles(grid) {
         const rotations = Math.floor(random(seedString) * 4);
         for (let i = 0; i < rotations; i++) {
             const pivot = tileDiv.querySelector(".tile-cell");
-            if (pivot) rotateTile(tileDiv, pivot);
+            if (pivot) {
+                rotateTile(tileDiv, pivot);
+                saveGameState();
+            }
         }
 
         tileDiv.dataset.state = "in-bank";
@@ -380,6 +536,7 @@ function enableTileRotation(tileDiv) {
         if (!moved && elapsed < CLICK_TIME) {
             const cell = e.target.closest(".tile-cell");
             rotateTile(tileDiv, cell);
+            saveGameState();
         }
     });
 
@@ -456,6 +613,8 @@ function rotateTile(tileDiv, pivotCell) {
     } else {
         placeTileInBank(tileDiv);
     }
+
+    saveGameState();
 }
 
 function enableTileDrag(tileDiv) {
@@ -534,6 +693,7 @@ function enableTileDrag(tileDiv) {
             } else {
                 placeTileInBoard(tileDiv, targetCell);
             }
+            saveGameState();
         }
 
         dragging = false;
@@ -748,10 +908,7 @@ function placeTileInBoard(tileDiv, startingBoardCell) {
 
     let complete = checkBoardForCompletion();
     if (complete) {
-        for (const tile of document.querySelectorAll(".tile")) {
-            tile.classList.add("locked");
-        }
-        launchFireworks(tileColors);
+        onComplete();
     }
 }
 
@@ -917,6 +1074,14 @@ function checkBoardForCompletion() {
     }
 
     return true;
+}
+
+function onComplete() {
+    for (const tile of document.querySelectorAll(".tile")) {
+        tile.classList.add("locked");
+    }
+    launchFireworks(tileColors);
+
 }
 
 function removeTileFromBoard(tileDiv) {

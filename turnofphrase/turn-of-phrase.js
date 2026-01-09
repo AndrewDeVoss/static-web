@@ -195,16 +195,19 @@ function loadGameState() {
  * @param {number} numHoles - how many cells to block (set false)
  * @returns {boolean[][]} mask - 2D array [row][col]
  */
+/**
+ * Creates a random mask with a given number of holes, avoiding isolated islands.
+ * @param {number} width  - number of columns
+ * @param {number} height - number of rows
+ * @param {number} numHoles - how many cells to block
+ * @returns {boolean[][]} mask - 2D array [row][col]
+ */
 function createRandomMask(width, height, numHoles) {
-    // Create full mask (all true)
-    const mask = Array.from({ length: height }, () =>
-        Array(width).fill(true)
-    );
-
+    const mask = Array.from({ length: height }, () => Array(width).fill(true));
     const totalCells = width * height;
     numHoles = Math.min(numHoles, totalCells);
 
-    // Flatten coordinates for easy random selection
+    // Flatten coordinates for random selection
     const coords = [];
     for (let r = 0; r < height; r++) {
         for (let c = 0; c < width; c++) {
@@ -218,10 +221,68 @@ function createRandomMask(width, height, numHoles) {
         [coords[i], coords[j]] = [coords[j], coords[i]];
     }
 
-    // Pick first numHoles coordinates and set to false
-    for (let i = 0; i < numHoles; i++) {
-        const [r, c] = coords[i];
+    let holesPlaced = 0;
+
+    // Helper: check if all open cells are still connected using BFS
+    function allConnected(testMask) {
+        const visited = Array.from({ length: height }, () => Array(width).fill(false));
+        let start = null;
+
+        // Find first open cell
+        outer: for (let r = 0; r < height; r++) {
+            for (let c = 0; c < width; c++) {
+                if (testMask[r][c]) {
+                    start = [r, c];
+                    break outer;
+                }
+            }
+        }
+
+        if (!start) return true; // no open cells left
+
+        const queue = [start];
+        visited[start[0]][start[1]] = true;
+        let count = 1;
+
+        const totalOpen = testMask.flat().filter(v => v).length;
+
+        const dirs = [
+            [0, 1], [1, 0], [0, -1], [-1, 0]
+        ];
+
+        while (queue.length) {
+            const [r, c] = queue.shift();
+            for (const [dr, dc] of dirs) {
+                const nr = r + dr, nc = c + dc;
+                if (
+                    nr >= 0 && nr < height &&
+                    nc >= 0 && nc < width &&
+                    testMask[nr][nc] && !visited[nr][nc]
+                ) {
+                    visited[nr][nc] = true;
+                    queue.push([nr, nc]);
+                    count++;
+                }
+            }
+        }
+
+        return count === totalOpen;
+    }
+
+    for (const [r, c] of coords) {
+        if (holesPlaced >= numHoles) break;
+
+        if (!mask[r][c]) continue;
+
+        // simulate hole
         mask[r][c] = false;
+        if (!allConnected(mask)) {
+            // undo if it would disconnect
+            mask[r][c] = true;
+            continue;
+        }
+
+        holesPlaced++;
     }
 
     return mask;

@@ -1,6 +1,10 @@
 import { todayInSaintLouis } from "../utility/datetime/datetime.js";
 import { DaySelector } from "./day-selector.js";
 
+const baseKey = `turn-of-phrase`;
+const version = `v0.0.1`;
+const masterKey = `${baseKey}-${version}`;
+
 document.querySelectorAll(".day-selector").forEach(el => {
   new DaySelector(el);
 });
@@ -35,11 +39,14 @@ document.querySelectorAll(".day-button").forEach(dayButton => {
   });
 });
 
+// Remove games from old versions
+pruneOldVersionGames();
+
 // Mark as finished, started, etc.
 updateDayButtonStates();
 
 // Clean old games not shown for this week
-cleanupOldGames();
+compressOldGames();
 
 function updateUrl(difficulty, date) {
   const config = difficultyConfig[difficulty];
@@ -53,23 +60,7 @@ function updateUrl(difficulty, date) {
   window.location.href = url;
 }
 
-function getPuzzleStatus(date, difficulty) {
-  const key = `${date}-${difficulty}`;
-  const raw = localStorage.getItem(key);
-
-  if (!raw) return "unstarted";
-
-  try {
-    const state = JSON.parse(raw);
-    return state.completed ? "finished" : "started";
-  } catch {
-    // Corrupt or old data → treat as unstarted
-    return "unstarted";
-  }
-}
-
 function updateDayButtonStates() {
-  const masterKey = "turn-of-phrase";
   const allGamesRaw = localStorage.getItem(masterKey);
   const allGames = allGamesRaw ? JSON.parse(allGamesRaw) : {};
 
@@ -101,8 +92,29 @@ function updateDayButtonStates() {
   });
 }
 
+function pruneOldVersionGames() {
+  const keysToDelete = [];
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+
+    if (!key) continue;
+
+    // Starts with baseKey but is NOT the current masterKey
+    if (key.startsWith(baseKey) && key !== masterKey) {
+      keysToDelete.push(key);
+    }
+  }
+
+  for (const key of keysToDelete) {
+    localStorage.removeItem(key);
+    console.info(`Removed old storage key: ${key}`);
+  }
+}
+
+
 // Cleans up old games that are not in the visible day buttons
-function cleanupOldGames() {
+function compressOldGames() {
   const allGames = getTurnOfPhraseStorage();
 
   // Get a set of all dates currently shown on the landing page
@@ -133,13 +145,11 @@ function cleanupOldGames() {
   }
 }
 
-// Get all games stored under the master key "turn-of-phrase"
 function getTurnOfPhraseStorage() {
-  const raw = localStorage.getItem("turn-of-phrase");
+  const raw = localStorage.getItem(masterKey);
   return raw ? JSON.parse(raw) : {};
 }
 
-// Save all games under the master key "turn-of-phrase"
 function setTurnOfPhraseStorage(allGames) {
-  localStorage.setItem("turn-of-phrase", JSON.stringify(allGames));
+  localStorage.setItem(masterKey, JSON.stringify(allGames));
 }

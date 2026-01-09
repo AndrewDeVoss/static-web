@@ -50,8 +50,10 @@ function getGameStorageKey() {
 }
 
 // Saving
+const baseKey = `turn-of-phrase`;
+const version = `v0.0.1`;
+const masterKey = `${baseKey}-${version}`;
 function saveGameState() {
-    const masterKey = "turn-of-phrase";
     const key = getGameStorageKey();
 
     const board = document.getElementById("board");
@@ -105,7 +107,6 @@ function saveGameState() {
 
 // Loading
 function loadGameState() {
-    const masterKey = "turn-of-phrase";
     const key = getGameStorageKey();
 
     const allGamesRaw = localStorage.getItem(masterKey);

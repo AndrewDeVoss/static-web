@@ -32,7 +32,7 @@ function trieInsert(root, word) {
 
 function trieFromWords(words) {
     const root = new Trie();
-    for (const w of words) trieInsert(root, w);
+    for (const word of words) trieInsert(root, word);
     return root;
 }
 
@@ -51,12 +51,12 @@ class Grid {
 
         // True row lengths if mask exists
         this.rowLengths = Array.from({ length: height }, (_, r) =>
-            mask ? mask[r].filter(v => v !== null).length : width
+            mask ? mask[r].filter(v => v === true).length : width
         );
 
         // True column lengths if mask exists
         this.colLengths = Array.from({ length: width }, (__, c) =>
-            mask ? mask.map(row => row[c]).filter(v => v !== null).length : height
+            mask ? mask.map(row => row[c]).filter(v => v === true).length : height
         );
 
         // Per-row / per-column tries
@@ -100,7 +100,7 @@ function shuffle(arr) {
 // 5. MERGED COMPLETION CHECKS
 ///////////////////////////////////////////////////////////////
 function checkRowCompletion(g, rowIndex) {
-    const len = g.rowLengths[rowIndex];
+    const rowLength = g.rowLengths[rowIndex];
     let filled = 0;
 
     for (let c = 0; c < g.w; c++) {
@@ -109,21 +109,19 @@ function checkRowCompletion(g, rowIndex) {
     }
 
     // Row not yet complete
-    if (filled !== len) return true;
+    if (filled !== rowLength) return null;
 
     const rowWord = getRowWord(g, rowIndex);
 
-    // Global duplicate check
     if (g.usedWords.has(rowWord)) return false;
 
-    // Check only the transposed column, if it exists
-    if (rowIndex < g.w && g.colLengths[rowIndex] === len) {
+    if (rowIndex < g.w && g.colLengths[rowIndex] === rowLength) {
         const colWord = getColWord(g, rowIndex);
         if (!wordsBelowSimilarityThreshold(rowWord, colWord, 0.61)) return false;
     }
 
     g.usedWords.add(rowWord);
-    return true;
+    return rowWord;
 }
 
 function checkColCompletion(g, colIndex) {
@@ -136,21 +134,20 @@ function checkColCompletion(g, colIndex) {
     }
 
     // Column not yet complete
-    if (filled !== len) return true;
+    if (filled !== len) return null;
 
     const colWord = getColWord(g, colIndex);
 
-    // Global duplicate check
     if (g.usedWords.has(colWord)) return false;
 
-    // Check only the transposed row, if it exists
     if (colIndex < g.h && g.rowLengths[colIndex] === len) {
         const rowWord = getRowWord(g, colIndex);
         if (!wordsBelowSimilarityThreshold(rowWord, colWord, 0.61)) return false;
     }
 
     g.usedWords.add(colWord);
-    return true;
+    return colWord;
+
 }
 
 function wordsBelowSimilarityThreshold(a, b, threshold) {
@@ -162,7 +159,7 @@ function wordsBelowSimilarityThreshold(a, b, threshold) {
         if (a[i] === b[i]) sameForward++;
     }
     const forwardRatio = sameForward / total;
-    if (forwardRatio>threshold) return false;
+    if (forwardRatio > threshold) return false;
 
     return true;
 }
@@ -205,19 +202,28 @@ function gridFind(g, cell = 0) {
         g.row[y] = nr;
         g.col[x] = nc;
 
-        const rowOk = checkRowCompletion(g, y);
-        const colOk = checkColCompletion(g, x);
+        const added = [];
 
-        if (rowOk && colOk) {
-            if (gridFind(g, cell + 1)) return true;
-        }
+        const rowResult = checkRowCompletion(g, y);
+        if (rowResult === false) gotoUndo();
+        if (typeof rowResult === "string") added.push(rowResult);
+
+        const colResult = checkColCompletion(g, x);
+        if (colResult === false) gotoUndo();
+        if (typeof colResult === "string") added.push(colResult);
+
+        if (gridFind(g, cell + 1)) return true;
+
 
         // undo
-        if (nr.end) g.usedWords.delete(getRowWord(g, y));
-        if (nc.end) g.usedWords.delete(getColWord(g, x));
-        g.grid[y][x] = "";
-        g.row[y] = rowNode;
-        g.col[x] = colNode;
+        gotoUndo();
+
+        function gotoUndo() {
+            for (const w of added) g.usedWords.delete(w);
+            g.grid[y][x] = "";
+            g.row[y] = rowNode;
+            g.col[x] = colNode;
+        }
     }
 
     return false;
@@ -225,12 +231,24 @@ function gridFind(g, cell = 0) {
 
 
 function getRowWord(g, rowIndex) {
-    return g.grid[rowIndex].map(c => c || "").join("");
+    let word = "";
+    for (let c = 0; c < g.w; c++) {
+        const cell = g.grid[rowIndex][c];
+        if (typeof cell === "string" && cell.length === 1) {
+            word += cell;
+        }
+    }
+    return word;
 }
 
 function getColWord(g, colIndex) {
     let word = "";
-    for (let r = 0; r < g.h; r++) word += g.grid[r][colIndex] || "";
+    for (let r = 0; r < g.h; r++) {
+        const cell = g.grid[r][colIndex];
+        if (typeof cell === "string" && cell.length === 1) {
+            word += cell;
+        }
+    }
     return word;
 }
 
@@ -242,6 +260,8 @@ let seedStr = "";
 export function findWordGrid(dictionary, width, height, seedString, mask = null) {
     seedStr = seedString;
     const g = new Grid(width, height, dictionary, mask);
-    if (!gridFind(g)) return null;
+    if (!gridFind(g)) {
+        return null;
+    }
     return g.grid;
 }

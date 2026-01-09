@@ -63,7 +63,8 @@ function saveGameState() {
             const cell = board.querySelector(
                 `.board-cell[data-row="${r}"][data-col="${c}"]`
             );
-            return cell?.dataset.letter || "";
+            // store null if blocked, otherwise letter or ""
+            return cell?.dataset.blocked === "true" ? null : (cell?.dataset.letter || "");
         })
     );
 
@@ -117,9 +118,7 @@ function loadGameState() {
     seedString = state.seedString;
     tileColors = state.tileColors || [];
 
-    renderBoard(
-        Array.from({ length: state.board.rows }, () => Array(state.board.cols).fill(""))
-    );
+    renderBoard(state.board.letters);
 
     // Restore board letters
     state.board.letters.forEach((row, r) => {
@@ -152,7 +151,7 @@ function loadGameState() {
         tileDiv.style.display = "inline-grid";
         tileDiv.style.gridTemplateRows = `repeat(${t.rows}, 40px)`;
         tileDiv.style.gridTemplateColumns = `repeat(${t.cols}, 40px)`;
-        
+
 
         t.cells.forEach(c => {
             const cell = document.createElement("div");
@@ -189,6 +188,44 @@ function loadGameState() {
     return true;
 }
 
+/**
+ * Creates a random mask with a given number of holes.
+ * @param {number} width  - number of columns
+ * @param {number} height - number of rows
+ * @param {number} numHoles - how many cells to block (set false)
+ * @returns {boolean[][]} mask - 2D array [row][col]
+ */
+function createRandomMask(width, height, numHoles) {
+    // Create full mask (all true)
+    const mask = Array.from({ length: height }, () =>
+        Array(width).fill(true)
+    );
+
+    const totalCells = width * height;
+    numHoles = Math.min(numHoles, totalCells);
+
+    // Flatten coordinates for easy random selection
+    const coords = [];
+    for (let r = 0; r < height; r++) {
+        for (let c = 0; c < width; c++) {
+            coords.push([r, c]);
+        }
+    }
+
+    // Shuffle coordinates
+    for (let i = coords.length - 1; i > 0; i--) {
+        const j = Math.floor(random(seedString) * (i + 1));
+        [coords[i], coords[j]] = [coords[j], coords[i]];
+    }
+
+    // Pick first numHoles coordinates and set to false
+    for (let i = 0; i < numHoles; i++) {
+        const [r, c] = coords[i];
+        mask[r][c] = false;
+    }
+
+    return mask;
+}
 
 function generateGame({ width, height }) {
     const maxDim = 6;
@@ -200,7 +237,10 @@ function generateGame({ width, height }) {
 
     tileColors = [];
 
-    const wordGrid = findWordGrid(DICT, w, h, seedString);
+    const numHoles = 4;
+    const mask = createRandomMask(w, h, numHoles);
+
+    const wordGrid = findWordGrid(DICT, w, h, seedString, mask);
 
     if (!wordGrid) {
         document.getElementById("grid-output").textContent = "No grid found.";
@@ -214,6 +254,7 @@ function generateGame({ width, height }) {
     renderTiles(wordGrid);
     saveGameState();
 }
+
 const generateBtn = document.getElementById("generate-btn");
 generateBtn.addEventListener("click", () => {
     const width = parseInt(document.getElementById("grid-width").value, 10);
@@ -322,12 +363,17 @@ function renderBoard(grid) {
 
     for (let r = 0; r < H; r++) {
         for (let c = 0; c < W; c++) {
-            const gridCell = document.createElement("div");
-            gridCell.className = "board-cell";
-            gridCell.dataset.row = r;
-            gridCell.dataset.col = c;
-            gridCell.dataset.letter = "";
-            board.appendChild(gridCell);
+            const boardCell = document.createElement("div");
+            boardCell.className = "board-cell";
+            boardCell.dataset.row = r;
+            boardCell.dataset.col = c;
+            boardCell.dataset.letter = "";
+            boardCell.dataset.blocked = "false";
+            if (grid[r][c] === null) {
+                boardCell.dataset.blocked = "true";
+                boardCell.classList.add("blocked");
+            }
+            board.appendChild(boardCell);
         }
     }
 }
@@ -404,7 +450,6 @@ function renderTiles(grid) {
                 );
                 if (!cell) continue;
 
-                console.log(`Placing tile ${tileDiv.dataset.rows}x${tileDiv.dataset.cols} at bank cell (${r}, ${c})`);
                 placeTileAtCell(tileDiv, cell);
                 placed = true;
 
@@ -413,7 +458,6 @@ function renderTiles(grid) {
                 if (curCol >= BANK_COLS) {
                     curCol = 0;
                     curRow = r + tileRows;
-                    console.log(`Advancing to bank row ${curRow}`);
                 }
             }
         }
@@ -767,12 +811,13 @@ function tileFits(tileDiv, startingBoardCell) {
         if (rowInGrid < 0 || rowInGrid >= boardRows) return false;
         if (colInGrid < 0 || colInGrid >= boardCols) return false;
 
-        // Current tile cell would land in filled grid cell
+        // Current tile cell would land in filled or blocked grid cell
         const gridCell = board.querySelector(
             `.board-cell[data-row="${rowInGrid}"][data-col="${colInGrid}"]`
         );
         if (!gridCell) return false;
         if (gridCell.dataset.letter !== "") return false;
+        if (gridCell.dataset.blocked === "true") return false;
     }
 
     return true;
@@ -940,7 +985,7 @@ function updateRowColHelpers() {
             const cell = board.querySelector(
                 `.board-cell[data-row="${r}"][data-col="${c}"]`
             );
-            if (!cell || cell.dataset.letter === "") {
+            if (!cell || (cell.dataset.letter === "" && cell.dataset.blocked === "false")) {
                 complete = false;
                 break;
             }
@@ -993,7 +1038,7 @@ function updateRowColHelpers() {
             const cell = board.querySelector(
                 `.board-cell[data-row="${r}"][data-col="${c}"]`
             );
-            if (!cell || cell.dataset.letter === "") {
+            if (!cell || (cell.dataset.letter === "" && cell.dataset.blocked === "false")) {
                 complete = false;
                 break;
             }
@@ -1043,7 +1088,8 @@ function updateRowColHelpers() {
 function checkBoardForCompletion() {
     const board = document.getElementById("board");
     for (const cell of board.querySelectorAll(".board-cell")) {
-        if (cell.dataset.letter === "") {
+        // If any unblocked cell is unfilled, board is incomplete
+        if (cell.dataset.letter === "" && cell.dataset.blocked === "false") {
             return false;
         }
     }
@@ -1055,6 +1101,7 @@ function checkBoardForCompletion() {
         let rowWord = "";
         for (let c = 0; c < cols; c++) {
             const cell = board.querySelector(`.board-cell[data-row="${r}"][data-col="${c}"]`);
+            if (cell.dataset.blocked === "true") continue;
             rowWord += cell.dataset.letter;
         }
         if (!isWord(rowWord)) {
@@ -1066,6 +1113,7 @@ function checkBoardForCompletion() {
         let colWord = "";
         for (let r = 0; r < rows; r++) {
             const cell = board.querySelector(`.board-cell[data-row="${r}"][data-col="${c}"]`);
+            if (cell.dataset.blocked === "true") continue;
             colWord += cell.dataset.letter;
         }
         if (!isWord(colWord)) {

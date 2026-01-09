@@ -216,6 +216,11 @@ body {
     border-radius: 6px;
 }
 
+.board-cell.blocked {
+    background: #333;
+    box-shadow: none;
+}
+
 .word-helper {
     position: absolute;
     font-size: 14px;

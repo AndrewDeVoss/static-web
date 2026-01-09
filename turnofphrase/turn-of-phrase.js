@@ -290,7 +290,6 @@ function createRandomMask(width, height, numHoles) {
 
 function generateGame({ width, height }) {
     const maxDim = 6;
-    console.log('seed ' + seedString);
     createSeed(seedString);
 
     const w = Math.min(maxDim, width);
@@ -299,9 +298,21 @@ function generateGame({ width, height }) {
     tileColors = [];
 
     const numHoles = 4;
-    const mask = createRandomMask(w, h, numHoles);
+    let wordGrid = null;
+    let attempts = 0;
+    const maxAttempts = 100; // safety to avoid infinite loops
 
-    const wordGrid = findWordGrid(DICT, w, h, seedString, mask);
+    while (!wordGrid && attempts < maxAttempts) {
+        attempts++;
+        const mask = createRandomMask(w, h, numHoles);
+
+        try {
+            wordGrid = findWordGrid(DICT, w, h, seedString, mask);
+        } catch (err) {
+            console.warn("Grid generation failed, retrying with a new mask:", err.message);
+            // wordGrid stays null, so the loop continues
+        }
+    }
 
     if (!wordGrid) {
         document.getElementById("grid-output").textContent = "No grid found.";

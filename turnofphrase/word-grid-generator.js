@@ -167,30 +167,36 @@ function wordsBelowSimilarityThreshold(a, b, threshold) {
 ///////////////////////////////////////////////////////////////
 // 6. BACKTRACKING SEARCH
 ///////////////////////////////////////////////////////////////
-function nextCell(g, i) {
+function firstEmptyCell(g) {
     const total = g.w * g.h;
+    let i=0;
     while (i < total) {
         const x = i % g.w;
         const y = Math.floor(i / g.w);
-        if (g.grid[y][x] !== null) break;
+
+        // Only consider empty, fillable cells
+        if (g.grid[y][x] === "") return i;
+
         i++;
     }
-    return i;
+
+    // No empty cells left
+    return null;
 }
 
-function gridFind(g, cell = 0) {
-    const total = g.w * g.h;
+function gridFind(g) {
+    let emptyCellIdx = firstEmptyCell(g);
+    if (emptyCellIdx === null) {
+        return true;
+    }
 
-    cell = nextCell(g, cell);
-    if (cell >= total) return true;
-
-    const x = cell % g.w;
-    const y = Math.floor(cell / g.w);
+    const x = emptyCellIdx % g.w;
+    const y = Math.floor(emptyCellIdx / g.w);
 
     const rowNode = g.row[y];
     const colNode = g.col[x];
 
-    const order = g.order[cell];
+    const order = g.order[emptyCellIdx];
     if (!order) return false; // out-of-range; backtrack safely
 
     for (const c of order) {
@@ -212,8 +218,9 @@ function gridFind(g, cell = 0) {
         if (colResult === false) gotoUndo();
         if (typeof colResult === "string") added.push(colResult);
 
-        if (gridFind(g, cell + 1)) return true;
-
+        if (gridFind(g)) {
+            return true;
+        }
 
         // undo
         gotoUndo();

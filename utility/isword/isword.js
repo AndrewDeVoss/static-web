@@ -33,19 +33,35 @@ export async function loadDictionary() {
     const match = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
     if (!match || match.length < 4) continue;
 
-    const [word, category, reason, definition] = match.map(v =>
+    const [word, frequency, reason, definition] = match.map(v =>
       v.replace(/^"|"$/g, '').trim()
     );
 
     bigDictionary.set(word.toLowerCase(), {
       word,
-      category,
+      frequency,
       reason,
       definition,
     });
   }
 
   return bigDictionary;
+}
+
+export async function loadDictionaryFrequencyBased(minFrequency) {
+  const bigDictionary = await loadDictionary();
+
+  const filteredDictionary = new Map();
+
+  for (const [key, entry] of bigDictionary) {
+    if (parseFloat(entry.frequency) >= minFrequency) {
+      filteredDictionary.set(key, {
+        ...entry,
+      });
+    }
+  }
+
+  return filteredDictionary;
 }
 
 export async function loadForbiddenWords() {

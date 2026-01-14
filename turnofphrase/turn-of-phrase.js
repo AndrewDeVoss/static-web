@@ -1,4 +1,4 @@
-import { isWord, loadDictionary, getDefinitionForWord } from "../utility/isword/isword.js";
+import { isWord, loadDictionary, loadDictionaryFrequencyBased, getDefinitionForWord } from "../utility/isword/isword.js";
 import { random, createSeed } from '../utility/random/random.js';
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
@@ -348,7 +348,7 @@ const DIFFICULTY_DIMENSIONS = {
 };
 
 let DICT = [];
-loadDictionary().then(dictMap => {
+loadDictionaryFrequencyBased(2.5).then(dictMap => {
     DICT = Array.from(dictMap.keys()).map(w => w.toUpperCase());
     DICT = DICT.filter(w => isWord(w));
     generateBtn.disabled = false;

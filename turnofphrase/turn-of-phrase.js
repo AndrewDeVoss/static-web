@@ -325,6 +325,7 @@ function generateGame({ width, height }) {
     renderBank(wordGrid);
     renderBoard(wordGrid);
     renderTiles(wordGrid);
+    updateRowColHelpers();
     saveGameState();
 }
 

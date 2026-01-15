@@ -273,7 +273,6 @@ p {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 0; /* buttons touch */
-    background: hsla(var(--difficulty-hsl), 1);
     border-radius: 999px; /* outer pill */
     padding: 2px; /* thin outer border */
 }
@@ -306,20 +305,17 @@ p {
 .day-button[data-state="unstarted"] {
     background: #f0f0f0;
     color: #555;
-    border-color: #f0f0f0;
 }
 
 .day-button[data-state="started"] {
     background: #ffe08a;
     color: #333;
     font-style: italic;
-    border-color: #f0f0f0;
 }
 
 .day-button[data-state="finished"] {
     background: hsla(var(--difficulty-hsl), 1);
     color: #000000;
-    border-color: hsla(var(--difficulty-hsl), 1);
 }
 
 /* Hover */

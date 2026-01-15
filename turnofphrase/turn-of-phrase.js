@@ -26,7 +26,7 @@ subHeaderClose.addEventListener("click", () => {
         'touchend',
         function (e) {
             const now = Date.now();
-            if (now - lastTouchEnd <= 300) {
+            if (now - lastTouchEnd <= 500) {
                 e.preventDefault();
             }
             lastTouchEnd = now;

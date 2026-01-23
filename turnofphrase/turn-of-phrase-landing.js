@@ -78,7 +78,7 @@ function writeStreaks() {
 
     const streakSpot = card.querySelector(".streak");
     if (streakSpot && streak > 0) {
-      const res = await fetch(".\\svg.\\fire.svg");
+      const res = await fetch("./svg./fire.svg");
       const svgText = await res.text();
 
       // Convert string → DOM
@@ -88,12 +88,7 @@ function writeStreaks() {
 
       svg.style.width = "1em";
       svg.style.height = "1em";
-
-      const paths = svg.querySelectorAll("path");
-      paths[0].setAttribute("fill", "#ff4500"); // outer flame
-      paths[1].setAttribute("fill", "#ffa500"); // mid flame
-      paths[2].setAttribute("fill", "#ffd700"); // inner flame
-
+      
       streakSpot.textContent = `${streak}`;
       streakSpot.appendChild(svg);
     }

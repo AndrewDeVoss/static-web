@@ -421,7 +421,7 @@ function renderBank(grid) {
     bank.innerHTML = "";
     bank.style.position = "relative"; // required for ghost + absolute tiles
     bank.style.display = "inline-grid";
-    bank.style.gridTemplateColumns = `repeat(${W}, 30px)`;
+    bank.style.gridTemplateColumns = `repeat(${W}, 25px)`;
     bank.style.width = "fit-content";
     bank.dataset.rows = H;
     bank.dataset.cols = W;

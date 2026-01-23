@@ -242,7 +242,8 @@ p {
 #undo-button,
 #redo-button,
 #shuffle-button,
-#back-button {
+#back-button,
+#share-button {
   text-decoration: none;
   color: white;
   font-size: 1.8rem;

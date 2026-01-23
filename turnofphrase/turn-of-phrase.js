@@ -3,11 +3,30 @@ import { random, createSeed } from '../utility/random/random.js';
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
 
+// Definition area
 const subHeader = document.querySelector(".subheader");
 const subHeaderText = document.querySelector(".subheader-text");
 const subHeaderClose = document.querySelector(".subheader-close");
 subHeaderClose.addEventListener("click", () => {
     subHeader.classList.add("hidden");
+});
+
+// Share button
+const shareButton = document.getElementById("share-button");
+shareButton.addEventListener("click", async () => {
+    const shareData = {
+        title: "Turn of Phrase",
+        text: "hey this puzzle is pretty neat, try it out",
+        url: window.location.href
+    };
+
+    if (navigator.share) {
+        try {
+            await navigator.share(shareData);
+        } catch (err) {
+            // User cancelled — no need to do anything
+        }
+    }
 });
 
 // Prevent double click zoom on iOS

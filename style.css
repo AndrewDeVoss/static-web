@@ -315,7 +315,7 @@ p {
 }
 
 .day-button[data-state="finished"] {
-    background: hsla(var(--difficulty-hsl), 1);
+    background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 1);
     color: #000000;
 }
 

@@ -40,23 +40,31 @@ body {
 }
 
 .difficulty-card[data-difficulty="easy"] {
-    --difficulty-hsl: 120, 100%, 85%;
-    background: hsla(var(--difficulty-hsl), 0.4);
+    --difficulty-h: 120;
+    --difficulty-s: 100%;
+    --difficulty-l: 85%;
+    background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
 }
 
 .difficulty-card[data-difficulty="medium"] {
-    --difficulty-hsl: 177, 88%, 77%;
-    background: hsla(var(--difficulty-hsl), 0.4);
+    --difficulty-h: 177;
+    --difficulty-s: 88%;
+    --difficulty-l: 77%;
+    background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
 }
 
 .difficulty-card[data-difficulty="hard"] {
-    --difficulty-hsl: 300, 89%, 75%;
-    background: hsla(var(--difficulty-hsl), 0.4);
+    --difficulty-h: 300;
+    --difficulty-s: 89%;
+    --difficulty-l: 75%;
+    background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
 }
 
 .difficulty-card[data-difficulty="custom"] {
-    --difficulty-hsl: 268, 81%, 72%;
-    background: hsla(var(--difficulty-hsl), 0.4);
+    --difficulty-h: 268;
+    --difficulty-s: 81%;
+    --difficulty-l: 72%;
+    background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
 }
 
 .difficulty-card:hover {
@@ -77,12 +85,31 @@ body {
     font-size: 1.7rem;
     font-weight: 700;
     color: #333;
+    display: flex;
+    flex-direction: row;
+}
+
+.streak {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
 }
 
 /* Label under button */
 .difficulty-label {
-    margin-top: 8px;
     font-size: 0.85rem;
     font-weight: 600;
     color: #555;
+}
+
+.difficulty-card #tongue-1 {
+    fill: hsl(var(--difficulty-h), var(--difficulty-s), calc(var(--difficulty-l) - 20%));
+}
+
+.difficulty-card #tongue-2 {
+    fill: hsl(var(--difficulty-h), var(--difficulty-s), calc(var(--difficulty-l) - 35%));
+}
+
+.difficulty-card #tongue-3 {
+    fill: hsl(var(--difficulty-h), var(--difficulty-s), calc(var(--difficulty-l) - 50%));
 }

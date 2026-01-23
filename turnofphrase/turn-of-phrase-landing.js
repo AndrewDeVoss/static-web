@@ -2,9 +2,8 @@ import { todayInSaintLouis } from "../utility/datetime/datetime.js";
 import { DaySelector } from "./day-selector.js";
 
 const baseKey = `turn-of-phrase`;
-const version = `v0.0.1`;
+const version = `v0.0.2`;
 const masterKey = `${baseKey}-${version}`;
-//🔥
 document.querySelectorAll(".day-selector").forEach(el => {
   new DaySelector(el);
 });
@@ -47,6 +46,59 @@ updateDayButtonStates();
 
 // Clean old games not shown for this week
 compressOldGames();
+
+// Write streaks
+writeStreaks();
+
+function writeStreaks() {
+  const allGamesRaw = localStorage.getItem(masterKey);
+  const allGames = allGamesRaw ? JSON.parse(allGamesRaw) : {};
+
+  document.querySelectorAll(".difficulty-card").forEach(async card => {
+    const difficulty = card.dataset.difficulty;
+    let streak = 0;
+    let dateObj = new Date(todayInSaintLouis()); // Date object
+    let dateStr = dateObj.toISOString().split("T")[0]; // YYYY-MM-DD string
+
+    while (true) {
+      const seed = `${dateStr}-${difficulty}`;
+      const game = allGames[seed];
+
+      if (game && game.completed) {
+        streak++;
+
+        // go back one day
+        dateObj.setDate(dateObj.getDate() - 1);
+        dateStr = dateObj.toISOString().split("T")[0];
+      } else {
+        break;
+      }
+    }
+
+
+    const streakSpot = card.querySelector(".streak");
+    if (streakSpot && streak > 0) {
+      const res = await fetch(".\\svg.\\fire.svg");
+      const svgText = await res.text();
+
+      // Convert string → DOM
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
+      const svg = svgDoc.querySelector("svg");
+
+      svg.style.width = "1em";
+      svg.style.height = "1em";
+
+      const paths = svg.querySelectorAll("path");
+      paths[0].setAttribute("fill", "#ff4500"); // outer flame
+      paths[1].setAttribute("fill", "#ffa500"); // mid flame
+      paths[2].setAttribute("fill", "#ffd700"); // inner flame
+
+      streakSpot.textContent = `${streak}`;
+      streakSpot.appendChild(svg);
+    }
+  });
+}
 
 function updateUrl(difficulty, date) {
   const config = difficultyConfig[difficulty];
@@ -111,7 +163,6 @@ function pruneOldVersionGames() {
     console.info(`Removed old storage key: ${key}`);
   }
 }
-
 
 // Cleans up old games that are not in the visible day buttons
 function compressOldGames() {

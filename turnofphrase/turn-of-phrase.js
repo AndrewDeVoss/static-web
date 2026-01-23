@@ -70,7 +70,7 @@ function getGameStorageKey() {
 
 // Saving
 const baseKey = `turn-of-phrase`;
-const version = `v0.0.1`;
+const version = `v0.0.2`;
 const masterKey = `${baseKey}-${version}`;
 function saveGameState() {
     const key = getGameStorageKey();

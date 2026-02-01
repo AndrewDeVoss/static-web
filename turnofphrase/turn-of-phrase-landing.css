@@ -25,6 +25,7 @@ body {
 
 /* Individual difficulty card */
 .difficulty-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -43,7 +44,7 @@ body {
     --difficulty-h: 30;
     --difficulty-s: 100%;
     --difficulty-l: 60%;
-    background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
+    background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.55);
 }
 
 .difficulty-card[data-difficulty="medium"] {
@@ -90,12 +91,21 @@ body {
 }
 
 .streak {
+    position: absolute;
+    top: 0;
+    right: 0;
     font-size: 0.85rem;
     font-weight: 600;
     color: #555;
     display: flex;
     flex-direction: row;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 18px;
+    background-color: hsl(calc(var(--difficulty-h)),
+            calc(var(--difficulty-s)),
+            calc(var(--difficulty-l) + 20%));
 }
 
 /* Label under button */

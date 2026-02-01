@@ -21,10 +21,6 @@ export function generateTiles(grid, seedString) {
             .map(v => v[1]);
     }
 
-    function manhattan(r1, c1, r2, c2) {
-        return Math.abs(r2 - r1) + Math.abs(c2 - c1);
-    }
-
     /* -------------------------------------------------- */
     /* Grid state                                         */
     /* -------------------------------------------------- */
@@ -46,35 +42,84 @@ export function generateTiles(grid, seedString) {
     /* -------------------------------------------------- */
 
     let startingCells = new Set();
-    let cellsArray = [...allCells];
-    const numStartingTiles = Math.max(W,H);
-    for (let i = 0; i < numStartingTiles && cellsArray.length > 0; i++) {
-        let candidates = new Set();
-        for (let j = 0; j <= i && cellsArray.length > 0; j++) {
-            const c = cellsArray[Math.floor(random(seedString) * cellsArray.length)];
-            candidates.add(c);
+    let remainingCells = new Set(allCells);
+
+    const numStartingTiles = Math.max(W, H);
+
+    // 4-way neighbors, respecting holes
+    function getNeighbors(cell) {
+        const dirs = [
+            [-1, 0],
+            [1, 0],
+            [0, -1],
+            [0, 1],
+        ];
+
+        const result = [];
+        for (const [dr, dc] of dirs) {
+            const r = cell.row + dr;
+            const c = cell.col + dc;
+            if (inGrid(r, c)) {
+                result.push({ row: r, col: c });
+            }
+        }
+        return result;
+    }
+
+    // pick initial source randomly
+    {
+        const arr = [...remainingCells];
+        const first = arr[Math.floor(random(seedString) * arr.length)];
+        startingCells.add(first);
+        remainingCells.delete(first);
+    }
+
+    for (let i = 1; i < numStartingTiles && remainingCells.size > 0; i++) {
+
+        // multi-source BFS
+        const queue = [];
+        const dist = new Map();
+
+        for (const s of startingCells) {
+            const key = `${s.row},${s.col}`;
+            dist.set(key, 0);
+            queue.push(s);
         }
 
-        let best = candidates.values().next().value;
+        while (queue.length > 0) {
+            const cur = queue.shift();
+            const curKey = `${cur.row},${cur.col}`;
+            const curDist = dist.get(curKey);
+
+            for (const n of getNeighbors(cur)) {
+                const nKey = `${n.row},${n.col}`;
+                if (!dist.has(nKey)) {
+                    dist.set(nKey, curDist + 1);
+                    queue.push(n);
+                }
+            }
+        }
+
+        // choose farthest remaining valid cell
+        let best = null;
         let bestDist = -1;
 
-        for (const cand of candidates) {
-            let minDist = Infinity;
-            for (const s of startingCells) {
-                minDist = Math.min(
-                    minDist,
-                    manhattan(cand.row, cand.col, s.row, s.col)
-                );
-            }
-            if (minDist > bestDist) {
-                bestDist = minDist;
-                best = cand;
+        for (const c of remainingCells) {
+            if (!inGrid(c.row, c.col)) continue;
+
+            const d = dist.get(`${c.row},${c.col}`);
+            if (d !== undefined && d > bestDist) {
+                bestDist = d;
+                best = c;
             }
         }
 
+        if (!best) break;
+
         startingCells.add(best);
-        cellsArray = cellsArray.filter(c => c !== best);
+        remainingCells.delete(best);
     }
+
 
     /* -------------------------------------------------- */
     /* Create tiles                                       */

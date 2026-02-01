@@ -44,7 +44,7 @@ export function generateTiles(grid, seedString) {
     let startingCells = new Set();
     let remainingCells = new Set(allCells);
 
-    const numStartingTiles = Math.max(W, H);
+    const numStartingTiles = Math.floor(H*W / 5);
 
     // 4-way neighbors, respecting holes
     function getNeighbors(cell) {

@@ -40,30 +40,30 @@ body {
 }
 
 .difficulty-card[data-difficulty="easy"] {
-    --difficulty-h: 120;
+    --difficulty-h: 30;
     --difficulty-s: 100%;
-    --difficulty-l: 85%;
+    --difficulty-l: 60%;
     background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
 }
 
 .difficulty-card[data-difficulty="medium"] {
-    --difficulty-h: 177;
-    --difficulty-s: 88%;
-    --difficulty-l: 77%;
+    --difficulty-h: 0;
+    --difficulty-s: 100%;
+    --difficulty-l: 60%;
     background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
 }
 
 .difficulty-card[data-difficulty="hard"] {
-    --difficulty-h: 300;
-    --difficulty-s: 89%;
-    --difficulty-l: 75%;
+    --difficulty-h: 270;
+    --difficulty-s: 100%;
+    --difficulty-l: 60%;
     background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
 }
 
 .difficulty-card[data-difficulty="custom"] {
-    --difficulty-h: 268;
-    --difficulty-s: 81%;
-    --difficulty-l: 72%;
+    --difficulty-h: 200;
+    --difficulty-s: 100%;
+    --difficulty-l: 60%;
     background: hsla(var(--difficulty-h), var(--difficulty-s), var(--difficulty-l), 0.4);
 }
 
@@ -106,13 +106,33 @@ body {
 }
 
 .difficulty-card #tongue-1 {
-    fill: hsl(var(--difficulty-h), var(--difficulty-s), calc(var(--difficulty-l) - 20%));
+    fill: hsla(calc(var(--difficulty-h) + 60),
+            calc(var(--difficulty-s) + 10%),
+            calc(var(--difficulty-l) + 20%),
+            .4);
+    stroke: #000;
+    stroke-width: 1px;
 }
 
 .difficulty-card #tongue-2 {
-    fill: hsl(var(--difficulty-h), var(--difficulty-s), calc(var(--difficulty-l) - 35%));
+    fill: hsla(calc(var(--difficulty-h) + 30),
+            calc(var(--difficulty-s) + 5%),
+            calc(var(--difficulty-l) + 10%),
+            .6);
+    stroke: #000;
+    stroke-width: 1px;
 }
 
 .difficulty-card #tongue-3 {
-    fill: hsl(var(--difficulty-h), var(--difficulty-s), calc(var(--difficulty-l) - 50%));
+    fill: hsla(calc(var(--difficulty-h)),
+            calc(var(--difficulty-s) + 0%),
+            calc(var(--difficulty-l) + 0%),
+            1);
+    stroke: #000;
+    stroke-width: 1px;
+}
+
+#fire {
+    width: 1.75em;
+    height: 1.75em;
 }

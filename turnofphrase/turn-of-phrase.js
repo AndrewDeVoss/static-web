@@ -998,6 +998,8 @@ function placeTileInBank(tileDiv) {
     tileDiv.style.top = `${bestRect.top - areaRect.top}px`;
 
     tileDiv.classList.remove("in-board");
+
+    updateRowColHelpers();
 }
 
 function placeTileInBoard(tileDiv, startingBoardCell) {

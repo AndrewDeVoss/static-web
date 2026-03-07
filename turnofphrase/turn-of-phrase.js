@@ -599,7 +599,7 @@ function renderTileDOM(tile) {
     tileDiv.className = "tile";
     tileDiv.style.display = "inline-grid";
 
-    const tileColor = randomLowOpacityColor(0.2);
+    const tileColor = randomLowOpacityColor(0.35);
 
     const rows = maxR - minR + 1;
     const cols = maxC - minC + 1;

@@ -1091,10 +1091,16 @@ function updateRowColHelpers() {
 
         const helper = document.createElement("div");
         helper.className = "word-helper";
-        helper.textContent = "❓";
         helper.dataset.type = "row";
         helper.dataset.index = r;
         helper.dataset.word = word;
+        const definition = getDefinitionForWord(word);
+
+        if (definition) {
+            helper.textContent = "❓";
+        } else {
+            helper.textContent = "❗";
+        }
 
         const top =
             offsetY +
@@ -1111,7 +1117,6 @@ function updateRowColHelpers() {
         helper.style.left = `${left}px`;
 
         helper.addEventListener("click", () => {
-            const definition = getDefinitionForWord(word);
             if (definition) {
                 subHeaderText.textContent = `${word} - ${definition}`;
                 subHeader.classList.remove('hidden');

@@ -1099,7 +1099,7 @@ function updateRowColHelpers() {
         if (definition) {
             helper.textContent = "❓";
         } else {
-            helper.textContent = "❗";
+            helper.textContent = "";
         }
 
         const top =
@@ -1149,7 +1149,14 @@ function updateRowColHelpers() {
 
         const helper = document.createElement("div");
         helper.className = "word-helper";
-        helper.textContent = "❓";
+        
+        const definition = getDefinitionForWord(word);
+        if (definition) {
+            helper.textContent = "❓";
+        } else {
+            helper.textContent = "";
+        }
+
         helper.dataset.type = "col";
         helper.dataset.index = c;
         helper.dataset.word = word;

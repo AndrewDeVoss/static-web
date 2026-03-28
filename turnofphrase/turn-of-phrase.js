@@ -6,6 +6,8 @@ import { generateTiles } from "./tile-generator.js";
 // Date area
 const dateSubHeader = document.querySelector("#date-subheader");
 const dateSubHeaderText = document.querySelector("#date-subheader-text");
+const dateSubHeaderPrev = document.querySelector("#date-subheader-prev");
+const dateSubHeaderNext = document.querySelector("#date-subheader-next");
 
 // Definition area
 const definitionSubHeader = document.querySelector("#definition-subheader");
@@ -63,6 +65,35 @@ const params = new URLSearchParams(window.location.search);
 const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null
 const launchDate = params.get("date"); // YYYY-MM-DD
 const dateObj = new Date(launchDate);
+
+function updateUrl(difficulty, date) {
+    const difficultyConfig = {
+        easy: { width: 5, height: 5 },
+        medium: { width: 6, height: 5 },
+        hard: { width: 6, height: 6 },
+        random: null
+    };
+    const config = difficultyConfig[difficulty];
+    let url = "./turn-of-phrase.html";
+
+    if (config) {
+        url += `?width=${config.width}&height=${config.height}&difficulty=${difficulty}&date=${date}`;
+    } else {
+        url += `?difficulty=custom`;
+    }
+    window.location.href = url;
+}
+dateSubHeaderPrev.addEventListener("click", () => {
+    let prevDate = new Date(dateObj);
+    prevDate.setDate(prevDate.getDate() - 1);
+    updateUrl(launchDifficulty, prevDate.toISOString().split("T")[0]);
+});
+
+dateSubHeaderNext.addEventListener("click", () => {
+    let nextDate = new Date(dateObj);
+    nextDate.setDate(nextDate.getDate() + 1);
+    updateUrl(launchDifficulty, nextDate.toISOString().split("T")[0]);
+});
 
 dateSubHeaderText.textContent = `${dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
 let seedString = `${launchDate}-${launchDifficulty}`;
@@ -1156,7 +1187,7 @@ function updateRowColHelpers() {
 
         const helper = document.createElement("div");
         helper.className = "word-helper";
-        
+
         const definition = getDefinitionForWord(word);
         if (definition) {
             helper.textContent = "❓";

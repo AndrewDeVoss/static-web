@@ -7,12 +7,6 @@ const difficultyConfig = {
 };
 
 export function updateUrl(difficulty, date) {
-    const difficultyConfig = {
-        easy: { width: 5, height: 5 },
-        medium: { width: 6, height: 5 },
-        hard: { width: 6, height: 6 },
-        random: null
-    };
     const config = difficultyConfig[difficulty];
     let url = "./turn-of-phrase.html";
 

@@ -65,7 +65,7 @@ shareButton.addEventListener("click", async () => {
 const params = new URLSearchParams(window.location.search);
 const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null
 const launchDate = params.get("date"); // YYYY-MM-DD
-const dateObj = new Date(launchDate);
+const dateObj = new Date(`${launchDate}T00:00:00`);
 
 dateSubHeaderPrev.addEventListener("click", () => {
     let prevDate = new Date(dateObj);

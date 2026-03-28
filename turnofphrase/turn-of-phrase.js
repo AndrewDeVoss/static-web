@@ -3,12 +3,16 @@ import { random, createSeed } from '../utility/random/random.js';
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
 
+// Date area
+const dateSubHeader = document.querySelector("#date-subheader");
+const dateSubHeaderText = document.querySelector("#date-subheader-text");
+
 // Definition area
-const subHeader = document.querySelector(".subheader");
-const subHeaderText = document.querySelector(".subheader-text");
-const subHeaderClose = document.querySelector(".subheader-close");
-subHeaderClose.addEventListener("click", () => {
-    subHeader.classList.add("hidden");
+const definitionSubHeader = document.querySelector("#definition-subheader");
+const definitionSubHeaderText = document.querySelector("#definition-subheader-text");
+const definitionSubHeaderClose = document.querySelector("#definition-subheader-close");
+definitionSubHeaderClose.addEventListener("click", () => {
+    definitionSubHeader.classList.add("hidden");
 });
 
 // Share button
@@ -58,6 +62,9 @@ shareButton.addEventListener("click", async () => {
 const params = new URLSearchParams(window.location.search);
 const launchDifficulty = params.get("difficulty"); // easy | medium | hard | custom | null
 const launchDate = params.get("date"); // YYYY-MM-DD
+const dateObj = new Date(launchDate);
+
+dateSubHeaderText.textContent = `${dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
 let seedString = `${launchDate}-${launchDifficulty}`;
 if (!launchDate || !launchDifficulty) {
     seedString = random(seedString).toString(36).slice(2);
@@ -1118,11 +1125,11 @@ function updateRowColHelpers() {
 
         helper.addEventListener("click", () => {
             if (definition) {
-                subHeaderText.textContent = `${word} - ${definition}`;
-                subHeader.classList.remove('hidden');
+                definitionSubHeaderText.textContent = `${word} - ${definition}`;
+                definitionSubHeader.classList.remove('hidden');
             } else {
-                subHeaderText.textContent = `No match found for ${word}`;
-                subHeader.classList.remove('hidden');
+                definitionSubHeaderText.textContent = `No match found for ${word}`;
+                definitionSubHeader.classList.remove('hidden');
             }
         });
 
@@ -1178,11 +1185,11 @@ function updateRowColHelpers() {
         helper.addEventListener("click", () => {
             const definition = getDefinitionForWord(word);
             if (definition) {
-                subHeaderText.textContent = `${word} - ${definition}`;
-                subHeader.classList.remove('hidden');
+                definitionSubHeaderText.textContent = `${word} - ${definition}`;
+                definitionSubHeader.classList.remove('hidden');
             } else {
-                subHeaderText.textContent = `No match found for ${word}`;
-                subHeader.classList.remove('hidden');
+                definitionSubHeaderText.textContent = `No match found for ${word}`;
+                definitionSubHeader.classList.remove('hidden');
 
             }
         });

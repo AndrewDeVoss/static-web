@@ -2,6 +2,7 @@ import { isWord, loadDictionary, loadDictionaryFrequencyBased, getDefinitionForW
 import { random, createSeed } from '../utility/random/random.js';
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
+import { updateUrl } from "./shared-navigation.js";
 
 // Date area
 const dateSubHeader = document.querySelector("#date-subheader");
@@ -66,23 +67,6 @@ const launchDifficulty = params.get("difficulty"); // easy | medium | hard | cus
 const launchDate = params.get("date"); // YYYY-MM-DD
 const dateObj = new Date(launchDate);
 
-function updateUrl(difficulty, date) {
-    const difficultyConfig = {
-        easy: { width: 5, height: 5 },
-        medium: { width: 6, height: 5 },
-        hard: { width: 6, height: 6 },
-        random: null
-    };
-    const config = difficultyConfig[difficulty];
-    let url = "./turn-of-phrase.html";
-
-    if (config) {
-        url += `?width=${config.width}&height=${config.height}&difficulty=${difficulty}&date=${date}`;
-    } else {
-        url += `?difficulty=custom`;
-    }
-    window.location.href = url;
-}
 dateSubHeaderPrev.addEventListener("click", () => {
     let prevDate = new Date(dateObj);
     prevDate.setDate(prevDate.getDate() - 1);

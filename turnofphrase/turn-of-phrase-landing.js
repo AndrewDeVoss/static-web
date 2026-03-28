@@ -1,5 +1,6 @@
 import { todayInSaintLouis } from "../utility/datetime/datetime.js";
 import { DaySelector } from "./day-selector.js";
+import { updateUrl } from "./shared-navigation.js";
 
 const baseKey = `turn-of-phrase`;
 const version = `v0.0.2`;
@@ -7,13 +8,6 @@ const masterKey = `${baseKey}-${version}`;
 document.querySelectorAll(".day-selector").forEach(el => {
   new DaySelector(el);
 });
-
-const difficultyConfig = {
-  easy: { width: 5, height: 5 },
-  medium: { width: 6, height: 5 },
-  hard: { width: 6, height: 6 },
-  random: null
-};
 
 // When clicking on a difficulty card, use today's date.
 document.querySelectorAll(".difficulty-card").forEach(card => {
@@ -84,18 +78,6 @@ function writeStreaks() {
     `;
     }
   });
-}
-
-function updateUrl(difficulty, date) {
-  const config = difficultyConfig[difficulty];
-  let url = "./turn-of-phrase.html";
-
-  if (config) {
-    url += `?width=${config.width}&height=${config.height}&difficulty=${difficulty}&date=${date}`;
-  } else {
-    url += `?difficulty=custom`;
-  }
-  window.location.href = url;
 }
 
 function updateDayButtonStates() {

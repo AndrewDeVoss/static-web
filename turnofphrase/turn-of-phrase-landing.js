@@ -4,7 +4,7 @@ import { updateUrl } from "./shared-navigation.js";
 
 const baseKey = `turn-of-phrase`;
 const version = `v0.0.2`;
-const masterKey = `${baseKey}-${version}`;
+export const masterKey = `${baseKey}-${version}`;
 document.querySelectorAll(".day-selector").forEach(el => {
   new DaySelector(el);
 });
@@ -164,7 +164,7 @@ function compressOldGames() {
   }
 }
 
-function getTurnOfPhraseStorage() {
+export function getTurnOfPhraseStorage() {
   const raw = localStorage.getItem(masterKey);
   return raw ? JSON.parse(raw) : {};
 }

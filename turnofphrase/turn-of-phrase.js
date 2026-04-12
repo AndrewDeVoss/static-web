@@ -3,6 +3,7 @@ import { random, createSeed } from '../utility/random/random.js';
 import { findWordGrid } from "./word-grid-generator.js";
 import { generateTiles } from "./tile-generator.js";
 import { updateUrl } from "./shared-navigation.js";
+import { getTurnOfPhraseStorage } from "./turn-of-phrase-landing.js";
 
 // Date area
 const dateSubHeader = document.querySelector("#date-subheader");
@@ -152,7 +153,14 @@ function loadGameState() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (dateObj>today) {
-        showFuturePuzzleMessage();
+        showPuzzleMessage("Puzzle is not yet available!");
+        return true; // handled
+    }
+
+    // Do not allow loading game older than user's oldest completed, but always allow games less than a week old
+    const oldestCompleted = getOldestCompletedGameDate();
+    if ((!oldestCompleted && (dateObj-today)/(1000 * 60 * 60 * 24)>7) || (oldestCompleted && (dateObj-today)/(1000 * 60 * 60 * 24)>7 && dateObj < oldestCompleted)) {
+        showPuzzleMessage("Puzzle is no longer available.");
         return true; // handled
     }
 
@@ -251,26 +259,40 @@ function loadGameState() {
 }
 
 /**
- * Puzzle not available
+ * @returns Date of oldest completed game
  */
-function showFuturePuzzleMessage() { 
-    bank.innerHTML = "<div class='complete-message'>Puzzle is not yet available!</div>";
+function getOldestCompletedGameDate() {
+  const allGames = getTurnOfPhraseStorage();
+
+  let oldestDate = null;
+
+  for (const game of Object.values(allGames)) {
+    if (!game.completed) continue;
+
+    const parts = game.seedString?.split("-");
+    if (!parts || parts.length < 3) continue;
+
+    const dateStr = `${parts[0]}-${parts[1]}-${parts[2]}`;
+
+    // Safer local date creation
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const gameDate = new Date(y, m - 1, d);
+
+    if (!oldestDate || gameDate < oldestDate) {
+      oldestDate = gameDate;
+    }
+  }
+
+  return oldestDate; // null if none found
 }
 
 /**
- * If puzzle is finished but stale, do not allow re-generation.
+ * Set text on bank
  */
-function showCompleteMessage() {
-    bank.innerHTML = "<div class='complete-message'>Puzzle was completed, but is stale.</div>";
+function showPuzzleMessage(message) { 
+    bank.innerHTML = `<div class='complete-message'>${message}</div>`;
 }
 
-/**
- * Creates a random mask with a given number of holes.
- * @param {number} width  - number of columns
- * @param {number} height - number of rows
- * @param {number} numHoles - how many cells to block (set false)
- * @returns {boolean[][]} mask - 2D array [row][col]
- */
 /**
  * Creates a random mask with a given number of holes, avoiding isolated islands.
  * @param {number} width  - number of columns

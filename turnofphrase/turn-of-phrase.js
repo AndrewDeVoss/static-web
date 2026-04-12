@@ -148,6 +148,14 @@ function saveGameState() {
 
 // Loading
 function loadGameState() {
+    // Do not allow loading invalid date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (dateObj>today) {
+        showFuturePuzzleMessage();
+        return true; // handled
+    }
+
     const key = getGameStorageKey();
 
     const allGamesRaw = localStorage.getItem(masterKey);
@@ -156,6 +164,18 @@ function loadGameState() {
     const allGames = JSON.parse(allGamesRaw);
     const state = allGames[key];
     if (!state) return false;
+
+    // Handle trimmed/stale states
+    const hasBoardState = state.board && state.board.letters;
+
+    if (!hasBoardState) {
+        if (state.completed) {
+            showCompleteMessage();
+            return true; // handled
+        } else {
+            return false; // force fresh generation
+        }
+    }
 
     seedString = state.seedString;
     tileColors = state.tileColors || [];
@@ -228,6 +248,20 @@ function loadGameState() {
     }
 
     return true;
+}
+
+/**
+ * Puzzle not available
+ */
+function showFuturePuzzleMessage() { 
+    bank.innerHTML = "<div class='complete-message'>Puzzle is not yet available!</div>";
+}
+
+/**
+ * If puzzle is finished but stale, do not allow re-generation.
+ */
+function showCompleteMessage() {
+    bank.innerHTML = "<div class='complete-message'>Puzzle was completed, but is stale.</div>";
 }
 
 /**

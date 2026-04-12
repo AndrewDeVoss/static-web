@@ -178,7 +178,7 @@ function loadGameState() {
 
     if (!hasBoardState) {
         if (state.completed) {
-            showCompleteMessage();
+            showPuzzleMessage("Puzzle completed!");
             return true; // handled
         } else {
             return false; // force fresh generation

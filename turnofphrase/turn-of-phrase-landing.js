@@ -141,6 +141,8 @@ function compressOldGames() {
     Array.from(document.querySelectorAll(".day-button")).map(btn => btn.dataset.date)
   );
 
+  if (visibleDates.size === 0) return; // safety check
+
   let changed = false;
 
   for (const [key, game] of Object.entries(allGames)) {

@@ -1,11 +1,7 @@
 import { generatePrismixture } from "./prismixture-generator.js";
 import { Color } from "./color.js";
 
-const colors = Color.generatePartitionColors({
-    numColors: 6,
-    seed: Math.random,
-});
-
+const colors = Color.generatePartitionColors(4, Math.random);
 const prismixture = generatePrismixture(4, 4, colors);
 const board = document.getElementById("board");
 
@@ -37,12 +33,14 @@ function renderPrismixture(board, grid) {
                 combined = combined.add(c);
             }
 
-            const { r, g, b, a } = combined.toSRGB();
+            const r = combined.r;
+            const g = combined.g;
+            const b = combined.b;
 
             cell.style.width = "100%";
             cell.style.height = "100%";
             cell.style.borderRadius = "50%";
-            cell.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+            cell.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 1)`;
             cell.style.border = "1px solid rgba(0, 0, 0, 0.6)";
 
             // --- center content ---
@@ -60,8 +58,7 @@ function renderPrismixture(board, grid) {
 
             // simple label: show each color as (r,g,b)
             label.innerHTML = colors.map(c => {
-                const { r, g, b } = c.toSRGB();
-                return `(${r},${g},${b})`;
+                return `(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)})`;
             }).join("<br>");
 
             cell.appendChild(label);

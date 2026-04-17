@@ -24,20 +24,52 @@ export function generatePrismixture(width, height, colors) {
         return arr;
     }
 
-    // --- create starting cells ---
-    const allCells = [];
-    for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
-            allCells.push([x, y]);
+    // --- spaced starting cells (farthest-point sampling) ---
+    function pickSpacedStarts(width, height, count) {
+        const starts = [];
+
+        const dist2 = (a, b) => {
+            const dx = a[0] - b[0];
+            const dy = a[1] - b[1];
+            return dx * dx + dy * dy;
+        };
+
+        // first point: center
+        starts.push([
+            Math.floor(width / 2),
+            Math.floor(height / 2)
+        ]);
+
+        while (starts.length < count) {
+            let bestCell = null;
+            let bestScore = -1;
+
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < height; y++) {
+                    const candidate = [x, y];
+
+                    let minDist = Infinity;
+                    for (let s of starts) {
+                        minDist = Math.min(minDist, dist2(candidate, s));
+                    }
+
+                    if (minDist > bestScore) {
+                        bestScore = minDist;
+                        bestCell = candidate;
+                    }
+                }
+            }
+
+            starts.push(bestCell);
         }
+
+        return starts;
     }
 
-    for (let i = allCells.length - 1; i > 0; i--) {
-        const j = (Math.random() * (i + 1)) | 0;
-        [allCells[i], allCells[j]] = [allCells[j], allCells[i]];
-    }
+    const starts = pickSpacedStarts(width, height, colors.length);
 
-    const starts = allCells.slice(0, colors.length);
+    // reserve starting cells so they are never reused
+    const reserved = new Set(starts.map(([x, y]) => encode(x, y)));
 
     const lines = [];
 
@@ -70,7 +102,17 @@ export function generatePrismixture(width, height, colors) {
             const options = shuffle(dirs)
                 .map(([dx, dy]) => [cx + dx, cy + dy])
                 .filter(([nx, ny]) => inBounds(nx, ny))
-                .filter(([nx, ny]) => !line.visited.has(encode(nx, ny)));
+                .filter(([nx, ny]) => {
+                    const key = encode(nx, ny);
+
+                    // don't revisit own cells
+                    if (line.visited.has(key)) return false;
+
+                    // don't invade reserved starting cells (except own)
+                    if (reserved.has(key) && !line.visited.has(key)) return false;
+
+                    return true;
+                });
 
             if (options.length === 0) continue;
 
@@ -95,7 +137,7 @@ export function generatePrismixture(width, height, colors) {
             for (let [nx, ny] of neighbors) {
                 const key = encode(nx, ny);
 
-                if (!line.visited.has(key)) {
+                if (!line.visited.has(key) && !reserved.has(key)) {
                     line.cells.push([nx, ny]);
                     line.visited.add(key);
                     grid[nx][ny].lines.add(line.id);
@@ -115,20 +157,20 @@ export function generatePrismixture(width, height, colors) {
         }
     }
 
-    // --- build output ---
+    // --- build output (array of colors per cell) ---
     const output = Array.from({ length: width }, () =>
-        Array.from({ length: height }, () => new Color(0, 0, 0))
+        Array.from({ length: height }, () => [])
     );
 
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
-            let color = new Color(0, 0, 0);
+            const colorsHere = [];
 
             for (let lineId of grid[x][y].lines) {
-                color = color.add(lines[lineId].color);
+                colorsHere.push(lines[lineId].color);
             }
 
-            output[x][y] = color;
+            output[x][y] = colorsHere;
         }
     }
 

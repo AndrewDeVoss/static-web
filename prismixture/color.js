@@ -1,5 +1,8 @@
 export class Color {
-    // Stored in linear RGB
+    // -------------------------------------------------
+    // LINEAR RGB STORAGE
+    // -------------------------------------------------
+
     constructor(r, g, b, a = 1.0) {
         this.r = Math.max(0, r);
         this.g = Math.max(0, g);
@@ -8,7 +11,7 @@ export class Color {
     }
 
     // -------------------------------------------------
-    // BASIC LIGHT MATH (KEEP THIS AS YOUR SIM CORE)
+    // PHYSICAL LIGHT MATH (LINEAR RGB)
     // -------------------------------------------------
 
     add(other) {
@@ -29,20 +32,8 @@ export class Color {
         );
     }
 
-    multiply(s) {
-        return new Color(this.r * s, this.g * s, this.b * s, this.a);
-    }
-
-    luminance() {
-        return 0.2126 * this.r + 0.7152 * this.g + 0.0722 * this.b;
-    }
-
-    compareTo(other) {
-        return this.luminance() - other.luminance();
-    }
-
     // -------------------------------------------------
-    // SRGB <-> LINEAR (DISPLAY CONVERSION)
+    // SRGB <-> LINEAR
     // -------------------------------------------------
 
     static fromSRGB(r, g, b, a = 255) {
@@ -76,7 +67,7 @@ export class Color {
     }
 
     // -------------------------------------------------
-    // OKLAB (PERCEPTUAL SPACE FOR PALETTE GENERATION)
+    // OKLAB (PERCEPTUAL SPACE)
     // -------------------------------------------------
 
     static fromOKLab(L, a, b, alpha = 1.0) {
@@ -85,7 +76,6 @@ export class Color {
     }
 
     static #oklabToLinearRGB(L, a, b) {
-        // OKLab -> LMS
         let l_ = L + 0.3963377774 * a + 0.2158037573 * b;
         let m_ = L - 0.1055613458 * a - 0.0638541728 * b;
         let s_ = L - 0.0894841775 * a - 1.2914855480 * b;
@@ -117,7 +107,6 @@ export class Color {
         };
     }
 
-    // perceptual distance
     static oklabDistance(c1, c2) {
         const A = Color.#linearRGBToOKLab(c1.r, c1.g, c1.b);
         const B = Color.#linearRGBToOKLab(c2.r, c2.g, c2.b);
@@ -130,133 +119,160 @@ export class Color {
     }
 
     // -------------------------------------------------
-    // PALETTE GENERATION (YOUR KEY FEATURE)
+    // CORE IDEA: LIGHT PARTITION COLOR GENERATOR
     // -------------------------------------------------
 
-    static generateDistinctLightColors(n, {
-        candidates = 12,
-        alpha = 0.25,
-        seed = Math.random
-    } = {}) {
+    /**
+     * Generates distinct colors whose sum = target light (approx)
+     *
+     * This treats color generation as:
+     *  - start with total light
+     *  - repeatedly carve out perceptually distinct "light chunks"
+     */
+    static generatePartitionColors({
+        numColors,
+        seed,
+        hueWedge = Math.PI / 3,
+        minChroma = 0.15,
+        maxChroma = 0.35,
+        minL = 0.35,
+        maxL = 0.75,
+        distinctThreshold = 0.10
+    }) {
+        const rand = seed;
+        const targetSRGB = Color.generateTargetSRGB(rand);
+
+        // convert target to linear RGB "light pool"
+        let remaining = Color.fromSRGB(
+            targetSRGB.r,
+            targetSRGB.g,
+            targetSRGB.b
+        );
+
         const result = [];
 
-        for (let i = 0; i < n; i++) {
+        function randomOKLabCandidate() {
+            const base = rand() * Math.PI * 2;
+            const angle = base + (rand() * 2 - 1) * hueWedge;
+
+            const chroma = minChroma + rand() * (maxChroma - minChroma);
+            const L = minL + rand() * (maxL - minL);
+
+            const a = Math.cos(angle) * chroma;
+            const b = Math.sin(angle) * chroma;
+
+            return Color.fromOKLab(L, a, b);
+        }
+
+        function isDistinct(c) {
+            for (const r of result) {
+                if (Color.oklabDistance(c, r) < distinctThreshold) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function clampColor(c) {
+            return new Color(
+                Math.max(0, Math.min(c.r, remaining.r)),
+                Math.max(0, Math.min(c.g, remaining.g)),
+                Math.max(0, Math.min(c.b, remaining.b)),
+                c.a
+            );
+        }
+
+        for (let i = 0; i < numColors; i++) {
             let best = null;
             let bestScore = -Infinity;
 
-            for (let c = 0; c < candidates; c++) {
-                const candidate = Color.#randomLightOKLab(seed, alpha);
+            const attempts = 10;
 
-                let minDist = Infinity;
+            for (let k = 0; k < attempts; k++) {
+                const candidate = randomOKLabCandidate();
 
-                for (const used of result) {
-                    const d = Color.oklabDistance(candidate, used);
-                    if (d < minDist) minDist = d;
-                }
+                if (!isDistinct(candidate)) continue;
 
-                if (result.length === 0) minDist = 1;
+                // normalize direction
+                const sum = candidate.r + candidate.g + candidate.b;
+                if (sum <= 0) continue;
 
-                if (minDist > bestScore) {
-                    bestScore = minDist;
-                    best = candidate;
+                const dir = new Color(
+                    candidate.r / sum,
+                    candidate.g / sum,
+                    candidate.b / sum
+                );
+
+                // how much light to carve
+                const t = 0.15 + rand() * 0.55;
+
+                const extracted = clampColor(new Color(
+                    remaining.r * dir.r * t,
+                    remaining.g * dir.g * t,
+                    remaining.b * dir.b * t
+                ));
+
+                const score =
+                    Color.oklabDistance(extracted, remaining) +
+                    (Color.#chromaScore(extracted) * 0.5);
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = extracted;
                 }
             }
 
+            if (!best) {
+                // fallback: take remaining evenly
+                best = new Color(
+                    remaining.r / (numColors - i),
+                    remaining.g / (numColors - i),
+                    remaining.b / (numColors - i)
+                );
+            }
+
             result.push(best);
+            remaining = remaining.subtract(best);
         }
 
         return result;
     }
 
-    static generateBalancedDistinctColors(n, {
-        candidates = 20,
-        alpha = 0.25,
-        seed = Math.random,
-        targetBrightness = 0.6 // controls how “white” full overlap becomes
-    } = {}) {
-
-        const result = [];
-
-        // ----------------------------
-        // 1. greedy farthest sampling in OKLab
-        // ----------------------------
-        for (let i = 0; i < n; i++) {
-            let best = null;
-            let bestScore = -Infinity;
-
-            for (let c = 0; c < candidates; c++) {
-
-                const candidate = Color.#randomDarkVividOKLab(seed, alpha);
-
-                let minDist = Infinity;
-
-                for (const used of result) {
-                    const d = Color.oklabDistance(candidate, used);
-                    if (d < minDist) minDist = d;
-                }
-
-                if (result.length === 0) minDist = 1;
-
-                if (minDist > bestScore) {
-                    bestScore = minDist;
-                    best = candidate;
-                }
-            }
-
-            result.push(best);
+    static generateTargetSRGB(seed = Math.random) {
+        function randRange(min, max) {
+            return Math.floor(min + seed() * (max - min + 1));
         }
 
-        // ----------------------------
-        // 2. normalize total energy toward white
-        // ----------------------------
-        let sumR = 0, sumG = 0, sumB = 0;
+        // your 3 intensity bands
+        const bands = [
+            randRange(50, 80),     // dark channel
+            randRange(120, 200),   // mid channel
+            randRange(220, 255)    // bright channel
+        ];
 
-        const linear = result.map(c => {
-            sumR += c.r;
-            sumG += c.g;
-            sumB += c.b;
-            return c;
-        });
+        // shuffle across R, G, B
+        for (let i = bands.length - 1; i > 0; i--) {
+            const j = Math.floor(seed() * (i + 1));
+            [bands[i], bands[j]] = [bands[j], bands[i]];
+        }
 
-        const avgR = sumR / n;
-        const avgG = sumG / n;
-        const avgB = sumB / n;
-
-        // target white-ish balance
-        const target = targetBrightness;
-
-        const scaleR = target / (avgR || 1);
-        const scaleG = target / (avgG || 1);
-        const scaleB = target / (avgB || 1);
-
-        return linear.map(c =>
-            new Color(
-                c.r * scaleR,
-                c.g * scaleG,
-                c.b * scaleB,
-                alpha
-            )
-        );
+        return {
+            r: bands[0],
+            g: bands[1],
+            b: bands[2]
+        };
     }
 
-    static #randomDarkVividOKLab(seed, alpha) {
+    // -------------------------------------------------
+    // HELPERS
+    // -------------------------------------------------
 
-        // darker base so overlaps don’t immediately wash out
-        const L = 0.35 + seed() * 0.25;   // 0.35–0.60 (important change)
-
-        // higher chroma for saturation
-        const a = (seed() * 2 - 1) * 0.35;
-        const b = (seed() * 2 - 1) * 0.35;
-
-        return Color.fromOKLab(L, a, b, alpha);
-    }
-
-    static #randomLightOKLab(seed, alpha) {
-        // Light biased OKLab sampling
-        const L = 0.75 + seed() * 0.2;     // bright range
-        const a = (seed() * 2 - 1) * 0.25; // small chroma spread
-        const b = (seed() * 2 - 1) * 0.25;
-
-        return Color.fromOKLab(L, a, b, alpha);
-    }
+    static #chromaScore(c) {
+    const avg = (c.r + c.g + c.b) / 3;
+    return (
+        Math.abs(c.r - avg) +
+        Math.abs(c.g - avg) +
+        Math.abs(c.b - avg)
+    );
+}
 }

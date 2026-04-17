@@ -1,7 +1,11 @@
 import { generatePrismixture } from "./prismixture-generator.js";
 import { Color } from "./color.js";
 
-const colors = Color.generateBalancedDistinctColors(4);
+const colors = Color.generatePartitionColors({
+    numColors: 6,
+    seed: Math.random,
+});
+
 const prismixture = generatePrismixture(4, 4, colors);
 const board = document.getElementById("board");
 
@@ -11,7 +15,6 @@ function renderPrismixture(board, grid) {
 
     board.innerHTML = "";
 
-    // --- CRITICAL FIX: give the grid real space ---
     board.style.display = "grid";
     board.style.width = "600px";
     board.style.height = "600px";
@@ -26,21 +29,42 @@ function renderPrismixture(board, grid) {
 
             const cell = document.createElement("div");
 
-            const { r, g, b, a } = grid[x][y].toSRGB();
+            const colors = grid[x][y]; // <-- now an array
 
-            // --- ensure full cell usage ---
+            // --- recompute summed color ---
+            let combined = new Color(0, 0, 0);
+            for (let c of colors) {
+                combined = combined.add(c);
+            }
+
+            const { r, g, b, a } = combined.toSRGB();
+
             cell.style.width = "100%";
             cell.style.height = "100%";
-
-            // --- circle styling ---
             cell.style.borderRadius = "50%";
             cell.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
             cell.style.border = "1px solid rgba(0, 0, 0, 0.6)";
 
-            // optional: makes circles visually cleaner
+            // --- center content ---
             cell.style.display = "flex";
             cell.style.alignItems = "center";
             cell.style.justifyContent = "center";
+
+            // --- label colors ---
+            const label = document.createElement("div");
+
+            label.style.fontSize = "10px";
+            label.style.color = "black";
+            label.style.textAlign = "center";
+            label.style.pointerEvents = "none";
+
+            // simple label: show each color as (r,g,b)
+            label.innerHTML = colors.map(c => {
+                const { r, g, b } = c.toSRGB();
+                return `(${r},${g},${b})`;
+            }).join("<br>");
+
+            cell.appendChild(label);
 
             board.appendChild(cell);
         }

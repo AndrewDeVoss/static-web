@@ -10,15 +10,10 @@ function renderPrismixture(board, grid) {
     const height = grid[0].length;
 
     board.innerHTML = "";
-
     board.style.display = "grid";
-    board.style.width = "600px";
-    board.style.height = "600px";
-
     board.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
     board.style.gridTemplateRows = `repeat(${height}, minmax(0, 1fr))`;
-
-    board.style.gap = "2px";
+    board.style.gap = "10px";
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {

@@ -1,18 +1,18 @@
 import { generatePrismixture } from "./prismixture-generator.js";
 import { Color } from "./color.js";
-import { ColorNGraph, ColorNode } from "./color-n-graph.js";
+import { ColorNGraph } from "./color-n-graph.js";
 
 /**
- * Notes: 
- * only connect to endpoints
- * maintain list of lines
- * use n-tree model that is used by controller to render
- * try to do local updates instead of re-rendering everything
+ * Notes:
+ * - additive blending via canvas ("lighter")
+ * - graph-driven rendering (not grid colors anymore)
+ * - edges drawn on global overlay canvas
  */
+
 const colors = Color.generatePartitionColors(4, Math.random);
 const prismixture = generatePrismixture(4, 4, colors);
 const colorNGraph = new ColorNGraph(prismixture);
-console.log("color n graph", colorNGraph.getGraph());
+
 const board = document.getElementById("board");
 
 function renderColorNGraph(board, graph) {
@@ -28,7 +28,11 @@ function renderColorNGraph(board, graph) {
 
     const globalPositions = new Map();
 
-    // --- FIRST PASS: render cells + circles ---
+    const boardRect = board.getBoundingClientRect();
+
+    // =========================
+    // PASS 1: DRAW NODES
+    // =========================
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
 
@@ -47,46 +51,41 @@ function renderColorNGraph(board, graph) {
             const ctx = canvas.getContext("2d");
 
             const rect = cellEl.getBoundingClientRect();
-            const boardRect = board.getBoundingClientRect();
+
+            const sizePx = Math.min(rect.width, rect.height);
             const dpr = window.devicePixelRatio || 1;
 
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
+            canvas.width = sizePx * dpr;
+            canvas.height = sizePx * dpr;
+
+            // FIX: no cumulative scaling
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            // 🔥 ADDITIVE BLENDING RESTORED
+            ctx.globalCompositeOperation = "lighter";
 
             const nodes = graph[x][y];
             const n = nodes.length;
 
             const baseSize = 0.9;
-            const size = baseSize / Math.sqrt(n);
-
-
-            const sizePx = Math.min(rect.width, rect.height);
-
-            canvas.width = sizePx * dpr;
-            canvas.height = sizePx * dpr;
-            ctx.scale(dpr, dpr);
-
             const cx = sizePx / 2;
             const cy = sizePx / 2;
 
             const paddingFactor = 0.85;
-            const cellSize = sizePx;
 
             const baseRadius =
-                (cellSize * (baseSize / Math.sqrt(n)) * 0.5) * paddingFactor;
-
+                (sizePx * (baseSize / Math.sqrt(n)) * 0.5) * paddingFactor;
 
             nodes.forEach((node, i) => {
                 const c = node.getColor();
 
                 const angle = (i / n) * Math.PI * 2;
-                const offsetRadius = n === 1 ? 0 : baseRadius * 0.8;
+                const offsetRadius = n === 1 ? 0 : baseRadius * 0.5;
 
                 const px = cx + Math.cos(angle) * offsetRadius;
                 const py = cy + Math.sin(angle) * offsetRadius;
 
-                // 🔥 convert to GLOBAL board coordinates
+                // global coordinate system for edges
                 const globalX = rect.left - boardRect.left + px;
                 const globalY = rect.top - boardRect.top + py;
 
@@ -100,7 +99,9 @@ function renderColorNGraph(board, graph) {
         }
     }
 
-    // --- SECOND PASS: draw edges on overlay canvas ---
+    // =========================
+    // PASS 2: DRAW EDGES
+    // =========================
     const overlay = document.createElement("canvas");
     overlay.style.position = "absolute";
     overlay.style.left = "0";
@@ -112,19 +113,19 @@ function renderColorNGraph(board, graph) {
     board.appendChild(overlay);
 
     const ctx = overlay.getContext("2d");
-    const boardRect = board.getBoundingClientRect();
+
     const dpr = window.devicePixelRatio || 1;
 
     overlay.width = boardRect.width * dpr;
     overlay.height = boardRect.height * dpr;
-    ctx.scale(dpr, dpr);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     ctx.globalCompositeOperation = "source-over";
     ctx.lineWidth = 2;
 
     const drawn = new Set();
 
-    // iterate entire graph
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
             for (let node of graph[x][y]) {
@@ -137,8 +138,11 @@ function renderColorNGraph(board, graph) {
 
                 for (let target of node.connections) {
 
-                    // prevent double drawing
-                    const key = node < target ? node + "|" + target : target + "|" + node;
+                    const key =
+                        node.id < target.id
+                            ? `${node.id}|${target.id}`
+                            : `${target.id}|${node.id}`;
+
                     if (drawn.has(key)) continue;
                     drawn.add(key);
 
@@ -155,10 +159,27 @@ function renderColorNGraph(board, graph) {
     }
 }
 
-// Testing connections in graph. Corner must connect to one of the ones next to it at least.
-colorNGraph.connect(colorNGraph.getGraph()[0][0][0], colorNGraph.getGraph()[1][0][0]);
-colorNGraph.connect(colorNGraph.getGraph()[0][0][0], colorNGraph.getGraph()[0][1][0]);
-colorNGraph.connect(colorNGraph.getGraph()[0][1][0], colorNGraph.getGraph()[0][2][0]);
-colorNGraph.connect(colorNGraph.getGraph()[1][0][0], colorNGraph.getGraph()[2][0][0]);
+// =========================
+// TEST CONNECTIONS
+// =========================
+colorNGraph.connect(
+    colorNGraph.getGraph()[0][0][0],
+    colorNGraph.getGraph()[1][0][0]
+);
+
+colorNGraph.connect(
+    colorNGraph.getGraph()[0][0][0],
+    colorNGraph.getGraph()[0][1][0]
+);
+
+colorNGraph.connect(
+    colorNGraph.getGraph()[0][1][0],
+    colorNGraph.getGraph()[0][2][0]
+);
+
+colorNGraph.connect(
+    colorNGraph.getGraph()[1][0][0],
+    colorNGraph.getGraph()[2][0][0]
+);
 
 renderColorNGraph(board, colorNGraph.getGraph());

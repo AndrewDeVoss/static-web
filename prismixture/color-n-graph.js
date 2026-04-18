@@ -125,11 +125,17 @@ export class ColorNGraph {
 }
 
 export class ColorNode {
+    static _idCounter = 0;
+
     constructor(colorList, x, y, connections = []) {
+
+        this.id = ColorNode._idCounter++;
+
         let colorSum = new Color(0, 0, 0);
         for (let c of colorList) {
-            colorSum = colorSum.add(c);  
+            colorSum = colorSum.add(c);
         }
+
         this.color = colorSum;
         this.x = x;
         this.y = y;
@@ -141,4 +147,5 @@ export class ColorNode {
     getX() { return this.x; }
     getY() { return this.y; }
     getConnections() { return this.connections; }
+    getID() { return this.id; }
 }

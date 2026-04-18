@@ -65,7 +65,13 @@ function renderColorNGraph(board, graph) {
             ctx.globalCompositeOperation = "lighter";
 
             const nodes = graph[x][y];
-            const n = nodes.length;
+            const sortedNodes = [...nodes].sort((a, b) => {
+                const [ar, ag, ab] = [a.getColor().r, a.getColor().g, a.getColor().b];
+                const [br, bg, bb] = [b.getColor().r, b.getColor().g, b.getColor().b];
+
+                return (br - ar) || (bg - ag) || (bb - ab);
+            });
+            const n = sortedNodes.length;
 
             const baseSize = 0.9;
             const cx = sizePx / 2;
@@ -76,7 +82,7 @@ function renderColorNGraph(board, graph) {
             const baseRadius =
                 (sizePx * (baseSize / Math.sqrt(n)) * 0.5) * paddingFactor;
 
-            nodes.forEach((node, i) => {
+            sortedNodes.forEach((node, i) => {
                 const c = node.getColor();
 
                 const angle = (i / n) * Math.PI * 2;
@@ -110,7 +116,7 @@ function renderColorNGraph(board, graph) {
     overlay.style.height = "100%";
     overlay.style.pointerEvents = "none";
 
-    board.appendChild(overlay);
+    board.prepend(overlay);
 
     const ctx = overlay.getContext("2d");
 
@@ -143,7 +149,7 @@ function renderColorNGraph(board, graph) {
                             ? `${node.id}|${target.id}`
                             : `${target.id}|${node.id}`;
 
-                    if (drawn.has(key)) continue;
+                    // if (drawn.has(key)) continue;
                     drawn.add(key);
 
                     const to = globalPositions.get(target);

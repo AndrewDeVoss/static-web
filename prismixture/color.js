@@ -29,10 +29,25 @@ export class Color {
         );
     }
 
+    isRGBSubset(other) {
+        return (
+            this.r <= other.r &&
+            this.g <= other.g &&
+            this.b <= other.b
+        );
+    }
+
+    isMatch(other) {
+        return (
+            this.r === other.r &&
+            this.g === other.g &&
+            this.b === other.b
+        );
+    }
+
     static generatePartitionColors(numColors, seed) {
         const rand = seed;
         const rgbSum = Color.generateRGBSum(rand);
-        console.log("Target RGB:", rgbSum);
 
         let remaining = new Color(rgbSum.r, rgbSum.g, rgbSum.b);
         const result = [];
@@ -64,7 +79,6 @@ export class Color {
             remaining = remaining.subtract(portion);
         }
 
-        console.log(result);
         return result;
     }
 

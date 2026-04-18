@@ -1,66 +1,77 @@
 import { generatePrismixture } from "./prismixture-generator.js";
 import { Color } from "./color.js";
+import { ColorNGraph, ColorNode } from "./color-n-graph.js";
 
+/**
+ * Notes: 
+ * only connect to endpoints
+ * maintain list of lines
+ * use n-tree model that is used by controller to render
+ * try to do local updates instead of re-rendering everything
+ */
 const colors = Color.generatePartitionColors(4, Math.random);
 const prismixture = generatePrismixture(4, 4, colors);
+const colorNGraph = new ColorNGraph(prismixture);
+console.log("color n graph", colorNGraph.getGraph());
 const board = document.getElementById("board");
 
-function renderPrismixture(board, grid) {
-    const width = grid.length;
-    const height = grid[0].length;
+function renderColorNGraph(board, graph) {
+    const width = graph.length;
+    const height = graph[0].length;
 
     board.innerHTML = "";
     board.style.display = "grid";
-    board.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
-    board.style.gridTemplateRows = `repeat(${height}, minmax(0, 1fr))`;
+    board.style.gridTemplateColumns = `repeat(${width}, 1fr)`;
+    board.style.gridTemplateRows = `repeat(${height}, 1fr)`;
     board.style.gap = "10px";
 
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
 
-            const cell = document.createElement("div");
+            const cellEl = document.createElement("div");
+            const nodes = graph[x][y]; // array of ColorNode
 
-            const colors = grid[x][y]; // <-- now an array
+            // --- container setup ---
+            cellEl.style.position = "relative";
+            cellEl.style.width = "100%";
+            cellEl.style.height = "100%";
 
-            // --- recompute summed color ---
-            let combined = new Color(0, 0, 0);
-            for (let c of colors) {
-                combined = combined.add(c);
-            }
+            const n = nodes.length;
 
-            const r = combined.r;
-            const g = combined.g;
-            const b = combined.b;
+            // shrink factor when multiple nodes
+            const size = n === 1 ? 0.9 : 0.6;
 
-            cell.style.width = "100%";
-            cell.style.height = "100%";
-            cell.style.borderRadius = "50%";
-            cell.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 1)`;
-            cell.style.border = "1px solid rgba(0, 0, 0, 0.6)";
+            nodes.forEach((node, i) => {
+                const c = node.getColor();
 
-            // --- center content ---
-            cell.style.display = "flex";
-            cell.style.alignItems = "center";
-            cell.style.justifyContent = "center";
+                const circle = document.createElement("div");
 
-            // --- label colors ---
-            const label = document.createElement("div");
+                // --- base circle ---
+                circle.style.position = "absolute";
+                circle.style.width = `${size * 100}%`;
+                circle.style.height = `${size * 100}%`;
+                circle.style.borderRadius = "50%";
 
-            label.style.fontSize = "10px";
-            label.style.color = "black";
-            label.style.textAlign = "center";
-            label.style.pointerEvents = "none";
+                circle.style.backgroundColor = `rgba(${c.r}, ${c.g}, ${c.b}, 0.7)`;
 
-            // simple label: show each color as (r,g,b)
-            label.innerHTML = colors.map(c => {
-                return `(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)})`;
-            }).join("<br>");
+                // important for Venn-style blending
+                circle.style.mixBlendMode = "multiply";
 
-            cell.appendChild(label);
+                // --- offset logic ---
+                const angle = (i / n) * Math.PI * 2;
+                const radius = n === 1 ? 0 : 10; // px offset
 
-            board.appendChild(cell);
+                const offsetX = Math.cos(angle) * radius;
+                const offsetY = Math.sin(angle) * radius;
+
+                circle.style.left = `calc(50% - ${size * 50}% + ${offsetX}px)`;
+                circle.style.top  = `calc(50% - ${size * 50}% + ${offsetY}px)`;
+
+                cellEl.appendChild(circle);
+            });
+
+            board.appendChild(cellEl);
         }
     }
 }
-
-renderPrismixture(board, prismixture);
+renderColorNGraph(board, colorNGraph.getGraph());

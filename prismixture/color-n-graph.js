@@ -14,7 +14,7 @@ export class ColorNGraph {
         for (let x = 0; x < startingGrid.length; x++) {
             this.graph[x] = [];
             for (let y = 0; y < startingGrid[0].length; y++) {
-                // each cell is an array of ColorNodes, starting with the initial color
+                // each cell is an array of ColorNodes, starting with the initial colors from the prismixture
                 this.graph[x][y] = [new ColorNode(startingGrid[x][y], x, y)];
             }
         }
@@ -52,7 +52,7 @@ export class ColorNGraph {
         }
     }
 
-    connect(x1, y1, colorNode1, x2, y2, colorNode2) {
+    connect(colorNode1, colorNode2) {
         const connectionCode = this.canConnect(colorNode1, colorNode2);
 
         // Check incompatibility
@@ -87,8 +87,8 @@ export class ColorNGraph {
             // Split current color node into Source and Remainder
             const unsplitColor = unsplitColorNode.getColor();
             const remainder = unsplitColor.subtract(source.getColor());
-            const remainderColorNode = new ColorNode(remainder, unsplitColorNode.getX(), unsplitColorNode.getY());
-            const sourceColorNode = new ColorNode(source.getColor(), unsplitColorNode.getX(), unsplitColorNode.getY());
+            const remainderColorNode = new ColorNode([remainder], unsplitColorNode.getX(), unsplitColorNode.getY());
+            const sourceColorNode = new ColorNode([source.getColor()], unsplitColorNode.getX(), unsplitColorNode.getY());
 
             // Remove unsplit and add the two new nodes
             const cell = this.graph[unsplitColorNode.getX()][unsplitColorNode.getY()];
@@ -125,9 +125,9 @@ export class ColorNGraph {
 }
 
 export class ColorNode {
-    constructor(prismixtureColorList, x, y, connections = []) {
+    constructor(colorList, x, y, connections = []) {
         let colorSum = new Color(0, 0, 0);
-        for (let c of prismixtureColorList) {
+        for (let c of colorList) {
             colorSum = colorSum.add(c);  
         }
         this.color = colorSum;
@@ -140,4 +140,5 @@ export class ColorNode {
     getColor() { return this.color; }
     getX() { return this.x; }
     getY() { return this.y; }
+    getConnections() { return this.connections; }
 }

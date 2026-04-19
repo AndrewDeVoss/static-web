@@ -94,7 +94,7 @@ export class ColorNGraph extends EventTarget {
 
             // Remove unsplit and add the two new nodes
             const cellColorNodes = this.graph[unsplitColorNode.getX()][unsplitColorNode.getY()];
-            const copy = [...unsplitColorNode.getConnections()]; // copy to avoid mutation issues
+            const copy = [...cellColorNodes]; // copy to avoid mutation issues
             cellColorNodes.splice(cellColorNodes.indexOf(unsplitColorNode), 1);
             cellColorNodes.push(remainderColorNode);
             cellColorNodes.push(sourceColorNode);

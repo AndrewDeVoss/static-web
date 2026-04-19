@@ -20,6 +20,9 @@ let hoveredNode = null;
 const globalPositions = new Map();
 let boardRect = null;
 let connections = new Map();
+let cellContexts = [];
+let cellCanvases = [];
+let cellElements = [];
 
 // Define board
 function initBoard() {
@@ -32,9 +35,46 @@ function initBoard() {
 
     boardRect = board.getBoundingClientRect();
 
+    // Define the canvas for each cell (once, at the beginning)
     for (let row = 0; row < height; row++) {
+        cellContexts[row] = [];
+        cellCanvases[row] = [];
+        cellElements[row] = [];
         for (let col = 0; col < width; col++) {
-            board.appendChild(document.createElement("div"));
+            const cellElement = document.createElement("div");
+            cellElement.style.position = "relative";
+            cellElement.style.width = "100%";
+            cellElement.style.height = "100%";
+
+            // Create canvas for the div - needed for additive color mixing
+            const cellCanvas = document.createElement("canvas");
+            cellCanvas.style.width = "100%";
+            cellCanvas.style.height = "100%";
+
+            // Define the context
+            const cellContext = cellCanvas.getContext("2d");
+
+            // Save refs
+            cellContexts[row][col] = cellContext;
+            cellCanvases[row][col] = cellCanvas;
+            cellElements[row][col] = cellElement;
+
+            // Add canvas to cell
+            cellElement.appendChild(cellCanvas);
+
+            // Add cell to board
+            board.appendChild(cellElement);
+
+            // Set canvas resolution based on cell size and device pixel ratio
+            const rect = cellElement.getBoundingClientRect();
+            const sizePx = Math.min(rect.width, rect.height);
+            const dpr = window.devicePixelRatio || 1;
+            cellCanvas.width = sizePx * dpr;
+            cellCanvas.height = sizePx * dpr;
+            cellContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            // Additive color mixing - set at the end so it does not get undone when cellCanvas size changes
+            cellContext.globalCompositeOperation = "lighter";
         }
     }
 
@@ -64,42 +104,19 @@ initOverlay();
  */
 function updateCell(fromColorNodes, toColorNodes) {
     // Remove old nodes from globals
-    for (let node of fromColorNodes) {
-        globalPositions.delete(node);
+    for (let fromNode of fromColorNodes) {
+        globalPositions.delete(fromNode);
     }
 
-    // Calculate cell index
+    // Get ref to cell context, canvas, and element
     const col = toColorNodes[0].getX();
     const row = toColorNodes[0].getY();
-    const cellIndex = row * width + col + 1; // +1 because of the overlay canvas at index 0
+    const ctx = cellContexts[row][col];
+    const canvas = cellCanvases[row][col];
+    const cellEl = cellElements[row][col];
 
-    // Create div for the cell
-    const cellEl = document.createElement("div");
-    cellEl.style.position = "relative";
-    cellEl.style.width = "100%";
-    cellEl.style.height = "100%";
-
-    // Create canvas for the div - needed for additive color mixing
-    const canvas = document.createElement("canvas");
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-
-    // Add canvas to cell
-    cellEl.appendChild(canvas);
-
-    // Add cell to board
-    board.replaceChild(cellEl, board.children[cellIndex]);
-
-    // Use canvas to render circles defined by toColorNodes
-    const ctx = canvas.getContext("2d");
-    ctx.globalCompositeOperation = "lighter"; // Additive color mixing
-
-    const rect = cellEl.getBoundingClientRect();
-    const sizePx = Math.min(rect.width, rect.height);
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = sizePx * dpr;
-    canvas.height = sizePx * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Clear the cell
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Sort nodes by color for consistent placement
     const sortedNodes = [...toColorNodes].sort((a, b) => {
@@ -108,6 +125,9 @@ function updateCell(fromColorNodes, toColorNodes) {
         return (br - ar) || (bg - ag) || (bb - ab);
     });
 
+    // Variables for drawing
+    const rect = cellEl.getBoundingClientRect();
+    const sizePx = Math.min(rect.width, rect.height);
     const n = sortedNodes.length;
     const baseSize = 0.9;
     const cx = sizePx / 2;
@@ -175,16 +195,17 @@ function drawAllLines() {
     // active line
     if (isDrawing && sourceNode) {
         const from = globalPositions.get(sourceNode);
+        if (from) {
+            const c = sourceNode.getColor();
+            overlayContext.strokeStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
 
-        const c = sourceNode.getColor();
-        overlayContext.strokeStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
+            overlayContext.lineWidth = 3;
 
-        overlayContext.lineWidth = 3;
-
-        overlayContext.beginPath();
-        overlayContext.moveTo(from.x, from.y);
-        overlayContext.lineTo(currentMouse.x, currentMouse.y);
-        overlayContext.stroke();
+            overlayContext.beginPath();
+            overlayContext.moveTo(from.x, from.y);
+            overlayContext.lineTo(currentMouse.x, currentMouse.y);
+            overlayContext.stroke();
+        }
     }
 }
 

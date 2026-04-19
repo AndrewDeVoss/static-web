@@ -72,7 +72,9 @@ export class Color {
 
             // Random portion
             const portion = new Color(
-                remaining.r *rp, remaining.g * gp, remaining.b * bp
+                Math.floor(remaining.r * rp),
+                Math.floor(remaining.g * gp),
+                Math.floor(remaining.b * bp)
             );
 
             result.push(portion);

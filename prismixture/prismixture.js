@@ -15,6 +15,14 @@ const colorNGraph = new ColorNGraph(prismixture);
 
 const board = document.getElementById("board");
 
+// =========================
+// INTERACTION STATE
+// =========================
+let isDrawing = false;
+let sourceNode = null;
+let currentMouse = { x: 0, y: 0 };
+let hoveredNode = null;
+
 function renderColorNGraph(board, graph) {
     const width = graph.length;
     const height = graph[0].length;
@@ -58,10 +66,8 @@ function renderColorNGraph(board, graph) {
             canvas.width = sizePx * dpr;
             canvas.height = sizePx * dpr;
 
-            // FIX: no cumulative scaling
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-            // 🔥 ADDITIVE BLENDING RESTORED
             ctx.globalCompositeOperation = "lighter";
 
             const nodes = graph[x][y];
@@ -71,6 +77,7 @@ function renderColorNGraph(board, graph) {
 
                 return (br - ar) || (bg - ag) || (bb - ab);
             });
+
             const n = sortedNodes.length;
 
             const baseSize = 0.9;
@@ -91,11 +98,10 @@ function renderColorNGraph(board, graph) {
                 const px = cx + Math.cos(angle) * offsetRadius;
                 const py = cy + Math.sin(angle) * offsetRadius;
 
-                // global coordinate system for edges
                 const globalX = rect.left - boardRect.left + px;
                 const globalY = rect.top - boardRect.top + py;
 
-                globalPositions.set(node, { x: globalX, y: globalY });
+                globalPositions.set(node, { x: globalX, y: globalY, r: baseRadius });
 
                 ctx.beginPath();
                 ctx.arc(px, py, baseRadius, 0, Math.PI * 2);
@@ -106,7 +112,7 @@ function renderColorNGraph(board, graph) {
     }
 
     // =========================
-    // PASS 2: DRAW EDGES
+    // OVERLAY (INTERACTION + EDGES)
     // =========================
     const overlay = document.createElement("canvas");
     overlay.style.position = "absolute";
@@ -114,7 +120,7 @@ function renderColorNGraph(board, graph) {
     overlay.style.top = "0";
     overlay.style.width = "100%";
     overlay.style.height = "100%";
-    overlay.style.pointerEvents = "none";
+    overlay.style.pointerEvents = "auto";
 
     board.prepend(overlay);
 
@@ -127,65 +133,156 @@ function renderColorNGraph(board, graph) {
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    ctx.globalCompositeOperation = "source-over";
     ctx.lineWidth = 2;
 
-    const drawn = new Set();
+    function getNodeAtPosition(x, y) {
+        for (let [node, pos] of globalPositions.entries()) {
+            const dx = x - pos.x;
+            const dy = y - pos.y;
+            if (dx * dx + dy * dy <= pos.r * pos.r) {
+                return node;
+            }
+        }
+        return null;
+    }
 
-    for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
-            for (let node of graph[x][y]) {
+    function redrawOverlay() {
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
 
-                const from = globalPositions.get(node);
-                if (!from) continue;
+        // draw edges
+        for (let x = 0; x < width; x++) {
+            for (let y = 0; y < height; y++) {
+                for (let node of graph[x][y]) {
 
-                const c = node.getColor();
-                ctx.strokeStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
+                    const from = globalPositions.get(node);
+                    if (!from) continue;
 
-                for (let target of node.connections) {
+                    const c = node.getColor();
+                    ctx.strokeStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
 
-                    const key =
-                        node.id < target.id
-                            ? `${node.id}|${target.id}`
-                            : `${target.id}|${node.id}`;
+                    for (let target of node.connections) {
+                        const to = globalPositions.get(target);
+                        if (!to) continue;
 
-                    // if (drawn.has(key)) continue;
-                    drawn.add(key);
-
-                    const to = globalPositions.get(target);
-                    if (!to) continue;
-
-                    ctx.beginPath();
-                    ctx.moveTo(from.x, from.y);
-                    ctx.lineTo(to.x, to.y);
-                    ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(from.x, from.y);
+                        ctx.lineTo(to.x, to.y);
+                        ctx.stroke();
+                    }
                 }
             }
         }
+
+        // active line
+        if (isDrawing && sourceNode) {
+            const from = globalPositions.get(sourceNode);
+
+            const c = sourceNode.getColor();
+            ctx.strokeStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
+
+            ctx.lineWidth = 3;
+
+            ctx.beginPath();
+            ctx.moveTo(from.x, from.y);
+            ctx.lineTo(currentMouse.x, currentMouse.y);
+            ctx.stroke();
+        }
+
+        // hover glow
+        if (hoveredNode) {
+            const pos = globalPositions.get(hoveredNode);
+
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, pos.r * 1.2, 0, Math.PI * 2);
+
+            ctx.shadowColor = "white";
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = "rgba(255,255,255,0.15)";
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+        }
     }
+
+    // =========================
+    // EVENTS
+    // =========================
+    board.addEventListener("mousedown", (e) => {
+        const rect = overlay.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const node = getNodeAtPosition(x, y);
+
+        if (node) {
+            isDrawing = true;
+            sourceNode = node;
+            currentMouse = { x, y };
+        }
+    });
+
+    board.addEventListener("mousemove", (e) => {
+        const rect = overlay.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        currentMouse = { x, y };
+
+        if (!isDrawing) return;
+
+        const node = getNodeAtPosition(x, y);
+
+        if (node && node !== sourceNode) {
+            hoveredNode = node;
+            overlay.style.cursor = "pointer";
+        } else {
+            hoveredNode = null;
+            overlay.style.cursor = "default";
+        }
+
+        redrawOverlay();
+    });
+
+    board.addEventListener("mouseup", () => {
+        if (!isDrawing) return;
+
+        if (hoveredNode && hoveredNode !== sourceNode) {
+            // console.log("SOURCE:", sourceNode);
+            // console.log("TARGET:", hoveredNode);
+            colorNGraph.connect(sourceNode, hoveredNode);
+        }
+
+        isDrawing = false;
+        sourceNode = null;
+        hoveredNode = null;
+
+        redrawOverlay();
+    });
+
+    redrawOverlay();
 }
 
 // =========================
 // TEST CONNECTIONS
 // =========================
-colorNGraph.connect(
-    colorNGraph.getGraph()[0][0][0],
-    colorNGraph.getGraph()[1][0][0]
-);
+// colorNGraph.connect(
+//     colorNGraph.getGraph()[0][0][0],
+//     colorNGraph.getGraph()[1][0][0]
+// );
 
-colorNGraph.connect(
-    colorNGraph.getGraph()[0][0][0],
-    colorNGraph.getGraph()[0][1][0]
-);
+// colorNGraph.connect(
+//     colorNGraph.getGraph()[0][0][0],
+//     colorNGraph.getGraph()[0][1][0]
+// );
 
-colorNGraph.connect(
-    colorNGraph.getGraph()[0][1][0],
-    colorNGraph.getGraph()[0][2][0]
-);
+// colorNGraph.connect(
+//     colorNGraph.getGraph()[0][1][0],
+//     colorNGraph.getGraph()[0][2][0]
+// );
 
-colorNGraph.connect(
-    colorNGraph.getGraph()[1][0][0],
-    colorNGraph.getGraph()[2][0][0]
-);
+// colorNGraph.connect(
+//     colorNGraph.getGraph()[1][0][0],
+//     colorNGraph.getGraph()[2][0][0]
+// );
 
 renderColorNGraph(board, colorNGraph.getGraph());

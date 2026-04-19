@@ -1,6 +1,6 @@
 import { Color } from "./color.js";
 
-export class ColorNGraph {
+export class ColorNGraph extends EventTarget {
     graph = null;
 
     static CONNECTABILITY_CODE = {
@@ -10,6 +10,7 @@ export class ColorNGraph {
     }
 
     constructor(startingGrid) {
+        super();
         this.graph = [];
         for (let x = 0; x < startingGrid.length; x++) {
             this.graph[x] = [];
@@ -34,7 +35,7 @@ export class ColorNGraph {
         // Do not allow connection if not adjacent orthogonally
         const dx = Math.abs(colorNode1.getX() - colorNode2.getX());
         const dy = Math.abs(colorNode1.getY() - colorNode2.getY());
-        if (dx>1 || dy>1 || (dx === 1 && dy === 1)) {
+        if (dx > 1 || dy > 1 || (dx === 1 && dy === 1)) {
             console.log("Colors are not adjacent");
             return ColorNGraph.CONNECTABILITY_CODE.NO;
         }
@@ -63,8 +64,9 @@ export class ColorNGraph {
 
         // Same color, just add connection
         if (connectionCode === ColorNGraph.CONNECTABILITY_CODE.YES_SAME) {
-            colorNode1.connections.push(colorNode2);
-            colorNode2.connections.push(colorNode1);
+            colorNode1.getConnections().push(colorNode2);
+            colorNode2.getConnections().push(colorNode1);
+            this.informConnectionsChanged();
             return true;
         }
 
@@ -91,10 +93,12 @@ export class ColorNGraph {
             const sourceColorNode = new ColorNode([source.getColor()], unsplitColorNode.getX(), unsplitColorNode.getY());
 
             // Remove unsplit and add the two new nodes
-            const cell = this.graph[unsplitColorNode.getX()][unsplitColorNode.getY()];
-            cell.splice(cell.indexOf(unsplitColorNode), 1);
-            cell.push(remainderColorNode);
-            cell.push(sourceColorNode);
+            const cellColorNodes = this.graph[unsplitColorNode.getX()][unsplitColorNode.getY()];
+            const copy = [...unsplitColorNode.getConnections()]; // copy to avoid mutation issues
+            cellColorNodes.splice(cellColorNodes.indexOf(unsplitColorNode), 1);
+            cellColorNodes.push(remainderColorNode);
+            cellColorNodes.push(sourceColorNode);
+            this.informCellColorNodesChanged(copy, cellColorNodes);
 
             // Connect remainder to remainderPrev if not null
             if (prevOfRemainder) {
@@ -116,11 +120,25 @@ export class ColorNGraph {
                 // By removing the backward ref, we set up for next loop
                 next.connections = next.connections.filter(c => c !== unsplitColorNode);
                 unsplitColorNode = next;
+
+                // Connections just changed
+                this.informConnectionsChanged();
             } else {
+                // One last time, notify connections are different
+                this.informConnectionsChanged();
+
                 // No more nodes in line
                 break;
             }
         }
+    }
+
+    informConnectionsChanged() {
+        this.dispatchEvent(new CustomEvent('connection-change', { detail: {} }));
+    }
+
+    informCellColorNodesChanged(fromColorNodes, toColorNodes) {
+        this.dispatchEvent(new CustomEvent('cell-change', { detail: { fromColorNodes, toColorNodes } }));
     }
 }
 

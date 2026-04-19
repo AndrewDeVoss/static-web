@@ -45,44 +45,99 @@ export class Color {
         );
     }
 
-    static generatePartitionColors(numColors, seed) {
-        const rand = seed;
-        const rgbSum = Color.generateRGBSum(rand);
+static generatePartitionColors(numColors, seed) {
+    const rgbSum = Color.generateRGBSum(seed);
 
-        let remaining = new Color(rgbSum.r, rgbSum.g, rgbSum.b);
-        const result = [];
+    // ---- helper: random partition ----
+    function randomPartition(total, n) {
+        const cuts = Array.from({ length: n - 1 }, () => Math.random());
+        cuts.sort((a, b) => a - b);
 
-        for (let i = 0; i < numColors; i++) {
-            const remainingSlots = numColors - i;
+        const parts = [];
+        let prev = 0;
 
-            // Last color gets everything left
-            if (remainingSlots === 1) {
-                result.push(remaining);
-                break;
-            }
-
-            // Determine what percent of remaing r,g,b can be taken by this color. The more it takes of one, the more it leaves of the others
-            const a = Math.random();
-            const b = Math.random();
-            const c = Math.random();
-            const sum = a + b + c;
-            const rp = a / sum;
-            const gp = b / sum;
-            const bp = c / sum;
-
-            // Random portion
-            const portion = new Color(
-                Math.floor(remaining.r * rp),
-                Math.floor(remaining.g * gp),
-                Math.floor(remaining.b * bp)
-            );
-
-            result.push(portion);
-            remaining = remaining.subtract(portion);
+        for (let i = 0; i < n - 1; i++) {
+            parts.push((cuts[i] - prev) * total);
+            prev = cuts[i];
         }
 
-        return result;
+        parts.push((1 - prev) * total);
+        return parts;
     }
+
+    // ---- ordering helpers ----
+    function order(arr, increasing) {
+        return [...arr].sort((a, b) => increasing ? a - b : b - a);
+    }
+
+    function shuffle(arr) {
+        return arr
+            .map(v => ({ v, r: Math.random() }))
+            .sort((a, b) => a.r - b.r)
+            .map(x => x.v);
+    }
+
+    // ---- floor + sum correction ----
+    function floorFix(values, total) {
+        const floored = values.map(v => Math.floor(v));
+        let diff = total - floored.reduce((a, b) => a + b, 0);
+
+        const fracOrder = values
+            .map((v, i) => ({ i, f: v - floored[i] }))
+            .sort((a, b) => b.f - a.f);
+
+        for (let k = 0; k < diff; k++) {
+            floored[fracOrder[k % fracOrder.length].i]++;
+        }
+
+        return floored;
+    }
+
+    // ---- determine channel roles ----
+    const channels = ["r", "g", "b"];
+
+    const maxChannel = channels.reduce((a, c) =>
+        rgbSum[c] > rgbSum[a] ? c : a
+    , "r");
+
+    const rest = channels.filter(c => c !== maxChannel);
+
+    const minChannel = rest.reduce((a, c) =>
+        rgbSum[c] < rgbSum[a] ? c : a
+    );
+
+    const midChannel = rest.find(c => c !== minChannel);
+
+    // ---- generate float partitions ----
+    let r = randomPartition(rgbSum.r, numColors);
+    let g = randomPartition(rgbSum.g, numColors);
+    let b = randomPartition(rgbSum.b, numColors);
+
+    const map = { r, g, b };
+
+    // ---- NEW ORDERING RULE ----
+    map[maxChannel] = shuffle(map[maxChannel]);              // random (was increasing)
+    map[minChannel] = order(map[minChannel], true);          // increasing (swapped in)
+    map[midChannel] = order(map[midChannel], false);         // decreasing
+
+    // ---- floor + repair sums ----
+    const rInt = floorFix(map.r, rgbSum.r);
+    const gInt = floorFix(map.g, rgbSum.g);
+    const bInt = floorFix(map.b, rgbSum.b);
+
+    // ---- assemble final colors ----
+    const colors = [];
+
+    for (let i = 0; i < numColors; i++) {
+        colors.push({
+            r: rInt[i],
+            g: gInt[i],
+            b: bInt[i]
+        });
+    }
+
+    return colors;
+}
 
     static generateRGBSum(seed = Math.random) {
         function randRange(min, max) {

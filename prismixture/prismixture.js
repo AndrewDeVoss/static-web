@@ -222,6 +222,7 @@ board.addEventListener("mousemove", (e) => {
     currentMouse = { x, y };
 
     if (!isDrawing) return;
+    drawAllLines();
 
     const node = getNodeAtPosition(x, y);
 
@@ -244,6 +245,7 @@ board.addEventListener("mouseup", () => {
     isDrawing = false;
     sourceNode = null;
     hoveredNode = null;
+    drawAllLines();
 });
 
 // Event listeners for observing model

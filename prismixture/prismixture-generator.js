@@ -165,9 +165,15 @@ export function generatePrismixture(width, height, colors) {
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
             const colorsHere = [];
+            const usedColors = new Set();  
 
             for (let lineId of grid[x][y].lines) {
-                colorsHere.push(lines[lineId].color);
+                let usedColor = lines[lineId].color;
+                colorsHere.push(usedColor);
+                if (usedColors.has(usedColor)) {
+                    console.warn("Duplicate color in cell:", usedColor);
+                }
+                usedColors.add(usedColor);
             }
 
             output[x][y] = colorsHere;

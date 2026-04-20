@@ -221,8 +221,8 @@ function getNodeAtPosition(x, y) {
     return null;
 }
 
-// Mouse listeners - actual user interaction with game
-board.addEventListener("mousedown", (e) => {
+// Pointer listeners - actual user interaction with game
+board.addEventListener("pointerdown", (e) => {
     const rect = overlay.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -235,7 +235,7 @@ board.addEventListener("mousedown", (e) => {
     }
 });
 
-board.addEventListener("mousemove", (e) => {
+board.addEventListener("pointermove", (e) => {
     const rect = overlay.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -256,7 +256,7 @@ board.addEventListener("mousemove", (e) => {
     }
 });
 
-board.addEventListener("mouseup", () => {
+board.addEventListener("pointerup", () => {
     if (!isDrawing) return;
 
     if (hoveredNode && hoveredNode !== sourceNode) {

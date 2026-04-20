@@ -218,6 +218,8 @@ function getNodeAtPosition(x, y) {
 }
 
 board.addEventListener("pointerdown", (e) => {
+    board.setPointerCapture(e.pointerId);
+
     const rect = overlay.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -251,7 +253,9 @@ board.addEventListener("pointermove", (e) => {
     }
 });
 
-board.addEventListener("pointerup", () => {
+board.addEventListener("pointerup", (e) => {
+    board.releasePointerCapture(e.pointerId);
+
     if (!isDrawing) return;
 
     if (hoveredNode && hoveredNode !== sourceNode) {

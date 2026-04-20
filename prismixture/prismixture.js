@@ -19,12 +19,14 @@ let currentMouse = { x: 0, y: 0 };
 let hoveredNode = null;
 const globalPositions = new Map();
 let boardRect = null;
-let connections = new Map();
 let cellContexts = [];
 let cellCanvases = [];
 let cellElements = [];
+let cellSize = 0;
 
-// Define board
+// =========================
+// INIT BOARD
+// =========================
 function initBoard() {
     board.innerHTML = "";
     board.style.position = "relative";
@@ -33,48 +35,43 @@ function initBoard() {
     board.style.gridTemplateRows = `repeat(${height}, 1fr)`;
     board.style.gap = "10px";
 
+    // Wait for layout to stabilize
     boardRect = board.getBoundingClientRect();
 
-    // Define the canvas for each cell (once, at the beginning)
+    // Compute ONE consistent size
+    cellSize = boardRect.width / width;
+
+    const dpr = window.devicePixelRatio || 1;
+
     for (let row = 0; row < height; row++) {
         cellContexts[row] = [];
         cellCanvases[row] = [];
         cellElements[row] = [];
+
         for (let col = 0; col < width; col++) {
             const cellElement = document.createElement("div");
             cellElement.style.position = "relative";
-            cellElement.style.width = "100%";
-            cellElement.style.height = "100%";
+            cellElement.style.width = `${cellSize}px`;
+            cellElement.style.height = `${cellSize}px`;
 
-            // Create canvas for the div - needed for additive color mixing
-            const cellCanvas = document.createElement("canvas");
-            cellCanvas.style.width = "100%";
-            cellCanvas.style.height = "100%";
+            const canvas = document.createElement("canvas");
+            canvas.style.width = "100%";
+            canvas.style.height = "100%";
 
-            // Define the context
-            const cellContext = cellCanvas.getContext("2d");
+            const ctx = canvas.getContext("2d");
 
-            // Save refs
-            cellContexts[row][col] = cellContext;
-            cellCanvases[row][col] = cellCanvas;
-            cellElements[row][col] = cellElement;
+            // Set consistent resolution
+            canvas.width = cellSize * dpr;
+            canvas.height = cellSize * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.globalCompositeOperation = "lighter";
 
-            // Add canvas to cell
-            cellElement.appendChild(cellCanvas);
-
-            // Add cell to board
+            cellElement.appendChild(canvas);
             board.appendChild(cellElement);
 
-            // Set canvas resolution based on cell size and device pixel ratio
-            const rect = cellElement.getBoundingClientRect();
-            const sizePx = Math.min(rect.width, rect.height);
-            const dpr = window.devicePixelRatio || 1;
-            cellCanvas.width = sizePx * dpr;
-            cellCanvas.height = sizePx * dpr;
-            cellContext.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-            // Additive color mixing - set at the end so it does not get undone when cellCanvas size changes
-            cellContext.globalCompositeOperation = "lighter";
+            cellContexts[row][col] = ctx;
+            cellCanvases[row][col] = canvas;
+            cellElements[row][col] = cellElement;
         }
     }
 
@@ -89,7 +86,9 @@ function initBoard() {
 }
 initBoard();
 
-// Define overlay canvas things
+// =========================
+// OVERLAY
+// =========================
 function initOverlay() {
     const dpr = window.devicePixelRatio || 1;
     overlay.width = boardRect.width * dpr;
@@ -99,80 +98,77 @@ function initOverlay() {
 }
 initOverlay();
 
-/**
- * Updates a cell's visual representation based on its current ColorNodes. Handles both adding and removing nodes.
- */
+// =========================
+// CELL RENDERING
+// =========================
 function updateCell(fromColorNodes, toColorNodes) {
-    // Remove old nodes from globals
     for (let fromNode of fromColorNodes) {
         globalPositions.delete(fromNode);
     }
 
-    // Get ref to cell context, canvas, and element
     const col = toColorNodes[0].getX();
     const row = toColorNodes[0].getY();
     const ctx = cellContexts[row][col];
     const canvas = cellCanvases[row][col];
     const cellEl = cellElements[row][col];
 
-    // Clear the cell
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, cellSize, cellSize);
 
-    // Sort nodes by color for consistent placement
     const sortedNodes = [...toColorNodes].sort((a, b) => {
         const [ar, ag, ab] = [a.getColor().r, a.getColor().g, a.getColor().b];
         const [br, bg, bb] = [b.getColor().r, b.getColor().g, b.getColor().b];
         return (br - ar) || (bg - ag) || (bb - ab);
     });
 
-    // Variables for drawing
-    const rect = cellEl.getBoundingClientRect();
-    const sizePx = Math.min(rect.width, rect.height);
     const n = sortedNodes.length;
     const baseSize = 0.9;
-    const cx = sizePx / 2;
-    const cy = sizePx / 2;
+    const cx = cellSize / 2;
+    const cy = cellSize / 2;
     const paddingFactor = 0.85;
-    const baseRadius = (sizePx * (baseSize / Math.sqrt(n)) * 0.5) * paddingFactor;
+
+    const baseRadius =
+        (cellSize * (baseSize / Math.sqrt(n)) * 0.5) * paddingFactor;
+
+    const rect = cellEl.getBoundingClientRect();
 
     sortedNodes.forEach((node, i) => {
         const c = node.getColor();
         const angle = (i / n) * Math.PI * 2;
         const offsetRadius = n === 1 ? 0 : baseRadius * 0.5;
+
         const px = cx + Math.cos(angle) * offsetRadius;
         const py = cy + Math.sin(angle) * offsetRadius;
+
         const globalX = rect.left - boardRect.left + px;
         const globalY = rect.top - boardRect.top + py;
 
-        // Store global position
         globalPositions.set(node, { x: globalX, y: globalY, r: baseRadius });
 
-        // Draw circle for the node
         ctx.beginPath();
         ctx.arc(px, py, baseRadius, 0, Math.PI * 2);
         ctx.fillStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
         ctx.fill();
     });
 
-    // After updating the cell, redraw lines
     drawAllLines();
 }
 
-// Render each starting cell:
+// Initial render
 for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
         updateCell([], colorNGraph.getGraph()[x][y]);
     }
 }
 
+// =========================
+// LINE DRAWING
+// =========================
 function drawAllLines() {
     overlayContext.clearRect(0, 0, overlay.width, overlay.height);
 
-    // Draw every connection
     for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
             for (let node of colorNGraph.getGraph()[x][y]) {
-
                 const from = globalPositions.get(node);
                 if (!from) continue;
 
@@ -192,13 +188,11 @@ function drawAllLines() {
         }
     }
 
-    // active line
     if (isDrawing && sourceNode) {
         const from = globalPositions.get(sourceNode);
         if (from) {
             const c = sourceNode.getColor();
             overlayContext.strokeStyle = `rgb(${c.r}, ${c.g}, ${c.b})`;
-
             overlayContext.lineWidth = 3;
 
             overlayContext.beginPath();
@@ -209,7 +203,9 @@ function drawAllLines() {
     }
 }
 
-// Helper
+// =========================
+// INPUT
+// =========================
 function getNodeAtPosition(x, y) {
     for (let [node, pos] of globalPositions.entries()) {
         const dx = x - pos.x;
@@ -221,13 +217,12 @@ function getNodeAtPosition(x, y) {
     return null;
 }
 
-// Pointer listeners - actual user interaction with game
 board.addEventListener("pointerdown", (e) => {
     const rect = overlay.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const node = getNodeAtPosition(x, y);
 
+    const node = getNodeAtPosition(x, y);
     if (node) {
         isDrawing = true;
         sourceNode = node;
@@ -269,37 +264,14 @@ board.addEventListener("pointerup", () => {
     drawAllLines();
 });
 
-// Event listeners for observing model
-colorNGraph.addEventListener("connection-change", (event) => {
-    console.log("Received:", event.detail.value);
+// =========================
+// MODEL EVENTS
+// =========================
+colorNGraph.addEventListener("connection-change", () => {
     drawAllLines();
 });
+
 colorNGraph.addEventListener("cell-change", (event) => {
-    console.log("Received cell change:", event.detail);
     const { fromColorNodes, toColorNodes } = event.detail;
     updateCell(fromColorNodes, toColorNodes);
 });
-
-// =========================
-// TEST CONNECTIONS
-// =========================
-// colorNGraph.connect(
-//     colorNGraph.getGraph()[0][0][0],
-//     colorNGraph.getGraph()[1][0][0]
-// );
-
-// colorNGraph.connect(
-//     colorNGraph.getGraph()[0][0][0],
-//     colorNGraph.getGraph()[0][1][0]
-// );
-
-// colorNGraph.connect(
-//     colorNGraph.getGraph()[0][1][0],
-//     colorNGraph.getGraph()[0][2][0]
-// );
-
-// colorNGraph.connect(
-//     colorNGraph.getGraph()[1][0][0],
-//     colorNGraph.getGraph()[2][0][0]
-// );
-

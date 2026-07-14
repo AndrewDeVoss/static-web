@@ -139,9 +139,19 @@ p {
 
 .turn-of-phrase-btn {
   position: relative;
-  background: #6172bd;
+  background: #9060b1;
   color: #fff;
-  border: 2px solid #3e41fc;
+  border: 2px solid #cd68d6;
+  box-shadow: none;
+  overflow: hidden;
+
+}
+
+.herdhero-btn {
+  position: relative;
+  background: #ee8640;
+  color: #fff;
+  border: 2px solid #f0ae63;
   box-shadow: none;
   overflow: hidden;
 }

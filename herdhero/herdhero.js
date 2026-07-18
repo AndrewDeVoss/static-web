@@ -1,6 +1,83 @@
 import { generateBoard, prettyPrintBoard } from './generate-board.js';
 import { visualizeBoard } from './board-visualizer.js';
+import { boardToBank } from './board-to-bank.js'
+import { CELL_TYPES } from './generate-board.js';
+
 
 const boardContainer = document.getElementById('board-container');
 const board = generateBoard(5, 5);
-boardContainer.appendChild(visualizeBoard(board));
+const bank = boardToBank(board);
+
+// boardContainer.appendChild(visualizeBoard(board));
+
+// Render functions:
+function initializeBank(bank) {
+    // Find the bank spot and style it to support rows
+    const bankDiv = document.getElementById('bank');
+    bankDiv.style.display = 'grid';
+    bankDiv.style.gridTemplateRows = `repeat(${bank.length}, 50px)`;
+    bankDiv.style.gap = '16px';
+    bankDiv.style.padding = '2px';
+
+    // Create rows of styled images
+    for (let row of bank) {
+        let rowDiv = document.createElement('div');
+        rowDiv.style.display = 'grid';
+        rowDiv.style.gridTemplateColumns = `repeat(${row.length}, 50px)`;
+        rowDiv.style.gridTemplateRows = `repeat(1, 50px)`;
+        rowDiv.style.gap = '2px';
+        rowDiv.style.border = '2px solid blue';
+        rowDiv.style.borderRadius = '5px'; 
+
+        for (let cellType of row) {
+            const imageFile = getRandomImageForCellType(cellType);
+            if (imageFile) {
+                const img = document.createElement('img');
+                img.src = imageFile;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                rowDiv.appendChild(img);
+            }
+        }
+        bankDiv.appendChild(rowDiv);
+    }
+}
+
+initializeBank(bank);
+
+function getRandomImageForCellType(cellType) {
+    let numChoices = 0;
+    let randomChoice = 0;
+    switch (cellType) {
+        case CELL_TYPES.CAMO:
+            numChoices = 5;
+            randomChoice = Math.floor(Math.random() * numChoices) + 1;
+            return `sprites/camo/camo-${randomChoice}.png`;
+        case CELL_TYPES.EFFELANT:
+            numChoices = 8;
+            randomChoice = Math.floor(Math.random() * numChoices) + 1;
+            return `sprites/effelant/effelant-${randomChoice}.png`;
+        case CELL_TYPES.GRUMPY:
+            numChoices = 6;
+            randomChoice = Math.floor(Math.random() * numChoices) + 1;
+            return `sprites/grumpy/grumpy-${randomChoice}.png`;
+        case CELL_TYPES.PARTY:
+            numChoices = 8;
+            randomChoice = Math.floor(Math.random() * numChoices) + 1;
+            return `sprites/party/party-${randomChoice}.png`;
+        case CELL_TYPES.PETS:
+            numChoices = 9;
+            randomChoice = Math.floor(Math.random() * numChoices) + 1;
+            return `sprites/pets/pets-${randomChoice}.png`;
+        case CELL_TYPES.ROYAL:
+            numChoices = 6;
+            randomChoice = Math.floor(Math.random() * numChoices) + 1;
+            return `sprites/royal/royal-${randomChoice}.png`;
+        case CELL_TYPES.NORMAL:
+            numChoices = 29;
+            randomChoice = Math.floor(Math.random() * numChoices) + 1;
+            return `sprites/normal/normal-${randomChoice}.png`;
+        default:
+            return null;
+    }
+}

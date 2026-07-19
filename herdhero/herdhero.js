@@ -2,32 +2,40 @@ import { generateBoard, prettyPrintBoard } from './generate-board.js';
 import { visualizeBoard } from './board-visualizer.js';
 import { boardToBank } from './board-to-bank.js'
 import { CELL_TYPES } from './generate-board.js';
-
+import { pickColors } from './color-generator.js'
 
 const boardContainer = document.getElementById('board-container');
 const board = generateBoard(5, 5);
 const bank = boardToBank(board);
+const divToBankPieceLookup = new Map();
+initializeBank(bank);
 
-// boardContainer.appendChild(visualizeBoard(board));
 
-// Render functions:
 function initializeBank(bank) {
+    const cellSize = 40;
+    const colors = pickColors(bank.length);
+
     // Find the bank spot and style it to support rows
     const bankDiv = document.getElementById('bank');
     bankDiv.style.display = 'grid';
-    bankDiv.style.gridTemplateRows = `repeat(${bank.length}, 50px)`;
+    bankDiv.style.gridTemplateRows = `repeat(${bank.length}, max-content)`;
     bankDiv.style.gap = '16px';
     bankDiv.style.padding = '2px';
 
     // Create rows of styled images
     for (let row of bank) {
         let rowDiv = document.createElement('div');
+        divToBankPieceLookup.set(rowDiv, row);
+
+        const color = colors.shift();
         rowDiv.style.display = 'grid';
-        rowDiv.style.gridTemplateColumns = `repeat(${row.length}, 50px)`;
-        rowDiv.style.gridTemplateRows = `repeat(1, 50px)`;
+        rowDiv.style.gridTemplateColumns = `repeat(${row.length}, ${cellSize}px)`;
+        rowDiv.style.gridTemplateRows = `repeat(1, ${cellSize}px)`;
         rowDiv.style.gap = '2px';
-        rowDiv.style.border = '2px solid blue';
+        rowDiv.style.padding = '10px';
+        rowDiv.style.border = `4px solid ${color}`;
         rowDiv.style.borderRadius = '5px'; 
+        rowDiv.style.boxSizing = 'border-box';
 
         for (let cellType of row) {
             const imageFile = getRandomImageForCellType(cellType);
@@ -36,14 +44,13 @@ function initializeBank(bank) {
                 img.src = imageFile;
                 img.style.width = '100%';
                 img.style.height = '100%';
+                img.style.objectFit = 'contain';
                 rowDiv.appendChild(img);
             }
         }
         bankDiv.appendChild(rowDiv);
     }
 }
-
-initializeBank(bank);
 
 function getRandomImageForCellType(cellType) {
     let numChoices = 0;

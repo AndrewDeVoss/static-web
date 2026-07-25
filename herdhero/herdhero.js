@@ -5,7 +5,7 @@ import { CELL_TYPES } from './generate-board.js';
 import { pickColors } from './color-generator.js'
 
 const boardContainer = document.getElementById('board-container');
-const board = generateBoard(5, 5);
+const board = generateBoard(4, 4);
 const bank = boardToBank(board);
 const divToBankPieceLookup = new Map();
 initializeBank(bank);
@@ -34,6 +34,7 @@ function initializeBank(bank) {
         rowDiv.style.gap = '2px';
         rowDiv.style.padding = '10px';
         rowDiv.style.border = `4px solid ${color}`;
+        rowDiv.style.backgroundColor = color;
         rowDiv.style.borderRadius = '5px'; 
         rowDiv.style.boxSizing = 'border-box';
 
